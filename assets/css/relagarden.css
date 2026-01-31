@@ -61,3 +61,91 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic P
     height: 120px;
   }
 }
+
+/* お問い合わせボタン */
+.contact-btn {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: #4CAF50; /* ブランドカラーに合わせて後で調整可 */
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+  margin-top: 1.5rem;
+}
+
+.contact-btn:hover {
+  background: #43a047;
+  transform: translateY(-2px);
+}
+
+/* ヘッダー全体 */
+.site-header {
+  background: #f7f7f7;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.site-header .inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 12px 24px;
+}
+
+/* ロゴ */
+.header-logo {
+  display: flex;
+  align-items: center;
+}
+.logo-img {
+  height: 48px;
+}
+
+/* ナビ */
+.header-nav {
+  display: flex;
+  gap: 24px;
+}
+.header-nav a {
+  text-decoration: none;
+  color: #222;
+  font-weight: 600;
+}
+.header-nav a:hover {
+  opacity: 0.7;
+}
+
+/* 電話情報 */
+.header-contact {
+  text-align: right;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+.header-contact .tel {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #2e7d32;
+}
+.header-contact .hours {
+  color: #555;
+}
+
+/* スマホ対応 */
+@media (max-width: 700px) {
+  .site-header .inner {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .header-nav {
+    gap: 16px;
+  }
+  .header-contact {
+    text-align: center;
+  }
+}

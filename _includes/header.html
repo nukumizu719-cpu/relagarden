@@ -1,11 +1,24 @@
 <header class="site-header">
   <div class="inner">
-    <a href="{{ '/' | relative_url }}" class="logo">{{ site.title }}</a>
 
-    <nav class="site-nav">
-      <a href="{{ '/' | relative_url }}">ホーム</a>
-      <a href="{{ '/cases/' | relative_url }}">施工事例</a>
-      <a href="{{ '/contact/' | relative_url }}">お問い合わせ</a>
+    <!-- 左：ロゴ -->
+    <a href="/" class="header-logo">
+      <img src="/assets/images/logo.png" alt="リラガーデン" class="logo-img">
+    </a>
+
+    <!-- 中央：ナビ -->
+    <nav class="header-nav">
+      <a href="/products/">商品・価格</a>
+      <a href="/works/">施工事例</a>
+      <a href="/contact/">お問い合わせ</a>
     </nav>
+
+    <!-- 右：電話情報 -->
+    <div class="header-contact">
+      <div class="tel">080-XXXX-XXXX</div>
+      <div class="hours">営業時間 **:**〜**:**（土日休み）</div>
+    </div>
+
   </div>
 </header>
+
