@@ -22,7 +22,7 @@ title: リラガーデン(RelaGarden)
 email: ""
 description: "愛知県岡崎市の人工芝施工・販売ならリラガーデン（RelaGarden / Relagarden / ReraGarden）。自社オリジナル人工芝を豊富にラインナップし、高品質な施工で理想の庭づくりを実現します。"
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://relagarden.jp" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: ""
 github_username:  ""
 
