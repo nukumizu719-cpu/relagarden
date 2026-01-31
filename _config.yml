@@ -32,8 +32,9 @@ plugins:
 
 #コレクション設定
 collections:
-  cases:
+  works:
     output: true
+
 
 # Exclude from processing.
 # The following items will not be processed, by default.
