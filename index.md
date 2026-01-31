@@ -4,7 +4,6 @@ title: ホーム
 ---
 
 {% include hero.html %}
-
 {% include top-problems.html %}
 {% include top-usp.html %}
 {% include top-lineup.html %}
