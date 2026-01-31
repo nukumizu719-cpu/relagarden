@@ -6,12 +6,12 @@ title: ホーム
 <h1>relagarden</h1>
 <p>ようこそ。ここは relagarden のサンプルサイトです。</p>
 
-<section id="works">
+<section id="top-works">
   <h2>施工事例</h2>
   <div class="works-grid">
-    {% for work in site.works %}
+    {% for work in site.cases %}
       <article class="work-item">
-        <a href="{{ site.baseurl }}{{ work.url }}">
+        <a href="{{ work.url | relative_url }}">
           <img src="{{ work.thumbnail | default: '/assets/images/works/default-thumb.jpg' }}" alt="{{ work.title }} サムネイル">
           <h3>{{ work.title }}</h3>
         </a>
@@ -22,7 +22,6 @@ title: ホーム
     {% endfor %}
   </div>
 </section>
-
 
 <section id="contact">
   <h2>お問い合わせ</h2>

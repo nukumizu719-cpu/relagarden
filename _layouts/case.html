@@ -2,28 +2,30 @@
 layout: default
 ---
 
-<article class="work">
-  <header class="work-header">
-    <h1 class="work-title">{{ page.title }}</h1>
-    <p class="work-meta">
-      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d" }}</time>
-      {% if page.categories %}・カテゴリ: {{ page.categories | join: " / " }}{% endif %}
+<article class="case">
+  <header class="case-header">
+    <h1 class="case-title">{{ page.title }}</h1>
+
+    <p class="case-meta">
+      <time datetime="{{ page.date | date_to_xmlschema }}">
+        {{ page.date | date: "%Y-%m-%d" }}
+      </time>
+      {% if page.area %}・施工地域：{{ page.area }}{% endif %}
+      {% if page.turf %}・使用人工芝：{{ page.turf }}{% endif %}
     </p>
+
     {% if page.thumbnail %}
-      <figure class="work-thumb">
-        <img src="{{ page.thumbnail }}" alt="{{ page.title }} サムネイル">
+      <figure class="case-thumb">
+        <img src="{{ page.thumbnail | relative_url }}" alt="{{ page.title }} サムネイル">
       </figure>
     {% endif %}
   </header>
 
-  <section class="work-body">
+  <section class="case-body">
     {{ content }}
   </section>
 
-  <footer class="work-footer">
-    {% if page.excerpt %}
-      <p class="work-excerpt">{{ page.excerpt }}</p>
-    {% endif %}
-    <p><a href="{{ site.baseurl }}/">← トップへ戻る</a></p>
+  <footer class="case-footer">
+    <p><a href="{{ '/cases/' | relative_url }}">← 施工事例一覧へ戻る</a></p>
   </footer>
 </article>
