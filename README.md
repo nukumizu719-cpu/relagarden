@@ -1,14 +1,15 @@
 サイト構成
 _
-includes/
+_includes/
   ├── header.html
   ├── footer.html
   ├── hero.html
-  ├── usp.html          ← 訴求ポイント
-  ├── lineup.html       ← 商品ラインナップ
-  ├── price.html        ← 料金表
-  ├── flow.html         ← 施工の流れ
-  └── problems.html     ← 困りごと
+  ├── top-problems.html     ← 困りごと
+  ├── top-usp.html          ← 訴求ポイント（選ばれる理由）
+  ├── top-lineup.html       ← 商品ラインナップ
+  ├── top-price.html        ← 料金表
+  └── top-flow.html         ← 施工の流れ
+
 
 {% include problems.html %}
 {% include usp.html %}
