@@ -4,11 +4,13 @@ title: ホーム
 ---
 
 {% include hero.html %}
-{% include top-problems.html %}
-{% include top-usp.html %}
-{% include top-lineup.html %}
-{% include top-price.html %}
-{% include top-flow.html %}
+
+<div class="container">
+  {% include top-problems.html %}
+  {% include top-usp.html %}
+  {% include top-lineup.html %}
+  {% include top-price.html %}
+  {% include top-flow.html %}
 
 <section id="top-works">
   <h2>施工事例</h2>

@@ -1,90 +1,42 @@
-:root{--max-width:1100px;--gap:16px}
-*{box-sizing:border-box}
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN",Meiryo, sans-serif;margin:0;color:#222;line-height:1.6}
-.container{max-width:var(--max-width);margin:0 auto;padding:24px}
-.site-header{background:#f7f7f7;border-bottom:1px solid #e6e6e6}
-.site-header .inner{display:flex;align-items:center;justify-content:space-between;max-width:var(--max-width);margin:0 auto;padding:12px}
-.logo{font-weight:700;text-decoration:none;color:#111}
-@media (max-width:600px){
-  .site-header .inner{padding:8px}
-  .container{padding:12px}
+/* -----------------------------------
+   基本設定（デザインシステム）
+----------------------------------- */
+:root {
+  --max-width: 1100px;
+  --gap: 16px;
 }
 
-/* 施工事例グリッド */
-.works-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
+* {
+  box-sizing: border-box;
 }
 
-/* 各事例カード */
-.work-item {
-  background: #fff;
-  border: 1px solid #e6e6e6;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-
-/* 画像 */
-.work-item img {
-  display: block;
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  object-position: center;
-}
-
-/* タイトル・抜粋 */
-.work-item h3 {
-  font-size: 1.05rem;
-  margin: 0.6rem 0 0.3rem;
-  padding: 0 0.8rem;
-}
-.work-item .work-excerpt {
-  font-size: 0.95rem;
-  color: #555;
-  padding: 0 0.8rem 1rem;
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
   margin: 0;
+  color: #222;
+  line-height: 1.6;
 }
 
-/* ホバー効果 */
-.work-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 24px;
 }
 
-/* レスポンシブ調整（小さい画面で画像高さを抑える） */
-@media (max-width: 480px) {
-  .work-item img {
-    height: 120px;
+@media (max-width: 600px) {
+  .container {
+    padding: 12px;
   }
 }
 
-/* お問い合わせボタン */
-.contact-btn {
-  display: inline-block;
-  padding: 1rem 2rem;
-  background: #4CAF50; /* ブランドカラーに合わせて後で調整可 */
-  color: #fff;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  text-align: center;
-  transition: background 0.2s ease, transform 0.2s ease;
-  margin-top: 1.5rem;
-}
-
-.contact-btn:hover {
-  background: #43a047;
-  transform: translateY(-2px);
-}
-
-/* ヘッダー全体 */
+/* -----------------------------------
+   ヘッダー（完全統合版）
+----------------------------------- */
 .site-header {
-  background: #f7f7f7;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #fff;
   border-bottom: 1px solid #e6e6e6;
 }
 
@@ -150,9 +102,181 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic P
   }
 }
 
-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: #fff;
+/* -----------------------------------
+   施工事例グリッド
+----------------------------------- */
+.works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
 }
+
+/* カード */
+.work-item {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+/* 画像 */
+.work-item img {
+  display: block;
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* タイトル・抜粋 */
+.work-item h3 {
+  font-size: 1.05rem;
+  margin: 0.6rem 0 0.3rem;
+  padding: 0 0.8rem;
+}
+.work-item .work-excerpt {
+  font-size: 0.95rem;
+  color: #555;
+  padding: 0 0.8rem 1rem;
+  margin: 0;
+}
+
+/* ホバー */
+.work-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* スマホ画像調整 */
+@media (max-width: 480px) {
+  .work-item img {
+    height: 120px;
+  }
+}
+
+/* -----------------------------------
+   お問い合わせボタン
+----------------------------------- */
+.contact-btn {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: #4CAF50;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+  margin-top: 1.5rem;
+}
+
+.contact-btn:hover {
+  background: #43a047;
+  transform: translateY(-2px);
+}
+
+/* -----------------------------------
+   ヒーローセクション
+----------------------------------- */
+.hero {
+  background: #000;
+  color: #fff;
+}
+
+.hero-slider {
+  position: relative;
+  /*max-width: var(--max-width);
+  margin: 0 auto; */
+  overflow: hidden;
+}
+
+/* 画像 */
+.hero-slider picture,
+.hero-slider img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* オーバーレイ（テキストエリア） */
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2.5rem;
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.55),
+    rgba(0,0,0,0.25),
+    transparent
+  );
+}
+
+/* ヒーロタイトル */
+.hero-title{
+  font-size: 4.6rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0 0 1.2rem;
+  font-family: "Zen Maru Gothic", sans-serif;
+}
+
+/* タイトル・サブコピー */
+.site-title {
+  font-size: 2.1rem;
+  margin: 0 0 0.8rem;
+}
+.site-sub {
+  font-size: 1.05rem;
+  margin: 0 0 1.5rem;
+  max-width: 32rem;
+}
+
+/* ボタン（仮のベース） */
+.btn {
+  display: inline-block;
+  width: auto;        /* ← これが決定打 */
+  align-self: flex-start; /* ← flex で勝手に伸びるのを防ぐ */
+  padding: 0.8rem 1.2rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background: #4CAF50;
+  color: #fff;
+}
+.btn-primary:hover {
+  background: #43a047;
+}
+
+@media (max-width: 700px) {
+  .hero-title {
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  .site-sub {
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+
+  .btn {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .hero-overlay {
+    padding-top: 4rem;
+  }
+}
+
