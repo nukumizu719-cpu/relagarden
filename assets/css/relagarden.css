@@ -54,22 +54,33 @@ body {
   display: flex;
   align-items: center;
 }
+
 .logo-img {
   height: 48px;
 }
 
-/* ナビ */
+/* ナビ（現在は未使用・コメントアウト想定）
 .header-nav {
   display: flex;
   gap: 24px;
 }
+
 .header-nav a {
   text-decoration: none;
   color: #222;
   font-weight: 600;
 }
+
 .header-nav a:hover {
   opacity: 0.7;
+}
+*/
+
+/* 電話 + SNS をまとめて右側に配置 */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 /* 電話情報 */
@@ -78,104 +89,63 @@ body {
   font-size: 0.9rem;
   line-height: 1.3;
 }
+
 .header-contact .tel {
   font-size: 1.1rem;
   font-weight: bold;
   color: #2e7d32;
 }
+
 .header-contact .hours {
   color: #555;
 }
 
-/* スマホ対応 */
+/* 電話リンク */
+.header-contact a {
+  color: #2e7d32;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.header-contact a:hover {
+  opacity: 0.7;
+}
+
+/* SNSアイコン（Instagram / YouTube） */
+.header-instagram img,
+.header-youtube img {
+  width: 40px;
+  height: 40px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.header-instagram,
+.header-youtube {
+  flex-shrink: 0;
+}
+
+/* スマホ対応（ヘッダー） */
 @media (max-width: 700px) {
   .site-header .inner {
     flex-direction: column;
     gap: 8px;
     text-align: center;
   }
-  .header-nav {
-    gap: 16px;
-  }
+
   .header-contact {
     text-align: center;
   }
-}
 
-/* -----------------------------------
-   施工事例グリッド
------------------------------------ */
-.works-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-/* カード */
-.work-item {
-  background: #fff;
-  border: 1px solid #e6e6e6;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-
-/* 画像 */
-.work-item img {
-  display: block;
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  object-position: center;
-}
-
-/* タイトル・抜粋 */
-.work-item h3 {
-  font-size: 1.05rem;
-  margin: 0.6rem 0 0.3rem;
-  padding: 0 0.8rem;
-}
-.work-item .work-excerpt {
-  font-size: 0.95rem;
-  color: #555;
-  padding: 0 0.8rem 1rem;
-  margin: 0;
-}
-
-/* ホバー */
-.work-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
-
-/* スマホ画像調整 */
-@media (max-width: 480px) {
-  .work-item img {
-    height: 120px;
+  .header-contact .tel a {
+    font-size: 1.4rem;
   }
-}
 
-/* -----------------------------------
-   お問い合わせボタン
------------------------------------ */
-.contact-btn {
-  display: inline-block;
-  padding: 1rem 2rem;
-  background: #4CAF50;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  text-align: center;
-  transition: background 0.2s ease, transform 0.2s ease;
-  margin-top: 1.5rem;
-}
-
-.contact-btn:hover {
-  background: #43a047;
-  transform: translateY(-2px);
+  .header-instagram img,
+  .header-youtube img {
+    width: 32px;
+    height: 32px;
+  }
 }
 
 /* -----------------------------------
@@ -188,8 +158,8 @@ body {
 
 .hero-slider {
   position: relative;
-  /*max-width: var(--max-width);
-  margin: 0 auto; */
+
+
   overflow: hidden;
 }
 
@@ -217,8 +187,17 @@ body {
   );
 }
 
-/* ヒーロタイトル */
-.hero-title{
+/* SNSステッカー（右上） */
+.hero-sns {
+  position: absolute;
+  top: 20px;
+  right: 120px;
+  width: 180px;
+  z-index: 10;
+}
+
+/* ヒーロータイトル */
+.hero-title {
   font-size: 4.6rem;
   font-weight: 700;
   line-height: 1.25;
@@ -231,17 +210,19 @@ body {
   font-size: 2.1rem;
   margin: 0 0 0.8rem;
 }
+
 .site-sub {
-  font-size: 1.05rem;
+  font-size: 2rem;
   margin: 0 0 1.5rem;
-  max-width: 32rem;
+  max-width: 50rem;
+  font-family: "Zen Maru Gothic", sans-serif;
 }
 
-/* ボタン（仮のベース） */
+/* ボタン（共通） */
 .btn {
   display: inline-block;
-  width: auto;        /* ← これが決定打 */
-  align-self: flex-start; /* ← flex で勝手に伸びるのを防ぐ */
+  width: auto;
+  align-self: flex-start;
   padding: 0.8rem 1.2rem;
   border-radius: 999px;
   text-decoration: none;
@@ -253,30 +234,760 @@ body {
   background: #4CAF50;
   color: #fff;
 }
+
 .btn-primary:hover {
   background: #43a047;
 }
 
+/* ヒーロー スマホ対応 */
 @media (max-width: 700px) {
+  /* SNSステッカーはスマホでは邪魔なので非表示 */
+  .hero-sns {
+    display: none;
+  }
+
   .hero-title {
-    font-size: 1rem;
+    font-size: 1.6rem;
     line-height: 1.3;
+    margin-bottom: 0.6rem;
   }
 
   .site-sub {
-    font-size: 0.8rem;
-    line-height: 1.6;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.8rem;
   }
 
   .btn {
-    font-size: 1rem;
-    padding: 0.7rem 1.2rem;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.1rem;
   }
+
+  .hero-overlay {
+    padding: 1.5rem 1.2rem 1.5rem;
+  }
+
+  .hero-slider img {
+    object-fit: cover;
+    height: 70vh;
+  }
+}
+
+/* -----------------------------------
+   悩みセクション
+----------------------------------- */
+.problems {
+  background: #f7f7f7;
+  padding: 80px 0;
+}
+
+.problems h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: #333;
+}
+
+/* 「＼ こんなお悩みはありませんか？ ／」 */
+.problems-title {
+  position: relative;
+  display: block;
+  width: fit-content;
+  margin: 0 auto 40px;
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
+  font-family: "Zen Maru Gothic", sans-serif;
+  padding: 0 40px;
+}
+
+.problems-title::before {
+  content: "＼";
+  color: #2e7d32;
+  font-weight: 700;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.problems-title::after {
+  content: "／";
+  color: #2e7d32;
+  font-weight: 700;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+/* リスト全体 */
+.problems ul {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+/* 各項目 */
+.problems li {
+  background: #fff;
+  padding: 20px 24px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+/* チェックアイコン */
+.problems li::before {
+  content: "✔";
+  color: #2e7d32;
+  font-weight: bold;
+  font-size: 1.3rem;
+  margin-top: 2px;
+}
+
+/* 悩みセクションの締めコピー */
+.problems-solution {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-top: 40px;
+  padding: 20px 0;
+  border-top: 2px solid #2e7d32;
+  border-bottom: 2px solid #2e7d32;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  font-family: "Zen Maru Gothic", sans-serif;
+}
+
+/* 悩み スマホ対応 */
+@media (max-width: 700px) {
+  .problems ul {
+    grid-template-columns: 1fr;
+  }
+
+  .problems-title {
+    font-size: 1.3rem;
+    padding: 0 24px;
+    white-space: nowrap; /* 1行に収める */
+  }
+
+  .problems-solution {
+    font-size: 0.5rem;
+    white-space: nowrap; /* 1行に収める */
+  }
+}
+
+/* -----------------------------------
+   USPセクション
+----------------------------------- */
+.usp {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.usp h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 50px;
+  color: #333;
+}
+
+/* USPリスト（3つ横並び） */
+.usp-list {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  padding: 0 24px;
+}
+
+/* 各USPカード */
+.usp-item {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 28px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* USPタイトル */
+.usp-item h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+/* USP本文 */
+.usp-item p {
+  color: #444;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+/* USP スマホ対応 */
+@media (max-width: 700px) {
+  .usp-list {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* -----------------------------------
+   ラインナップ
+----------------------------------- */
+.lineup {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.lineup h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 50px;
+  color: #333;
+}
+
+/* 3つ横並び */
+.lineup-list {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  padding: 0 24px;
+}
+
+/* カード本体 */
+.lineup-item {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* タイトル */
+.lineup-item h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 説明文 */
+.lineup-item p {
+  color: #444;
+  line-height: 1.7;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* 画像 */
+.lineup-item img {
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-top: 16px;
+}
+
+/* ラインナップ スマホ対応 */
+@media (max-width: 700px) {
+  .lineup-list {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* -----------------------------------
+   料金セクション
+----------------------------------- */
+.price {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.price h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #333;
+}
+
+.price > p {
+  text-align: center;
+  color: #555;
+  font-size: 1rem;
+  margin-bottom: 40px;
+}
+
+/* テーブル */
+.price-table {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 30px;
+  border-collapse: collapse;
+  font-size: 1rem;
+  color: #333;
+}
+
+.price-table th,
+.price-table td {
+  padding: 16px 20px;
+  border: 1px solid #e5e5e5;
+  text-align: left;
+}
+
+/* 見出しセル */
+.price-table th {
+  background: #f3f3f3;
+  font-weight: 700;
+}
+
+/* 交互背景 */
+.price-table tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+/* 料金部分を強調 */
+.price-table td:last-child {
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+/* 注意書き */
+.price-note {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 10px;
+}
+
+/* -----------------------------------
+   施工の流れ
+----------------------------------- */
+.flow {
+  background: #fff;
+  padding: 80px 0;
+}
+
+.flow h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 50px;
+  color: #333;
+}
+
+/* リスト全体 */
+.flow-list {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+  list-style: none;
+  counter-reset: step;
+}
+
+/* 各ステップ */
+.flow-list li {
+  position: relative;
+  padding-left: 70px;
+  padding-bottom: 40px;
+  border-left: 2px solid #e5e5e5;
+}
+
+/* 最後のステップはラインを消す */
+.flow-list li:last-child {
+  border-left: none;
+  padding-bottom: 0;
+}
+
+/* ステップ番号（丸） */
+.flow-list li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: -18px;
+  top: 0;
+  width: 36px;
+  height: 36px;
+  background: #2e7d32;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* タイトル */
+.flow-list h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 8px;
+}
+
+/* 説明文 */
+.flow-list p {
+  color: #444;
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+/* -----------------------------------
+   施工事例（トップページ用）
+----------------------------------- */
+.top-works {
+  padding: 80px 0;
+  background: #fff;
+}
+
+.top-works h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+  color: #333;
+}
+
+/* Instagram 最新投稿（SnapWidget） */
+.insta-latest {
+  max-width: 1000px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+.insta-latest iframe {
+  height: 510px;
+  width: 100%;
+  max-width: 765px;
+  margin: 0 auto;
+  display: block;
+}
+
+/* もっと見るボタン */
+.works-more {
+  text-align: center;
+  margin-top: 40px;
+}
+
+/* Instagramボタン（グラデーション） */
+.btn-instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 32px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 30px;
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  background-size: 300% 300%;
+  transition: background-position 0.4s ease, transform 0.2s ease;
+}
+
+.btn-instagram:hover {
+  background-position: right center;
+  transform: translateY(-3px);
+}
+
+/* Instagramアイコン（CSSで再現） */
+.insta-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #fff 15%, transparent 16%),
+              linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  position: relative;
+}
+
+/* レンズ部分 */
+.insta-icon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* フラッシュ部分 */
+.insta-icon::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+/* 施工事例 スマホ調整（余白を詰める） */
+@media (max-width: 700px) {
+  .insta-latest iframe {
+    height: 300px;
+  }
+
+  .insta-latest {
+    margin: 0 auto 8px; /* ← 下の余白を8pxにする（ここが本命） */
+  }
+
+  .works-more {
+    margin-top: 0; /* ← ここは0でOK */
+  }
+}
+
+/* -----------------------------------
+   お問い合わせ（トップ用）
+----------------------------------- */
+.top-contact {
+  padding: 80px 0;
+  background: #f7f7f7;
+  text-align: center;
+}
+
+.top-contact h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #333;
+}
+
+.top-contact a {
+  text-decoration: none;
+}
+
+/* お問い合わせボタン（共通で使える） */
+.contact-btn {
+  display: inline-block;
+  padding: 1rem 2rem;
+  background: #4CAF50;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+  margin-top: 1.5rem;
+}
+
+.contact-btn:hover {
+  background: #43a047;
+  transform: translateY(-2px);
+}
+
+/* -----------------------------------
+   固定お問い合わせボタン
+----------------------------------- */
+.floating-contact {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  z-index: 999;
+}
+
+/* 表示状態 */
+.floating-contact.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ボタンの見た目（既存の contact-btn を流用） */
+.floating-contact .contact-btn {
+  padding: 1rem 1.6rem;
+  font-size: 1rem;
+  border-radius: 50px;
+}
+
+/* -----------------------------------
+   フッター
+----------------------------------- */
+.site-footer {
+  background: #333;
+  color: #fff;
+  padding: 40px 0;
+}
+
+.site-footer .inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+/* 左右ロゴ */
+.footer-logo-left img,
+.footer-logo-right img {
+  width: 120px;
+  height: auto;
+  display: block;
+}
+
+/* 中央テキスト */
+.footer-info {
+  text-align: center;
+  flex: 0 1 auto;
+}
+
+.footer-info p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+
+/* コピーライト */
+.footer-copy {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 0.85rem;
+  color: #ccc;
 }
 
 @media (max-width: 700px) {
-  .hero-overlay {
-    padding-top: 4rem;
+
+  .site-footer .inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px; /* ← 余白を詰める */
+  }
+
+  /* 並び順を入れ替える */
+  .footer-logo-right {
+    order: 1;
+  }
+
+  .footer-info {
+    order: 2;
+  }
+
+  .footer-logo-left {
+    order: 3;
+  }
+
+  /* 左ロゴだけ調整 */
+  .footer-logo-left img {
+    width: 300px; /* ← 好きなサイズに変更可能 */
+    margin-bottom: 4px; /* ← 下の余白を少しだけ */
+  }
+
+  /* 右ロゴだけ調整 */
+  .footer-logo-right img {
+    width: 80px; /* ← 左と別サイズにできる */
+    margin-top: -30px; /* ← 右ロゴを上に引き上げる（重要） */
   }
 }
 
+
+/* -----------------------------------
+   スマホ全体の余白調整
+----------------------------------- */
+@media (max-width: 700px) {
+  .problems,
+  .usp,
+  .lineup,
+  .price,
+  .flow,
+  .top-works,
+  .top-contact {
+    padding: 40px 0;
+  }
+}
+
+/* -----------------------------------
+   スマホ最終調整
+----------------------------------- */
+@media (max-width: 700px) {
+
+  /* ヘッダー */
+  .site-header .inner {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .header-contact {
+    text-align: center;
+  }
+
+  .header-instagram img,
+  .header-youtube img {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* ヒーロー */
+  .hero-sns { display: none; }
+  .hero-title { font-size: 1.6rem; margin-bottom: 0.6rem; }
+  .site-sub { font-size: 0.95rem; margin-bottom: 0.8rem; }
+  .btn { font-size: 0.9rem; padding: 0.6rem 1.1rem; }
+  .hero-overlay { padding: 1.5rem; }
+  .hero-slider img { height: 70vh; object-fit: cover; }
+
+  /* 悩み */
+  .problems ul { grid-template-columns: 1fr; }
+
+  .problems-title {
+    font-size: 1.2rem !important;
+    padding: 0 16px;
+    white-space: nowrap;
+  }
+
+  .problems-solution {
+    font-size: 1.2rem !important;
+    white-space: nowrap;
+  }
+
+  /* Instagram */
+  .insta-latest { margin: 24px auto; }
+  .works-more { margin-top: 20px; }
+
+  /* 固定ボタン */
+  .floating-contact { bottom: 12px; right: 12px; }
+  .floating-contact .contact-btn { font-size: 0.9rem; }
+
+  /* セクション余白 */
+  .problems,
+  .usp,
+  .lineup,
+  .price,
+  .flow,
+  .top-works,
+  .top-contact {
+    padding: 40px 0;
+  }
+}

@@ -29,11 +29,7 @@ github_username:  ""
 # Build settings
 plugins:
   - jekyll-feed
-
-#コレクション設定
-collections:
-  works:
-    output: true
+  
 
 
 # Exclude from processing.

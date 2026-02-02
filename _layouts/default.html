@@ -18,7 +18,6 @@
 
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
 
-    <!-- OGP basic -->  
   <meta property="og:site_name" content="{{ site.title }}">
 
   {% if page.url == "/" %}
@@ -46,29 +45,12 @@
   {% else %}
     <meta property="og:image" content="{{ site.url }}/assets/images/og-default.jpg">
   {% endif %}
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "headline": "{{ page.title }}",
-    "description": "{{ page.excerpt | strip_html | strip_newlines }}",
-    "image": "{{ site.url }}{{ page.thumbnail }}",
-    "datePublished": "{{ page.date | date_to_xmlschema }}",
-    "publisher": {
-      "@type": "Organization",
-      "name": "{{ site.title }}",
-      "logo": {
-        "@type": "ImageObject",
-        "url": "{{ site.url }}/favicon.png"
-      }
-    }
-  }
-  </script>
-  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
 
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="stylesheet" href="{{ '/assets/css/relagarden.css' | relative_url }}">
 </head>
+
 <body>
 
   {% include header.html %}
@@ -77,7 +59,36 @@
     {{ content }}
   </main>
 
+  <!-- 固定お問い合わせボタン -->
+  <div class="floating-contact">
+    <a href="/contact/" class="contact-btn">お問い合わせフォームはこちら</a>
+  </div>
+
   {% include footer.html %}
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const btn = document.querySelector(".floating-contact");
+    const contact = document.querySelector("#contact");
+
+    window.addEventListener("scroll", () => {
+      const scroll = window.scrollY;
+      const contactTop = contact.getBoundingClientRect().top;
+
+      // スクロールで出す
+      if (scroll > 150) {
+        btn.classList.add("show");
+      } else {
+        btn.classList.remove("show");
+      }
+
+      // top-contact が画面に入ったら消す
+      if (contactTop < window.innerHeight) {
+        btn.classList.remove("show");
+      }
+    });
+  });
+  </script>
 
 </body>
 </html>

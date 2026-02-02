@@ -1,6 +1,12 @@
 <footer class="site-footer">
   <div class="inner">
 
+    <!-- 左ロゴ -->
+    <div class="footer-logo-left">
+      <img src="/assets/images/logo.png" alt="RelaGarden ロゴ">
+    </div>
+
+    <!-- 中央の会社情報 -->
     <div class="footer-info">
       <p class="footer-title">リラガーデン（RelaGarden）</p>
       <p class="footer-company">運営会社：FOURTEEN HEARTS</p>
@@ -8,9 +14,14 @@
       <p class="footer-tel">電話番号：090-2133-4003</p>
     </div>
 
-    <div class="footer-copy">
-      <p>&copy; {{ site.time | date: "%Y" }} RelaGarden</p>
+    <!-- 右ロゴ -->
+    <div class="footer-logo-right">
+      <img src="/assets/images/footer.png" alt="FOURTEEN HEARTS ロゴ">
     </div>
 
+  </div>
+
+  <div class="footer-copy">
+    <p>&copy; {{ site.time | date: "%Y" }} RelaGarden</p>
   </div>
 </footer>
