@@ -400,7 +400,7 @@ body {
 
 .usp h2 {
   text-align: center;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin-bottom: 50px;
   color: #333;
@@ -851,18 +851,28 @@ body {
   gap: 40px;
 }
 
+/* 左右ロゴを固定幅にしてバランスをとる */
+.footer-logo-left,
+.footer-logo-right {
+  flex: 0 0 300px;
+  display: flex;
+  justify-content: center;
+}
+
 /* 左右ロゴ */
-.footer-logo-left img,
-.footer-logo-right img {
-  width: 120px;
+.footer-logo-left img{
+  width: 300px;
   height: auto;
-  display: block;
+}
+.footer-logo-right img {
+  width: 200px;
+  height: auto;
 }
 
 /* 中央テキスト */
 .footer-info {
   text-align: center;
-  flex: 0 1 auto;
+  flex: 1;
 }
 
 .footer-info p {
@@ -877,41 +887,60 @@ body {
   font-size: 0.85rem;
   color: #ccc;
 }
-
 @media (max-width: 700px) {
 
-  .site-footer .inner {
-    flex-direction: column;
-    text-align: center;
-    gap: 10px; /* ← 余白を詰める */
+  /* フッター全体 */
+  .site-footer {
+    padding: 10px 0; /* 完全0だと詰まりすぎるので最低限 */
   }
 
-  /* 並び順を入れ替える */
+  /* フッター内部：縦並び＋高さ事故防止 */
+  .site-footer .inner {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* ← 高さ300px事故を殺す */
+    text-align: center;
+    gap: 8px;
+  }
+
+  /* 並び順 */
   .footer-logo-right {
     order: 1;
   }
 
   .footer-info {
     order: 2;
+    margin: 0;
   }
 
   .footer-logo-left {
     order: 3;
   }
 
-  /* 左ロゴだけ調整 */
-  .footer-logo-left img {
-    width: 300px; /* ← 好きなサイズに変更可能 */
-    margin-bottom: 4px; /* ← 下の余白を少しだけ */
+  /* ロゴ親：flex指定を完全解除 */
+  .footer-logo-left,
+  .footer-logo-right {
+    flex: none;          /* ← 最重要 */
+    width: auto;
+    height: auto;
+    min-height: 0;
+    line-height: 0;      /* ← img下の謎余白対策 */
+    display: flex;
+    justify-content: center;
   }
 
-  /* 右ロゴだけ調整 */
+  /* ロゴ画像：実体サイズを物理的に固定 */
+  .footer-logo-left img,
   .footer-logo-right img {
-    width: 80px; /* ← 左と別サイズにできる */
-    margin-top: -30px; /* ← 右ロゴを上に引き上げる（重要） */
+    display: block;
+    width: 100px;        /* ← 必ず単位つける */
+    height: auto;        /* ← 縦横比維持 */
+    max-height: 100px;   /* ← 見えない縦箱防止 */
+    object-fit: contain;
+    margin: 0;
   }
-}
 
+}
 
 /* -----------------------------------
    スマホ全体の余白調整
