@@ -1,0 +1,113 @@
+---
+---
+<section class="top-contact-section" id="contact">
+  <div class="container">
+    <h2 class="section-title">お問い合わせ</h2>
+    <div class="contact-content">
+      <p class="contact-lead">
+        人工芝の施工、製品に関するご相談・お見積りは、<br class="pc-only">
+        以下のフォームよりお気軽にお問い合わせください。
+      </p>
+      <div class="button-wrapper">
+        <a href="/contact/" class="contact-cta-button">
+          お問い合わせフォームはこちら
+          <span class="arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<a href="/contact/" id="floating-cta" class="floating-cta">
+  <span class="cta-icon">✉</span>
+  <span class="cta-text">無料相談・見積り</span>
+</a>
+
+<style>
+  /* --- 通常セクションのスタイル (前回同様) --- */
+  .top-contact-section {
+    padding: 80px 24px;
+    background-color: #f7f7f7;
+    text-align: center;
+  }
+  .section-title { font-size: 2.2rem; font-weight: bold; margin-bottom: 30px; color: #333; font-family: 'Zen Maru Gothic', sans-serif; }
+  .contact-cta-button {
+    display: inline-flex; align-items: center; padding: 20px 50px;
+    background-color: #2e7d32; color: #fff !important; text-decoration: none;
+    font-size: 1.4rem; font-weight: bold; border-radius: 12px; transition: all 0.3s;
+  }
+
+  /* --- 追従ボタンのスタイル --- */
+  .floating-cta {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 2000; /* ヘッダーより上 */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 25px;
+    background:rgb(34, 129, 42); /* 目立つmidori */
+    color: #fff !important;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    
+    /* 初期状態：下に隠しておく */
+    transform: translateY(150%);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+  }
+
+  /* クラスがついた時にニョキっと出る */
+  .floating-cta.is-visible {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .cta-icon { font-size: 1.4rem; }
+
+  @media (max-width: 700px) {
+    .floating-cta {
+      right: 15px; bottom: 15px; padding: 12px 20px; font-size: 0.9rem;
+    }
+  }
+</style>
+
+<script is:inline>
+  const floatingBtn = document.getElementById('floating-cta');
+  const contactSection = document.getElementById('contact');
+
+  // 1. スクロール開始でボタンを表示する制御
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 300) {
+      // TopContactセクションが視界に入っていない時だけ表示クラスをつける
+      const rect = contactSection.getBoundingClientRect();
+      if (rect.top > window.innerHeight) {
+        floatingBtn.classList.add('is-visible');
+      }
+    } else {
+      floatingBtn.classList.remove('is-visible');
+    }
+  });
+
+  // 2. Intersection Observer で TopContact 領域に入ったら消す制御
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // セクションに入ったらフェードアウト
+        floatingBtn.classList.remove('is-visible');
+      } else {
+        // セクションから出たとき、かつ一定以上スクロールされていれば再表示
+        if (window.scrollY > 300) {
+          floatingBtn.classList.add('is-visible');
+        }
+      }
+    });
+  }, {
+    threshold: 0.1 // 10%でもセクションが見えたら反応
+  });
+
+  observer.observe(contactSection);
+</script>

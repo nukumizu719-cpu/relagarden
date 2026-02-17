@@ -1,0 +1,278 @@
+---
+const steps = [
+  { 
+    id: "01", 
+    title: "整地", 
+    highlightColor: "#aee0dd", 
+    desc: "雑草処理⇒水勾配墨出し山砂で整地⇔転圧を3、4回繰り返す。弊社のこだわりは、長尺の定規で限りなく凹凸がない整地です！",
+    img: "/assets/images/seiti.png",
+    prices: [
+      { label: "雑草なし", val: "1,500円/㎡" },
+      { label: "雑草あり", val: "2,000円/㎡" },
+      { label: "天然芝、砂利", val: "2,500円/㎡" },
+      { label: "残土処分", val: "10,000円/㎡" },
+      { label: "天然芝処分", val: "20,000円/㎡" }
+    ]
+  },
+  { 
+    id: "02", 
+    title: "防草シート施工", 
+    highlightColor: "#fff59d", 
+    desc: "耐候年数10～13年の防草シートを1～2mm余尺を確保し、隅から光が入らないように丁寧に敷いていきます。",
+    img: "/assets/images/bososeet.png",
+    note: "※耐候年数13～14年",
+    prices: [
+      { label: "人工芝用", val: "400円/㎡" },
+      { label: "砂利敷用", val: "500円/㎡" },
+      { label: "厄介な雑草用", val: "600円/㎡" },
+      { label: "シート張り工賃", val: "500円/㎡" }
+    ]
+  },
+  { 
+    id: "03", 
+    title: "人工芝施工", 
+    highlightColor: "#a5d6a7", 
+    desc: "お子様・愛犬の遊び場・雑草対策・景観用それぞれ用途に合った人工芝をご提案します。継ぎ目を感じさせない美しさが自慢です。",
+    img: "/assets/images/jinkoshiba.png",
+    note: "※耐候年数別",
+    prices: [
+      { label: "3～5年", val: "1,000～2,000円/㎡" },
+      { label: "7～8年", val: "2,500～3,000円/㎡" },
+      { label: "10年以上", val: "4,000～5,000円/㎡" },
+      { label: "人工芝設置工賃", val: "2,500円/㎡" }
+    ]
+  }
+];
+---
+
+<section class="flow-section">
+  <div class="container">
+    <h2 class="section-title">施工の流れと料金目安</h2>
+
+    {/* ステップ3列グリッド */}
+    <div class="flow-grid">
+      {steps.map((step) => (
+        <div class="flow-column">
+          <div class="flow-header">
+            <span class="flow-number">{step.id}</span>
+            <h3 class="flow-step-title">
+              <span class="marker" style={`background: linear-gradient(transparent 65%, ${step.highlightColor} 65%);`}>
+                {step.title}
+              </span>
+            </h3>
+          </div>
+          
+          <div class="flow-text-area">
+            <p>{step.desc}</p>
+          </div>
+          
+          <div class="flow-image-area">
+            <img src={step.img} alt={step.title} loading="lazy" />
+          </div>
+          
+          <div class="flow-price-area">
+            {step.note && <p class="price-note">{step.note}</p>}
+            <ul class="price-list">
+              {step.prices.map((p) => (
+                <li>
+                  <span class="p-label">● {p.label}</span>
+                  <span class="p-val">{p.val}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    {/* 合計目安：シンプル1行 */}
+    <div class="total-minimal-summary">
+      <div class="summary-line">
+        <span class="s-label">施工金額目安</span>
+        <span class="s-price">8,000<small>円</small> ～ 12,000<small>円/㎡</small></span>
+        <span class="s-warranty">※5年間の施工保証付き！</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* 基本設定 */
+  .flow-section {
+    padding: 80px 0;
+    background-color: #ffffff;
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  }
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  .section-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 60px;
+    color: #333;
+  }
+
+  /* 3列グリッド (PC時) */
+  .flow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-bottom: 50px;
+  }
+
+  .flow-column {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .flow-header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  .flow-number {
+    display: block;
+    font-family: serif;
+    font-size: 2.2rem;
+    color: #2e7d32;
+    font-style: italic;
+    line-height: 1;
+    margin-bottom: 5px;
+    opacity: 0.5;
+  }
+
+  .flow-step-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0;
+  }
+
+  .marker {
+    display: inline-block;
+    padding: 0 10px;
+  }
+
+  /* コンテンツエリア */
+  .flow-text-area {
+    background-color: #f8fafb;
+    padding: 25px;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    border: 1px solid #edf2f4;
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .flow-text-area p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #444;
+    margin: 0;
+  }
+
+  .flow-image-area {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+  }
+
+  .flow-image-area img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .flow-price-area {
+    padding: 25px;
+    background-color: #fff;
+    border: 1px solid #edf2f4;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    flex-grow: 1;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.02);
+  }
+
+  .price-note {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 15px;
+  }
+
+  .price-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .price-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 0.9rem;
+  }
+
+  .price-list li:last-child {
+    border-bottom: none;
+  }
+
+  .p-label { color: #666; }
+  .p-val { font-weight: 900; color: #111; }
+
+  /* 合計目安エリア */
+  .total-minimal-summary {
+    border-top: 2px solid #2e7d32;
+    padding-top: 30px;
+    text-align: center;
+  }
+
+  .summary-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    font-weight: 700;
+  }
+
+  .s-label { font-size: 1rem; color: #888; }
+  .s-price { font-size: 2.2rem; color: #2e7d32; font-weight: 900; }
+  .s-price small { font-size: 1rem; margin: 0 4px; }
+  .s-warranty {
+    font-size: 0.9rem;
+    color: #2e7d32;
+    background-color: #f1f8f3;
+    padding: 6px 18px;
+    border-radius: 50px;
+  }
+
+  /* スマホ対応 */
+  @media (max-width: 900px) {
+    .flow-grid {
+      grid-template-columns: 1fr; /* 縦並びに強制 */
+      gap: 40px;
+    }
+    
+    .summary-line {
+      flex-direction: column; /* 合計エリアも縦並びに */
+      align-items: center;
+      gap: 10px;
+    }
+
+    .s-price {
+      font-size: 1.8rem;
+    }
+
+    .flow-text-area {
+      min-height: auto;
+      padding: 20px;
+    }
+  }
+</style>

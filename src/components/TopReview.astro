@@ -1,0 +1,110 @@
+---
+interface Props {
+  link?: string;
+  imagePath?: string;
+}
+
+const { 
+  link = "https://curama.jp/617865852/review/", 
+  imagePath = "/assets/images/くらしのマーケット.png" 
+} = Astro.props;
+---
+
+<section class="review-section">
+  <div class="container">
+    <div class="review-feedback-inner">
+      {/* 斜めロゴ */}
+      <div class="feedback-logo-wrap">
+        <img src={imagePath} alt="くらしのマーケット" class="feedback-img" />
+      </div>
+      
+      {/* テキスト */}
+      <p class="feedback-catch">＼ 実際に施工されたお客様の声 ／</p>
+      
+      {/* ボタン */}
+      <a href={link} target="_blank" rel="noopener noreferrer" class="feedback-btn">
+        リアルな評価はここから
+        <span class="feedback-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .review-section {
+    padding: 60px 0 100px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    width: 100%;
+    max-width: 500px;
+    padding: 0 24px;
+  }
+  .review-feedback-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  /* ロゴ：斜め10度 */
+  .feedback-logo-wrap {
+    width: 200px;
+    margin-bottom: 15px;
+    transform: rotate(-10deg);
+    transition: transform 0.3s ease;
+  }
+  .review-feedback-inner:hover .feedback-logo-wrap {
+    transform: rotate(-5deg) scale(1.05);
+  }
+  .feedback-img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .feedback-catch {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #555;
+    margin-bottom: 25px;
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+
+  /* ボタン */
+  .feedback-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2e7d32;
+    color: #fff !important;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 900;
+    padding: 16px 45px;
+    border-radius: 100px;
+    box-shadow: 0 4px 15px rgba(46, 125, 50, 0.25);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  .feedback-btn:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(46, 125, 50, 0.35);
+  }
+  .feedback-arrow { margin-left: 12px; }
+
+  /* スマホ対応 */
+  @media (max-width: 600px) {
+    .feedback-logo-wrap { width: 160px; }
+    .feedback-catch { font-size: 1rem; }
+    .feedback-btn { 
+      width: 100%; 
+      padding: 14px 20px; 
+      font-size: 1rem; 
+    }
+  }
+</style>

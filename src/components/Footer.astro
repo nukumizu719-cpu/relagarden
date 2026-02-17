@@ -1,0 +1,134 @@
+---
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="container footer-inner">
+    
+    <div class="footer-section footer-logo-area">
+      <img src="/assets/images/logo.png" alt="RelaGarden" class="footer-logo" />
+    </div>
+
+    <div class="footer-section footer-info-area">
+      <p class="brand-name">リラガーデン (RelaGarden)</p>
+      <p class="company-name">運営：FOURTEEN HEARTS</p>
+      <p class="address">愛知県岡崎市森越町字与治43</p>
+    </div>
+
+    <div class="footer-section footer-icon-area">
+      <img src="/assets/images/footer.png" alt="Corporate Icon" class="footer-corp-icon" />
+    </div>
+
+  </div>
+
+  <div class="footer-copy">
+    <div class="container">
+      <nav class="footer-nav">
+        <a href="/privacy/">プライバシーポリシー</a>
+      </nav>
+      <p class="copyright">&copy; {year} RelaGarden All Rights Reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background-color: #333;
+    color: #ffffff;
+    padding: 60px 0 0 0;
+  }
+
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+    gap: 60px; 
+    padding-bottom: 40px;
+  }
+
+  .footer-section {
+    flex: 0 1 auto; 
+  }
+
+  /* ロゴ設定 */
+  .footer-logo {
+    width: 200px;
+    height: auto;
+    filter: grayscale(1) brightness(3);
+    display: block;
+  }
+
+  /* 会社情報 */
+  .footer-info-area {
+    text-align: center;
+    min-width: 250px;
+  }
+
+  .brand-name, .company-name {
+    font-size: 0.95rem;
+    margin: 0 0 5px 0;
+    font-weight: bold;
+  }
+
+  .address {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin: 0;
+  }
+
+  /* コーポレートアイコン */
+  .footer-corp-icon {
+    width: 100px;
+    height: auto;
+    display: block;
+    filter: brightness(0.8);
+  }
+
+  /* コピーライト & ナビエリア */
+  .footer-copy {
+    text-align: center;
+    padding: 30px 0; /* 上下の余白を少し広げてゆとりを持たせる */
+    border-top: 1px solid #444;
+  }
+
+  .footer-nav {
+    margin-bottom: 12px;
+  }
+
+  .footer-nav a {
+    color: #ffffff; /* 白文字に指定 */
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* さりげない下線 */
+    padding-bottom: 2px;
+  }
+
+  .footer-nav a:hover {
+    opacity: 0.7; /* ホバー時に少し透過させて反応を示す */
+    border-bottom-color: #ffffff;
+  }
+
+  .copyright {
+    font-size: 0.75rem;
+    color: #aaaaaa; /* コピーライトは少し落として情報の優先度を下げる */
+    margin: 0;
+  }
+
+  /* モバイル対応 (700px以下) */
+  @media (max-width: 700px) {
+    .footer-inner {
+      flex-direction: column;
+      gap: 30px;
+      padding-bottom: 30px;
+    }
+    
+    .footer-icon-area { order: 1; }
+    .footer-info-area { order: 2; }
+    .footer-logo-area { order: 3; }
+
+    .footer-logo, .footer-corp-icon {
+      margin: 0 auto;
+    }
+  }
+</style>

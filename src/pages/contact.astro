@@ -1,0 +1,342 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+
+const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
+---
+
+<BaseLayout pageTitle={pageTitle}>
+  <Header slot="header-slot" />
+
+  <div class="contact-page-container">
+    <div class="contact-header">
+      <h1 class="contact-title">お問い合わせ</h1>
+      <p class="contact-intro">
+        人工芝施工・購入に関するご相談は、こちらのフォームよりお気軽にお寄せください。<br>
+        必要事項をご入力のうえ、送信をお願いいたします。
+      </p>
+      <p class="required-note">（<span class="red">*</span>は必須項目です）</p>
+    </div>
+
+    {/* Cloudflare Turnstile Script */}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+    <form id="contactForm" novalidate class="contact-form">
+      
+      <div class="form-group">
+        <label>お名前 <span class="badge-required">必須</span></label>
+        <input name="name" type="text" required autocomplete="name" placeholder="例：芝生 太郎" />
+      </div>
+
+      <div class="form-group">
+        <label>フリガナ <span class="badge-required">必須</span></label>
+        <input name="furigana" type="text" required autocomplete="off" placeholder="例：シバフ タロウ" />
+      </div>
+
+      <div class="form-group">
+        <label>メールアドレス <span class="badge-required">必須</span></label>
+        <input name="email" type="email" required autocomplete="email" placeholder="example@mail.com" />
+      </div>
+
+      <div class="form-group">
+        <label>メールアドレス（確認用） <span class="badge-required">必須</span></label>
+        <input name="email_confirm" type="email" required autocomplete="email" placeholder="もう一度入力してください" />
+      </div>
+
+      <div class="form-group">
+        <label>電話番号 <span class="badge-optional">任意</span></label>
+        <input name="phone" type="tel" autocomplete="tel" placeholder="例：090-1234-5678" />
+      </div>
+
+      {/* --- 追加項目：住所 --- */}
+      <div class="form-group">
+        <label>住所 <span class="badge-optional">任意</span></label>
+        <input name="address" type="text" autocomplete="street-address" placeholder="例：愛知県岡崎市〇〇町1-2-3" />
+      </div>
+
+      <div class="form-group">
+        <label>お問い合わせ内容 <span class="badge-required">必須</span></label>
+        <select name="category" required>
+          <option value="">選択してください</option>
+          <option value="turf_construction_inquiry">人工芝施工のお問い合わせ</option>
+          <option value="turf_purchase_inquiry">人工芝購入のお問い合わせ</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>内容 <span class="badge-required">必須</span></label>
+        <textarea name="message" rows="7" required placeholder="具体的なご要望や、施工場所の広さなどをご記入ください"></textarea>
+      </div>
+
+      {/* Honeypot field (Spam protection) */}
+      <div style="display:none;">
+        <label>Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+      </div>
+
+      <input type="hidden" name="token" id="tokenField" value="">
+      <input type="hidden" name="startedAt" id="startedAtField" value="">
+
+      <div class="captcha-wrapper">
+        <div class="cf-turnstile" data-sitekey="0x4AAAAAACXZKzxGEevYcIf2"></div>
+      </div>
+
+      <button type="submit" id="submitBtn" class="submit-button">
+        入力内容を送信する
+      </button>
+      
+      <p id="status" class="status-message"></p>
+    </form>
+  </div>
+</BaseLayout>
+
+<style>
+  .contact-page-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    background-color: #fcfcfc;
+  }
+
+  .contact-header {
+    max-width: 700px;
+    margin: 0 auto 40px;
+    text-align: center;
+  }
+
+  .contact-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 20px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .contact-intro {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.8;
+  }
+
+  .required-note {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 10px;
+  }
+
+  .red { color: #d32f2f; }
+
+  /* フォームデザイン */
+  .contact-form {
+    max-width: 700px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+
+  .form-group {
+    margin-bottom: 24px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 1rem;
+  }
+
+  .badge-required {
+    background: #d32f2f;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .badge-optional {
+    background: #999;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .form-group input, 
+  .form-group select, 
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: #fafafa;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .form-group input:focus, 
+  .form-group select:focus, 
+  .form-group textarea:focus {
+    border-color: #4CAF50;
+    background: #fff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  }
+
+  .captcha-wrapper {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .submit-button {
+    width: 100%;
+    padding: 16px;
+    background: #2e7d32;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 0 #1b5e20;
+  }
+
+  .submit-button:hover {
+    background: #388e3c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #1b5e20;
+  }
+
+  .submit-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0;
+  }
+
+  .submit-button:disabled {
+    background: #ccc;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .status-message {
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
+    min-height: 1.5em;
+  }
+
+  @media (max-width: 700px) {
+    .contact-page-container { padding: 40px 15px; }
+    .contact-form { padding: 25px 20px; }
+    .contact-title { font-size: 1.8rem; }
+  }
+</style>
+
+<script is:inline>
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbyLMiBdx8mhFKavAdvrotnnnDj0YhSVLpi7SMLURXNXPJhRsps-2FbPF0L3hagV_2Rz/exec";
+  const MIN_FILL_MS = 3000;
+  const form = document.getElementById("contactForm");
+  const statusEl = document.getElementById("status");
+  const submitBtn = document.getElementById("submitBtn");
+  const tokenField = document.getElementById("tokenField");
+  const startedAtField = document.getElementById("startedAtField");
+
+  function setStatus(msg, isError = false) {
+    statusEl.textContent = msg;
+    statusEl.style.color = isError ? "crimson" : "#2e7d32";
+  }
+
+  let startedAt = Date.now();
+  if (startedAtField) startedAtField.value = String(startedAt);
+
+  async function initToken(silent = false) {
+    try {
+      if (!silent) setStatus("フォーム準備中…");
+      if (submitBtn) submitBtn.disabled = true;
+      const res = await fetch(`${ENDPOINT}?action=token`, { method: "GET", redirect: "follow" });
+      const data = await res.json();
+      if (data && data.ok && data.token) {
+        if (tokenField) tokenField.value = data.token;
+        if (!silent) setStatus("");
+        if (submitBtn) submitBtn.disabled = false;
+      } else {
+        setStatus("初期化に失敗しました。再読み込みしてください。", true);
+      }
+    } catch (e) {
+      setStatus("接続エラーが発生しました。", true);
+    }
+  }
+
+  initToken(false);
+
+  if (form) {
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < MIN_FILL_MS) {
+        setStatus("入力を完了させてから送信してください。", true);
+        return;
+      }
+      setStatus("送信中…");
+      submitBtn.disabled = true;
+      const fd = new FormData(form);
+      
+      // Honeypot check
+      if ((fd.get("website") || "").trim() !== "") return;
+
+      // Turnstile check
+      const tsInput = form.querySelector('input[name="cf-turnstile-response"]');
+      const turnstileToken = tsInput ? (tsInput.value || "").trim() : "";
+      if (!turnstileToken) {
+        setStatus("認証を完了させてください。", true);
+        submitBtn.disabled = false;
+        return;
+      }
+
+      // Payload construction (Address included)
+      const payload = {
+        name: fd.get("name").trim(),
+        furigana: fd.get("furigana").trim(),
+        email: fd.get("email").trim(),
+        phone: fd.get("phone").trim(),
+        address: fd.get("address").trim(), // Added field
+        category: fd.get("category").trim(),
+        message: fd.get("message").trim(),
+        token: fd.get("token").trim(),
+        startedAt: Number(fd.get("startedAt")),
+        turnstileToken
+      };
+
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          setStatus("お問い合わせを送信しました。ありがとうございます！");
+          form.reset();
+          initToken(true);
+        } else {
+          setStatus("送信エラー: " + (data.error || "unknown"), true);
+          submitBtn.disabled = false;
+        }
+      } catch (e) {
+        setStatus("通信エラーが発生しました。", true);
+        submitBtn.disabled = false;
+      }
+    });
+  }
+</script>

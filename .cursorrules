@@ -1,0 +1,25 @@
+# Project: relagarden-astro (Astro v4+)
+
+## Technical Stack
+- Framework: Astro
+- Language: TypeScript (Strict mode)
+- Styling: Tailwind CSS (if installed) or Scoped CSS in .astro files
+- Components: Astro Components (.astro) preferred
+
+## Coding Rules
+- Use Functional Components for any React/UI logic.
+- Keep `.astro` files clean: separate Logic (frontmatter) and Template.
+- Prioritize Astro's native components over client-side frameworks unless interactivity is required.
+- Use `client:load` or `client:visible` directives only when necessary for performance.
+- Image optimization: Always use the `<Image />` component from `astro:assets`.
+
+## Directory Structure
+- `src/components/`: Reusable UI elements.
+- `src/layouts/`: Base HTML templates.
+- `src/pages/`: File-based routing.
+- `src/content/`: Content Collections for Markdown/MDX.
+
+## Naming Conventions
+- Components: PascalCase (e.g., HeaderCard.astro)
+- Utilities/Hooks: camelCase (e.g., useFormatDate.ts)
+- CSS Classes: Tailwind standard or BEM if using raw CSS.

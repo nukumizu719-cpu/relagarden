@@ -1,0 +1,51 @@
+---
+// Header.astro
+---
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <img src="/assets/images/logo.png" alt="RelaGarden" />
+    </a>
+    <div class="header-right">
+      <div class="contact-info">
+        <a href="tel:09021334003" class="tel">090-2133-4003</a>
+        <span class="hours">営業時間 9:00〜19:00(不定休)</span>
+      </div>
+      <div class="sns-icons">
+        <a href="https://www.instagram.com/relagarden" target="_blank"><img src="/assets/images/instagram.png" alt="Instagram" /></a>
+        <a href="https://www.youtube.com/@relagarden" target="_blank"><img src="/assets/images/youtube.png" alt="YouTube" /></a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000; /* Heroより必ず上 */
+    background: #ffffff;
+    border-bottom: 1px solid #e6e6e6;
+    width: 100%;
+  }
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .logo img { height: 48px; width: auto; display: block; }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .contact-info { display: flex; flex-direction: column; text-align: right; }
+  .tel { color: #2e7d32; font-weight: bold; font-size: 1.25rem; text-decoration: none; }
+  .hours { font-size: 0.8rem; color: #666; }
+  .sns-icons { display: flex; gap: 10px; }
+  .sns-icons img { width: 36px; height: 36px; }
+
+  @media (max-width: 700px) {
+    .header-inner { flex-direction: column; gap: 8px; padding: 10px; }
+    .contact-info { text-align: center; }
+  }
+</style>

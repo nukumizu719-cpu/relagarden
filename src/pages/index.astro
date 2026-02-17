@@ -1,17 +1,30 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+import TopProblems from '../components/TopProblems.astro';
+import TopUsp from '../components/TopUsp.astro';
+import TopLineup from '../components/TopLineup.astro';
+import TopPrice from '../components/TopPrice.astro';
+import TopFlow from '../components/TopFlow.astro';
+import TopReview from '../components/TopReview.astro';
+import TopWorks from '../components/TopWorks.astro';
+import TopContact from '../components/TopContact.astro';
+import Footer from '../components/Footer.astro';
 
+// トップページでは個別の pageTitle を定義せず、BaseLayoutのデフォルトに任せるのがSEO上ベストです
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout> <Header slot="header-slot" />
+
+  <Hero />
+  <TopProblems />
+  <TopUsp />
+  <TopLineup />
+  <TopFlow />
+  <TopReview />
+  <TopWorks />
+  <TopContact />
+
+  <Footer slot="footer-slot" />
+</BaseLayout>

@@ -1,0 +1,38 @@
+name: Deploy to Xserver
+
+on:
+  push:
+    branches:
+      - main  # mainブランチにpushしたときに実行
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Astro
+        run: npm run build
+
+      - name: Deploy via rsync
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: dist/
+          # 💡 Xserverの公開ディレクトリ
+          # your-domain.com の部分は実際のドメイン名に変更してください
+          remote_path: /home/xs674757/your-domain.com/public_html/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022

@@ -1,0 +1,141 @@
+---
+const usps = [
+  {
+    number: "01",
+    title: "プロが厳選した高品質人工芝のみ使用",
+    desc: "耐久性・クッション性・見た目の自然さを兼ね備えた人工芝を採用。安価な芝は使わず、長く快適に使える品質にこだわっています。"
+  },
+  {
+    number: "02",
+    title: "仕上がりを左右する“下地処理”に徹底こだわり",
+    desc: "人工芝は下地が命。雑草対策、防草シート、排水処理まで丁寧に施工し、10年以上長持ちする庭づくりを実現します。"
+  },
+  {
+    number: "03",
+    title: "岡崎市密着の安心サポート",
+    desc: "地元だからこそできる迅速対応。代表が直接ご相談に乗り、施工後のフォローまで責任を持って対応します。"
+  }
+];
+---
+<section class="usp-section">
+  <div class="container">
+    <h2 class="section-title">リラガーデンが選ばれる理由</h2>
+
+    <div class="usp-grid">
+      {usps.map((usp) => (
+        <div class="usp-item">
+          <div class="usp-number">{usp.number}</div>
+          <div class="usp-content">
+            <h3 class="usp-title">{usp.title}</h3>
+            <p class="usp-desc">{usp.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .usp-section {
+    padding: 80px 24px;
+    background-color: #ffffff;
+  }
+  
+  /* Layoutのcontainerクラスと競合しないよう個別に定義 */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2.2rem; /* HeroやProblemsと統一感を出すサイズ */
+    font-weight: bold;
+    margin-bottom: 60px;
+    color: #333;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  /* 3列のグリッド構造 */
+  .usp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .usp-item {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 40px 28px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+
+  .usp-item:hover {
+    transform: translateY(-5px);
+  }
+
+  /* Jekyllでよく使われるアクセントの数字装飾 */
+  .usp-number {
+    font-size: 3.5rem;
+    font-weight: bold;
+    color: rgba(76, 175, 80, 0.1); /* 薄い緑色で背景に配置 */
+    position: absolute;
+    top: 5px;
+    left: 20px;
+    line-height: 1;
+    z-index: 0;
+  }
+
+  .usp-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .usp-title {
+    font-size: 1.35rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 16px;
+    line-height: 1.5;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .usp-desc {
+    font-size: 1rem;
+    color: #444;
+    line-height: 1.8;
+    margin: 0;
+  }
+
+  /* モバイル対応 (700px以下) */
+  @media (max-width: 700px) {
+    .usp-section {
+      padding: 40px 15px;
+    }
+    
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 40px;
+    }
+
+    .usp-grid {
+      grid-template-columns: 1fr; /* 1列に変更 */
+      gap: 24px;
+    }
+
+    .usp-item {
+      padding: 30px 20px;
+    }
+
+    .usp-title {
+      font-size: 1.2rem;
+    }
+  }
+</style>

@@ -1,0 +1,135 @@
+---
+---
+<section class="problems-section">
+  <div class="container">
+    
+    <h2 class="section-title-problem">
+      <span class="decoration">＼</span>
+      こんなお悩みはありませんか？
+      <span class="decoration">／</span>
+    </h2>
+
+    <div class="problems-grid">
+      <div class="problem-item">
+        <span class="check">✔</span>
+        <p>毎年雑草が生えてきて手入れが大変</p>
+      </div>
+      <div class="problem-item">
+        <span class="check">✔</span>
+        <p>子どもが安心して遊べる庭にしたい</p>
+      </div>
+      <div class="problem-item">
+        <span class="check">✔</span>
+        <p>庭の見た目をキレイにしたいけど維持が難しい</p>
+      </div>
+      <div class="problem-item">
+        <span class="check">✔</span>
+        <p>土や砂で家の中が汚れるのを防ぎたい</p>
+      </div>
+    </div>
+
+    <div class="solution-banner">
+      リラガーデンなら全部まとめて解決
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .problems-section {
+    padding: 80px 24px;
+    background: #f7f7f7;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* タイトル：文字サイズを大きくし、装飾との重なりを排除 */
+  .section-title-problem {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    text-align: center;
+    font-size: 2.2rem; /* Jekyll基準の大きなサイズ */
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 50px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+  .decoration {
+    color: #2e7d32;
+    font-size: 1.8rem;
+  }
+
+  /* 2列のテーブル構造を再現 */
+  .problems-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2列固定 */
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .problem-item {
+    background: #fff;
+    padding: 24px;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .check {
+    color: #2e7d32;
+    font-weight: bold;
+    font-size: 1.4rem;
+    line-height: 1;
+  }
+  .problem-item p {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #333;
+    font-weight: 500;
+  }
+
+  /* 解決バナー */
+  .solution-banner {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin: 50px auto 0;
+    padding: 20px 0;
+    border-top: 3px solid #2e7d32;
+    border-bottom: 3px solid #2e7d32;
+    max-width: 700px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  /* モバイル対応 (700px以下) */
+  @media (max-width: 700px) {
+    .problems-section { padding: 40px 15px; }
+    .section-title-problem { 
+      font-size: 1.4rem; 
+      gap: 8px;
+      flex-wrap: nowrap; /* 折り返さない */
+    }
+    .decoration { font-size: 1.1rem; }
+    
+    .problems-grid {
+      grid-template-columns: 1fr; /* スマホでは1列 */
+      gap: 12px;
+    }
+    .problem-item { padding: 16px; }
+    .problem-item p { font-size: 1rem; }
+    
+    .solution-banner {
+      font-size: 1.2rem;
+      padding: 15px 10px;
+      width: 100%;
+    }
+  }
+</style>

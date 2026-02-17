@@ -1,0 +1,145 @@
+---
+const lineup = [
+  { 
+    title: "プレミアム40mm", 
+    desc: "高密度でクッション性が高く、見た目も非常に自然。お子様やペットが遊ぶスペースに最適です。", 
+    img: "/assets/images/lineup1.png" // 拡張子は環境に合わせて調整してください
+  },
+  { 
+    title: "スタンダード30mm", 
+    desc: "コストと品質のバランスが良い人気モデル。庭全体の施工におすすめです。", 
+    img: "/assets/images/lineup2.png" 
+  },
+  { 
+    title: "防草シート", 
+    desc: "雑草対策に必須。人工芝の下に敷くことで、長期間キレイな状態を保ちます。", 
+    img: "/assets/images/lineup3.png" 
+  }
+];
+---
+<section class="lineup-section">
+  <div class="container">
+    <h2 class="section-title">人工芝ラインナップ</h2>
+
+    <div class="lineup-grid">
+      {lineup.map((item) => (
+        <div class="lineup-card">
+          <div class="lineup-img-wrapper">
+            <img src={item.img} alt={item.title} loading="lazy" />
+          </div>
+          <div class="lineup-body">
+            <h3 class="lineup-card-title">{item.title}</h3>
+            <p class="lineup-card-desc">{item.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .lineup-section {
+    padding: 80px 24px;
+    background-color: #fcfcfc; /* わずかにグレーを敷いてカードを際立たせる */
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-title {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 60px;
+    color: #333;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .lineup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .lineup-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    overflow: hidden; /* 画像の角丸を反映させる */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .lineup-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+
+  /* 画像エリア：高さを固定してガタつきを防止 */
+  .lineup-img-wrapper {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: #eee;
+  }
+
+  .lineup-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .lineup-card:hover .lineup-img-wrapper img {
+    transform: scale(1.05);
+  }
+
+  .lineup-body {
+    padding: 24px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lineup-card-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin: 0 0 12px 0;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .lineup-card-desc {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* モバイル対応 (700px以下) */
+  @media (max-width: 700px) {
+    .lineup-section {
+      padding: 40px 15px;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      margin-bottom: 30px;
+    }
+
+    .lineup-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .lineup-img-wrapper {
+      height: 180px;
+    }
+  }
+</style>
