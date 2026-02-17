@@ -12,8 +12,8 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     <div class="contact-header">
       <h1 class="contact-title">お問い合わせ</h1>
       <p class="contact-intro">
-        人工芝施工・購入に関するご相談は、こちらのフォームよりお気軽にお寄せください。<br>
-        必要事項をご入力のうえ、送信をお願いいたします。
+        人工芝の施工や製品に関するご相談・お見積りは、<br class="pc-only">
+        以下のフォームよりお気軽にお問い合わせください。
       </p>
       <p class="required-note">（<span class="red">*</span>は必須項目です）</p>
     </div>
@@ -48,7 +48,6 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
         <input name="phone" type="tel" autocomplete="tel" placeholder="例：090-1234-5678" />
       </div>
 
-      {/* --- 追加項目：住所 --- */}
       <div class="form-group">
         <label>住所 <span class="badge-optional">任意</span></label>
         <input name="address" type="text" autocomplete="street-address" placeholder="例：愛知県岡崎市〇〇町1-2-3" />
@@ -69,7 +68,17 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
         <textarea name="message" rows="7" required placeholder="具体的なご要望や、施工場所の広さなどをご記入ください"></textarea>
       </div>
 
-      {/* Honeypot field (Spam protection) */}
+      {/* --- プライバシーポリシー同意 (1行維持設定) --- */}
+      <div class="policy-agreement">
+        <label class="checkbox-label">
+          <input type="checkbox" name="policy_agreement" required id="policyCheck" />
+          <span class="checkbox-text">
+            <a href="/privacy/" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a>に同意する
+          </span>
+        </label>
+      </div>
+
+      {/* Honeypot field */}
       <div style="display:none;">
         <label>Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
       </div>
@@ -96,6 +105,7 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     margin: 0 auto;
     padding: 60px 24px;
     background-color: #fcfcfc;
+    font-family: 'Zen Maru Gothic', sans-serif;
   }
 
   .contact-header {
@@ -109,19 +119,18 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     font-weight: bold;
     color: #2e7d32;
     margin-bottom: 20px;
-    font-family: 'Zen Maru Gothic', sans-serif;
   }
 
   .contact-intro {
-    font-size: 1rem;
-    color: #444;
+    font-size: 0.95rem;
+    color: #666;
     line-height: 1.8;
   }
 
   .required-note {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 15px;
   }
 
   .red { color: #d32f2f; }
@@ -156,7 +165,6 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     padding: 2px 6px;
     border-radius: 4px;
     margin-left: 8px;
-    vertical-align: middle;
   }
 
   .badge-optional {
@@ -166,7 +174,6 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     padding: 2px 6px;
     border-radius: 4px;
     margin-left: 8px;
-    vertical-align: middle;
   }
 
   .form-group input, 
@@ -182,17 +189,50 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     font-family: inherit;
   }
 
-  .form-group input:focus, 
-  .form-group select:focus, 
-  .form-group textarea:focus {
-    border-color: #4CAF50;
-    background: #fff;
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  /* プライバシーポリシー同意エリア（1行化対応） */
+  .policy-agreement {
+    text-align: center;
+    margin: 30px 0;
+    padding: 12px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    white-space: nowrap; /* 改行を禁止 */
+    overflow: hidden;    /* 万が一のはみ出しをカット */
+  }
+
+  .checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.95rem;
+    max-width: 100%;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0; /* チェックボックスの変形を防止 */
+  }
+
+  .checkbox-text a {
+    color: #2e7d32;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.2s;
+  }
+
+  .checkbox-text a:hover {
+    color: #1b5e20;
+    text-decoration-thickness: 2px;
   }
 
   .captcha-wrapper {
-    margin: 20px 0;
+    margin-bottom: 20px;
     display: flex;
     justify-content: center;
   }
@@ -209,24 +249,13 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 0 #1b5e20;
+    font-family: inherit;
   }
 
   .submit-button:hover {
     background: #388e3c;
     transform: translateY(-2px);
     box-shadow: 0 6px 0 #1b5e20;
-  }
-
-  .submit-button:active {
-    transform: translateY(2px);
-    box-shadow: 0 0 0;
-  }
-
-  .submit-button:disabled {
-    background: #ccc;
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
   }
 
   .status-message {
@@ -240,6 +269,24 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     .contact-page-container { padding: 40px 15px; }
     .contact-form { padding: 25px 20px; }
     .contact-title { font-size: 1.8rem; }
+    .contact-intro { font-size: 0.85rem; }
+    .pc-only { display: none; }
+    
+    /* スマホ幅での1行維持調整 */
+    .checkbox-label {
+      font-size: 0.85rem;
+      gap: 6px;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  @media (max-width: 340px) {
+    .checkbox-label {
+      font-size: 0.75rem; /* 極小画面での対応 */
+    }
   }
 </style>
 
@@ -251,6 +298,7 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
   const submitBtn = document.getElementById("submitBtn");
   const tokenField = document.getElementById("tokenField");
   const startedAtField = document.getElementById("startedAtField");
+  const policyCheck = document.getElementById("policyCheck");
 
   function setStatus(msg, isError = false) {
     statusEl.textContent = msg;
@@ -263,15 +311,13 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
   async function initToken(silent = false) {
     try {
       if (!silent) setStatus("フォーム準備中…");
-      if (submitBtn) submitBtn.disabled = true;
+      submitBtn.disabled = true;
       const res = await fetch(`${ENDPOINT}?action=token`, { method: "GET", redirect: "follow" });
       const data = await res.json();
       if (data && data.ok && data.token) {
-        if (tokenField) tokenField.value = data.token;
+        tokenField.value = data.token;
         if (!silent) setStatus("");
-        if (submitBtn) submitBtn.disabled = false;
-      } else {
-        setStatus("初期化に失敗しました。再読み込みしてください。", true);
+        submitBtn.disabled = false;
       }
     } catch (e) {
       setStatus("接続エラーが発生しました。", true);
@@ -283,19 +329,22 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
   if (form) {
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
+
+      if (!policyCheck.checked) {
+        setStatus("プライバシーポリシーへの同意が必要です。", true);
+        return;
+      }
+
       const elapsed = Date.now() - startedAt;
       if (elapsed < MIN_FILL_MS) {
         setStatus("入力を完了させてから送信してください。", true);
         return;
       }
+
       setStatus("送信中…");
       submitBtn.disabled = true;
       const fd = new FormData(form);
       
-      // Honeypot check
-      if ((fd.get("website") || "").trim() !== "") return;
-
-      // Turnstile check
       const tsInput = form.querySelector('input[name="cf-turnstile-response"]');
       const turnstileToken = tsInput ? (tsInput.value || "").trim() : "";
       if (!turnstileToken) {
@@ -304,13 +353,12 @@ const pageTitle = "お問い合わせ | リラガーデン(RelaGarden)";
         return;
       }
 
-      // Payload construction (Address included)
       const payload = {
         name: fd.get("name").trim(),
         furigana: fd.get("furigana").trim(),
         email: fd.get("email").trim(),
         phone: fd.get("phone").trim(),
-        address: fd.get("address").trim(), // Added field
+        address: fd.get("address").trim(),
         category: fd.get("category").trim(),
         message: fd.get("message").trim(),
         token: fd.get("token").trim(),

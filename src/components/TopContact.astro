@@ -11,7 +11,6 @@
       <div class="button-wrapper">
         <a href="/contact/" class="contact-cta-button">
           お問い合わせフォームはこちら
-          <span class="arrow">→</span>
         </a>
       </div>
     </div>
@@ -24,17 +23,65 @@
 </a>
 
 <style>
-  /* --- 通常セクションのスタイル (前回同様) --- */
+  /* --- 通常セクションのスタイル --- */
   .top-contact-section {
     padding: 80px 24px;
     background-color: #f7f7f7;
     text-align: center;
+    overflow: hidden; /* はみ出し防止 */
   }
-  .section-title { font-size: 2.2rem; font-weight: bold; margin-bottom: 30px; color: #333; font-family: 'Zen Maru Gothic', sans-serif; }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-title { 
+    font-size: 2.2rem; 
+    font-weight: bold; 
+    margin-bottom: 30px; 
+    color: #333; 
+    font-family: 'Zen Maru Gothic', sans-serif; 
+    white-space: nowrap; /* 念のためここも1行維持 */
+  }
+
+  .contact-lead {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 40px;
+    color: #444;
+    font-family: 'Zen Maru Gothic', sans-serif; /* フォント統一 */
+  }
+
   .contact-cta-button {
-    display: inline-flex; align-items: center; padding: 20px 50px;
-    background-color: #2e7d32; color: #fff !important; text-decoration: none;
-    font-size: 1.4rem; font-weight: bold; border-radius: 12px; transition: all 0.3s;
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;
+    padding: 20px 40px;
+    background-color: #2e7d32; 
+    color: #fff !important; 
+    text-decoration: none;
+    font-size: 1.4rem; 
+    font-weight: bold; 
+    border-radius: 12px; 
+    transition: all 0.3s;
+    font-family: 'Zen Maru Gothic', sans-serif; /* フォントを明示的に指定 */
+    white-space: nowrap; /* 絶対に1行 */
+    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+  }
+
+  .contact-cta-button:hover {
+    background-color: #1b5e20;
+    transform: translateY(-2px);
+  }
+
+  .arrow {
+    margin-left: 10px;
+    transition: transform 0.3s;
+  }
+
+  .contact-cta-button:hover .arrow {
+    transform: translateX(5px);
   }
 
   /* --- 追従ボタンのスタイル --- */
@@ -42,25 +89,25 @@
     position: fixed;
     right: 20px;
     bottom: 20px;
-    z-index: 2000; /* ヘッダーより上 */
+    z-index: 2000;
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 15px 25px;
-    background:rgb(34, 129, 42); /* 目立つmidori */
+    background: #22812a;
     color: #fff !important;
     text-decoration: none;
     font-weight: bold;
     border-radius: 50px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    font-family: 'Zen Maru Gothic', sans-serif; /* フォント統一 */
+    white-space: nowrap;
     
-    /* 初期状態：下に隠しておく */
     transform: translateY(150%);
     opacity: 0;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
   }
 
-  /* クラスがついた時にニョキっと出る */
   .floating-cta.is-visible {
     transform: translateY(0);
     opacity: 1;
@@ -68,10 +115,31 @@
 
   .cta-icon { font-size: 1.4rem; }
 
+  /* --- モバイル対応 (700px以下) --- */
   @media (max-width: 700px) {
-    .floating-cta {
-      right: 15px; bottom: 15px; padding: 12px 20px; font-size: 0.9rem;
+    .top-contact-section { padding: 50px 15px; }
+
+    .section-title { font-size: 1.35rem; }
+
+    .contact-lead { font-size: 0.95rem; margin-bottom: 30px; }
+
+    .contact-cta-button {
+      font-size: 1.1rem; /* スマホで1行に収まるサイズ */
+      padding: 18px 20px;
+      width: 100%; /* 横幅いっぱい使って1行にする */
+      max-width: 320px;
+      margin: 0 auto;
+      letter-spacing: -0.02em;
     }
+
+    .floating-cta {
+      right: 15px; 
+      bottom: 15px; 
+      padding: 12px 20px; 
+      font-size: 0.9rem;
+    }
+
+    .pc-only { display: none; }
   }
 </style>
 
@@ -79,34 +147,29 @@
   const floatingBtn = document.getElementById('floating-cta');
   const contactSection = document.getElementById('contact');
 
-  // 1. スクロール開始でボタンを表示する制御
   window.addEventListener('scroll', () => {
     if (window.scrollY > 300) {
-      // TopContactセクションが視界に入っていない時だけ表示クラスをつける
       const rect = contactSection.getBoundingClientRect();
       if (rect.top > window.innerHeight) {
         floatingBtn.classList.add('is-visible');
+      } else {
+        floatingBtn.classList.remove('is-visible');
       }
     } else {
       floatingBtn.classList.remove('is-visible');
     }
   });
 
-  // 2. Intersection Observer で TopContact 領域に入ったら消す制御
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        // セクションに入ったらフェードアウト
         floatingBtn.classList.remove('is-visible');
-      } else {
-        // セクションから出たとき、かつ一定以上スクロールされていれば再表示
-        if (window.scrollY > 300) {
-          floatingBtn.classList.add('is-visible');
-        }
+      } else if (window.scrollY > 300) {
+        floatingBtn.classList.add('is-visible');
       }
     });
   }, {
-    threshold: 0.1 // 10%でもセクションが見えたら反応
+    threshold: 0.1
   });
 
   observer.observe(contactSection);

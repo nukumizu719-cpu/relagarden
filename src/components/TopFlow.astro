@@ -49,7 +49,6 @@ const steps = [
   <div class="container">
     <h2 class="section-title">施工の流れと料金目安</h2>
 
-    {/* ステップ3列グリッド */}
     <div class="flow-grid">
       {steps.map((step) => (
         <div class="flow-column">
@@ -85,11 +84,12 @@ const steps = [
       ))}
     </div>
 
-    {/* 合計目安：シンプル1行 */}
     <div class="total-minimal-summary">
       <div class="summary-line">
-        <span class="s-label">施工金額目安</span>
-        <span class="s-price">8,000<small>円</small> ～ 12,000<small>円/㎡</small></span>
+        <div class="price-row">
+          <span class="s-label">施工金額目安</span>
+          <span class="s-price">8,000<small>円</small> ～ 12,000<small>円/㎡</small></span>
+        </div>
         <span class="s-warranty">※5年間の施工保証付き！</span>
       </div>
     </div>
@@ -97,11 +97,12 @@ const steps = [
 </section>
 
 <style>
-  /* 基本設定 */
+  /* 基本設定 (PC) */
   .flow-section {
     padding: 80px 0;
     background-color: #ffffff;
     font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+    overflow: hidden;
   }
   .container {
     max-width: 1200px;
@@ -110,13 +111,13 @@ const steps = [
   }
   .section-title {
     text-align: center;
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 800;
     margin-bottom: 60px;
     color: #333;
+    white-space: nowrap; /* 1行維持 */
   }
 
-  /* 3列グリッド (PC時) */
   .flow-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -156,7 +157,6 @@ const steps = [
     padding: 0 10px;
   }
 
-  /* コンテンツエリア */
   .flow-text-area {
     background-color: #f8fafb;
     padding: 25px;
@@ -219,60 +219,94 @@ const steps = [
     font-size: 0.9rem;
   }
 
-  .price-list li:last-child {
-    border-bottom: none;
-  }
-
   .p-label { color: #666; }
   .p-val { font-weight: 900; color: #111; }
 
-  /* 合計目安エリア */
+  /* 合計目安エリア (PC) */
   .total-minimal-summary {
     border-top: 2px solid #2e7d32;
-    padding-top: 30px;
+    padding-top: 40px;
     text-align: center;
   }
 
   .summary-line {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: center;
-    gap: 15px;
+    gap: 20px;
     flex-wrap: wrap;
-    font-weight: 700;
   }
 
-  .s-label { font-size: 1rem; color: #888; }
-  .s-price { font-size: 2.2rem; color: #2e7d32; font-weight: 900; }
-  .s-price small { font-size: 1rem; margin: 0 4px; }
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+  }
+
+  .s-label { font-size: 1.1rem; color: #666; font-weight: bold; }
+  .s-price { font-size: 2.2rem; color: #2e7d32; font-weight: 900; white-space: nowrap; }
+  .s-price small { font-size: 1.1rem; margin: 0 2px; }
   .s-warranty {
     font-size: 0.9rem;
     color: #2e7d32;
     background-color: #f1f8f3;
     padding: 6px 18px;
     border-radius: 50px;
+    font-weight: bold;
   }
 
   /* スマホ対応 */
   @media (max-width: 900px) {
+    .flow-section { padding: 50px 0; }
+
+    /* タイトルの1行化 */
+    .section-title {
+      font-size: 1.3rem;
+      margin-bottom: 40px;
+      letter-spacing: -0.02em;
+    }
+
     .flow-grid {
-      grid-template-columns: 1fr; /* 縦並びに強制 */
+      grid-template-columns: 1fr;
       gap: 40px;
     }
-    
+
+    /* 合計エリアの1行化調整 */
     .summary-line {
-      flex-direction: column; /* 合計エリアも縦並びに */
-      align-items: center;
-      gap: 10px;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .price-row {
+      width: 100%;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .s-label {
+      font-size: 0.85rem;
+      white-space: nowrap;
     }
 
     .s-price {
-      font-size: 1.8rem;
+      font-size: 1.4rem; /* 1行に収まるサイズ */
+      letter-spacing: -0.01em;
     }
 
-    .flow-text-area {
-      min-height: auto;
-      padding: 20px;
+    .s-price small {
+      font-size: 0.8rem;
     }
+
+    .s-warranty {
+      font-size: 0.8rem;
+      padding: 4px 15px;
+    }
+  }
+
+  /* 最小幅デバイス (iPhone SE等) */
+  @media (max-width: 360px) {
+    .section-title { font-size: 1.15rem; }
+    .s-price { font-size: 1.2rem; }
+    .s-label { font-size: 0.75rem; }
   }
 </style>

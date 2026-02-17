@@ -36,12 +36,13 @@ const usps = [
 </section>
 
 <style>
+  /* --- 基本設定 (PC) --- */
   .usp-section {
     padding: 80px 24px;
     background-color: #ffffff;
+    overflow: hidden; /* はみ出し防止 */
   }
   
-  /* Layoutのcontainerクラスと競合しないよう個別に定義 */
   .container {
     max-width: 1100px;
     margin: 0 auto;
@@ -49,14 +50,14 @@ const usps = [
 
   .section-title {
     text-align: center;
-    font-size: 2.2rem; /* HeroやProblemsと統一感を出すサイズ */
+    font-size: 2.2rem;
     font-weight: bold;
     margin-bottom: 60px;
     color: #333;
     font-family: 'Zen Maru Gothic', sans-serif;
+    white-space: nowrap; /* 1行を維持 */
   }
 
-  /* 3列のグリッド構造 */
   .usp-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -81,11 +82,10 @@ const usps = [
     transform: translateY(-5px);
   }
 
-  /* Jekyllでよく使われるアクセントの数字装飾 */
   .usp-number {
     font-size: 3.5rem;
     font-weight: bold;
-    color: rgba(76, 175, 80, 0.1); /* 薄い緑色で背景に配置 */
+    color: rgba(76, 175, 80, 0.1);
     position: absolute;
     top: 5px;
     left: 20px;
@@ -114,19 +114,22 @@ const usps = [
     margin: 0;
   }
 
-  /* モバイル対応 (700px以下) */
+  /* --- モバイル対応 (700px以下) --- */
   @media (max-width: 700px) {
     .usp-section {
-      padding: 40px 15px;
+      padding: 50px 15px;
     }
     
     .section-title {
-      font-size: 1.8rem;
+      /* 1行に収めるための設定 */
+      font-size: 1.2rem; 
       margin-bottom: 40px;
+      white-space: nowrap;
+      letter-spacing: -0.02em; /* 文字間を微調整 */
     }
 
     .usp-grid {
-      grid-template-columns: 1fr; /* 1列に変更 */
+      grid-template-columns: 1fr;
       gap: 24px;
     }
 
@@ -136,6 +139,12 @@ const usps = [
 
     .usp-title {
       font-size: 1.2rem;
+    }
+
+    .usp-number {
+      font-size: 2.8rem; /* スマホでは数字を少し小さくしてバランス調整 */
+      top: 0;
+      left: 10px;
     }
   }
 </style>
