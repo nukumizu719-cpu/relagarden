@@ -31,7 +31,7 @@ jobs:
           path: dist/
           # 💡 Xserverの公開ディレクトリ
           # your-domain.com の部分は実際のドメイン名に変更してください
-          remote_path: /home/xs674757/your-domain.com/public_html/
+          remote_path: /home/xs674757/relagarden.jp/public_html/
           remote_host: ${{ secrets.XSERVER_HOST }}
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
