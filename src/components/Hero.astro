@@ -1,79 +1,153 @@
----
----
 <section class="hero-section">
   <div class="hero-grid">
     <div class="hero-image">
       <picture>
-        <img src="/images/hero.jpg" alt="人工芝施工事例" loading="eager" />
+        <img src="/images/hero2.jpg" alt="人工芝施工事例" loading="eager" />
       </picture>
     </div>
+    
+    {/* 背景画像と文字、ステッカーを馴染ませるオーバーレイ */}
     <div class="hero-overlay"></div>
+    
     <div class="hero-content">
       <div class="content-inner">
         <h1 class="hero-title">家族が集まる庭を、<br>もっと好きな場所に。</h1>
         <p class="hero-lead">自社オリジナルの高品質人工芝を豊富にラインナップ<br class="pc-only">愛知・岐阜・三重・静岡で施工実績多数</p>
         <a href="/contact/" class="hero-btn">まずは相談してみる</a>
-        <img src="/images/hero-sns.png" alt="SNS情報" class="hero-sns-sticker" />
+        
+        {/* ステッカー：右上配置＆スケルトン仕様 */}
+        <div class="sticker-wrapper">
+          <img src="/images/hero-sns.png" alt="SNS情報" class="hero-sns-sticker" />
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .hero-section { position: relative; background: #000; width: 100%; }
+  .hero-section { position: relative; background: #000; width: 100%; overflow: hidden; }
   .hero-grid {
     display: grid;
     grid-template-areas: "stack";
     min-height: 500px;
+    height: 80vh;
   }
   .hero-image, .hero-overlay, .hero-content { grid-area: stack; }
   
-  .hero-image img { width: 100%; height: auto; display: block; object-fit: cover; }
+  .hero-image img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  
+  /* オーバーレイ：左側の可読性と、右上のステッカーの浮き立ちを両立 */
   .hero-overlay {
-    background: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+    background: 
+      linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.1) 60%, transparent 100%),
+      radial-gradient(circle at top right, rgba(0,0,0,0.3) 0%, transparent 40%);
     z-index: 2;
   }
+
   .hero-content {
     z-index: 3;
     display: flex;
     align-items: center;
     padding: 2.5rem;
-    color: #ffffff !important; /* 絶対に白 */
+    color: #ffffff !important;
   }
-  .content-inner { max-width: 1100px; margin: 0 auto; width: 100%; position: relative; }
+
+  .content-inner { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    width: 100%; 
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative; 
+  }
   
   .hero-title {
     color: #ffffff !important;
-    font-size: 4.6rem;
+    font-size: clamp(2.2rem, 5vw, 4.2rem);
     font-weight: bold;
     line-height: 1.25;
     margin: 0 0 1.2rem 0;
     font-family: 'Zen Maru Gothic', sans-serif;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.3);
   }
+
   .hero-lead {
     color: #ffffff !important;
-    font-size: 2rem;
-    line-height: 1.5;
-    margin: 0 0 1.5rem 0;
+    font-size: clamp(1rem, 2vw, 1.8rem);
+    line-height: 1.6;
+    margin: 0 0 2rem 0;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
+
   .hero-btn {
     display: inline-block;
     background: #4CAF50;
     color: #ffffff !important;
     font-weight: bold;
     text-decoration: none;
-    padding: 0.8rem 2rem;
+    padding: 1rem 2.5rem;
     border-radius: 999px;
+    width: fit-content;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
   }
+
+  .hero-btn:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+  }
+
+  /* --- スケルトンステッカーの設定 --- */
+  .sticker-wrapper {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    z-index: 5;
+  }
+
   .hero-sns-sticker {
-    position: absolute; top: 0; right: 0; width: 180px;
+    width: 160px;
+    height: auto;
+    /* 透明度を下げて背後を透かす */
+    opacity: 0.75; 
+    /* 背景との馴染みを良くする（明るい部分を残すモード） */
+    mix-blend-mode: screen; 
+    /* ステッカーを浮かせる影（薄め） */
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    transform: rotate(5deg);
+    transition: all 0.4s ease;
+  }
+
+  /* ホバーでパキッと強調される演出 */
+  .hero-sns-sticker:hover {
+    opacity: 1;
+    mix-blend-mode: normal; /* 背景に干渉せず元の色を出す */
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+    transform: rotate(0deg) scale(1.05);
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .hero-sns-sticker { width: 120px; }
   }
 
   @media (max-width: 700px) {
-    .hero-grid { min-height: 70vh; }
-    .hero-image img { height: 70vh; }
-    .hero-title { font-size: 1.6rem; }
+    .hero-grid { min-height: 60vh; height: auto; }
+    .hero-image img { height: 60vh; }
+    .hero-content { padding: 1.5rem; }
+    .hero-title { font-size: 1.8rem; }
     .hero-lead { font-size: 1rem; }
-    .hero-sns-sticker, .pc-only { display: none; }
+    .pc-only { display: none; }
+    
+    .sticker-wrapper {
+      top: -10px;
+      right: -10px;
+    }
+    .hero-sns-sticker { 
+      width: 90px;
+      opacity: 0.8; /* スマホでは視認性を少し上げる */
+    }
   }
 </style>
