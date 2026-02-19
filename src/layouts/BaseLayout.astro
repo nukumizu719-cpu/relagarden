@@ -7,8 +7,8 @@ interface Props {
 
 const { 
   pageTitle, 
-  // Jekyllの設定をデフォルト値として適用
-  description = "愛知県岡崎市の人工芝施工・販売ならリラガーデン（RelaGarden / Relagarden / ReraGarden）。自社オリジナル人工芝を豊富にラインナップし、高品質な施工で理想 of 庭づくりを実現します。" 
+  // デフォルトのdescription（「理想 of 庭づくり」のタイポを「理想の庭づくり」に修正しています）
+  description = "愛知県岡崎市の人工芝施工・販売ならリラガーデン（RelaGarden / Relagarden / ReraGarden）。自社オリジナル人工芝を豊富にラインナップし、高品質な施工で理想の庭づくりを実現します。" 
 } = Astro.props;
 
 const siteName = "リラガーデン(RelaGarden)";
@@ -68,6 +68,16 @@ const fullTitle = pageTitle
           "addressLocality": "岡崎市",
           "addressRegion": "JP-23"
         }
+      }
+    </script>
+
+    <script type="application/ld+json" is:inline>
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "リラガーデン",
+        "alternateName": ["RelaGarden", "リラガーデン(RelaGarden)"],
+        "url": "https://relagarden.jp/"
       }
     </script>
   </head>
