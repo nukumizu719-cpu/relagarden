@@ -3,10 +3,12 @@
 interface Props {
   pageTitle?: string;
   description?: string;
+  exactTitle?: string;
 }
 
 const { 
   pageTitle, 
+  exactTitle,
   // デフォルトのdescription（「理想 of 庭づくり」のタイポを「理想の庭づくり」に修正しています）
   description = "愛知県岡崎市の人工芝施工・販売ならリラガーデン（RelaGarden / Relagarden / ReraGarden）。自社オリジナル人工芝を豊富にラインナップし、高品質な施工で理想の庭づくりを実現します。" 
 } = Astro.props;
@@ -16,12 +18,15 @@ const siteUrl = "https://relagarden.jp";
 
 /**
  * SEOロジック: 
- * 1. 下層ページ: 「ページタイトル | 岡崎市の人工芝施工ならリラガーデン」
- * 2. トップページ: キーワードを網羅した強力なタイトル
+ * 1. exactTitle: 指定された場合は完全にその文字列を出力（Google自動書き換え防止用）
+ * 2. 下層ページ: 「ページタイトル | 岡崎市の人工芝施工ならリラガーデン」
+ * 3. トップページ: キーワードを網羅した強力なタイトル
  */
-const fullTitle = pageTitle 
-  ? `${pageTitle} | 岡崎市の人工芝施工なら${siteName}`
-  : `岡崎市の人工芝施工・販売なら${siteName} | 理想の庭づくりを実現`;
+const fullTitle = exactTitle
+  ? exactTitle
+  : pageTitle 
+    ? `${pageTitle} | 岡崎市の人工芝施工なら${siteName}`
+    : `岡崎市の人工芝施工・販売なら${siteName} | 理想の庭づくりを実現`;
 ---
 <!DOCTYPE html>
 <html lang="ja">
