@@ -9,18 +9,17 @@ interface Props {
 const { 
   pageTitle, 
   exactTitle,
-  // デフォルトのdescription（「理想 of 庭づくり」のタイポを「理想の庭づくり」に修正しています）
   description = "愛知県岡崎市の人工芝施工・販売ならリラガーデン（RelaGarden / Relagarden / ReraGarden）。自社オリジナル人工芝を豊富にラインナップし、高品質な施工で理想の庭づくりを実現します。" 
 } = Astro.props;
 
 const siteName = "リラガーデン(RelaGarden)";
 const siteUrl = "https://relagarden.jp";
 
+// ★修正：ソフト404回避のため、現在のページのURLを正しく取得する
+const canonicalURL = new URL(Astro.url.pathname, siteUrl).href;
+
 /**
  * SEOロジック: 
- * 1. exactTitle: 指定された場合は完全にその文字列を出力（Google自動書き換え防止用）
- * 2. 下層ページ: 「ページタイトル | 岡崎市の人工芝施工ならリラガーデン」
- * 3. トップページ: キーワードを網羅した強力なタイトル
  */
 const fullTitle = exactTitle
   ? exactTitle
@@ -38,12 +37,13 @@ const fullTitle = exactTitle
     
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={siteUrl} />
+    
+    <link rel="canonical" href={canonicalURL} />
 
     <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={siteUrl} />
+    <meta property="og:url" content={canonicalURL} />
     <meta property="og:type" content="website" />
     <meta property="og:image" content={`${siteUrl}/ogp.png`} />
     <meta name="twitter:card" content="summary_large_image" />
@@ -57,7 +57,6 @@ const fullTitle = exactTitle
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-3BT9WT4PS9');
     </script>
 
@@ -75,41 +74,23 @@ const fullTitle = exactTitle
         }
       }
     </script>
-
-    <script type="application/ld+json" is:inline>
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "リラガーデン",
-        "alternateName": ["RelaGarden", "リラガーデン(RelaGarden)"],
-        "url": "https://relagarden.jp/"
-      }
-    </script>
   </head>
   <body>
     <slot name="header-slot" />
-
     <main class="site-main">
       <slot />
     </main>
-
     <slot name="footer-slot" />
 
     <style is:global>
-      /* --- グローバル・ベーススタイル --- */
       :root {
         --color-main: #2e7d32;
         --color-text: #222222;
         --color-bg-light: #f7f7f7;
       }
-
-      * {
-        box-sizing: border-box;
-      }
-
+      * { box-sizing: border-box; }
       body {
-        margin: 0;
-        padding: 0;
+        margin: 0; padding: 0;
         color: var(--color-text);
         font-family: 'Zen Maru Gothic', sans-serif;
         line-height: 1.6;
@@ -117,42 +98,12 @@ const fullTitle = exactTitle
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
-
-      .site-main {
-        display: block;
-        width: 100%;
-        position: relative;
-        min-height: 60vh; 
-      }
-
-      /* --- 共通コンテナ --- */
-      .container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 0 24px;
-      }
-
-      @media (max-width: 700px) {
-        .container {
-          padding: 0 15px;
-        }
-      }
-
-      /* --- 画像・リンクの共通ルール --- */
-      img {
-        max-width: 100%;
-        height: auto;
-      }
-
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-
-      /* スムーズスクロール */
-      html {
-        scroll-behavior: smooth;
-      }
+      .site-main { display: block; width: 100%; position: relative; min-height: 60vh; }
+      .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+      @media (max-width: 700px) { .container { padding: 0 15px; } }
+      img { max-width: 100%; height: auto; }
+      a { color: inherit; text-decoration: none; }
+      html { scroll-behavior: smooth; }
     </style>
   </body>
 </html>
