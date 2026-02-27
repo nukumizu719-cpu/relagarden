@@ -1,0 +1,122 @@
+---
+/**
+ * PriceSimulator: 面積に応じた概算見積もりを計算し、
+ * お問い合わせフォームへパラメータを引き継ぐコンポーネント
+ */
+---
+
+<div class="bg-white rounded-[40px] shadow-2xl shadow-green-900/5 overflow-hidden border border-green-50">
+  <div class="bg-green-800 p-8 text-white text-center">
+    <span class="inline-block bg-green-700 text-[10px] font-bold px-3 py-1 rounded-full mb-3 tracking-widest uppercase">Quick Estimate</span>
+    <h3 class="text-2xl font-bold font-zen">概算費用シミュレーター</h3>
+  </div>
+  
+  <div class="p-8 md:p-12 space-y-10">
+    <div class="space-y-6">
+      <div class="flex justify-between items-end">
+        <label for="area-range" class="text-sm font-bold text-gray-700 flex items-center gap-2">
+          <span class="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs">1</span>
+          お庭の広さを選択
+        </label>
+        <div class="text-right">
+          <span id="area-display" class="text-4xl font-bold text-green-700 font-zen">20</span>
+          <span class="text-gray-500 font-bold ml-1">㎡</span>
+        </div>
+      </div>
+      <input type="range" id="area-range" min="5" max="100" step="1" value="20" class="w-full h-3 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-green-700" />
+      <div class="flex justify-between text-[10px] text-gray-400 font-bold tracking-tighter px-1 text-center">
+        <span>5㎡<br/>(坪庭)</span>
+        <span>25㎡<br/>(駐車場1台分)</span>
+        <span>50㎡<br/>(標準的な庭)</span>
+        <span>100㎡<br/>(広いお庭)</span>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <p class="text-sm font-bold text-gray-700 flex items-center gap-2">
+        <span class="w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs">2</span>
+        現在の状況を選択
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="relative flex items-center p-4 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-green-200 hover:bg-green-50/30 transition-all group">
+          <input type="radio" name="condition" value="0" checked class="w-5 h-5 text-green-700 border-gray-300 focus:ring-green-500" />
+          <div class="ml-3"><span class="block text-sm font-bold text-gray-800">土・砂利</span><span class="block text-[10px] text-gray-400">追加費用なし</span></div>
+        </label>
+        <label class="relative flex items-center p-4 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-green-200 hover:bg-green-50/30 transition-all group">
+          <input type="radio" name="condition" value="3000" class="w-5 h-5 text-green-700 border-gray-300 focus:ring-green-500" />
+          <div class="ml-3"><span class="block text-sm font-bold text-gray-800 font-zen">天然芝あり</span><span class="block text-[10px] text-green-600 font-bold">+3,000円/㎡ (処分費込)</span></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 rounded-[32px] p-8 border border-gray-100 text-center">
+      <p class="text-[10px] text-gray-400 font-bold mb-2 tracking-[0.2em] uppercase">Estimated Total</p>
+      <div class="flex items-center justify-center gap-1">
+        <span class="text-gray-400 font-bold text-sm">約</span>
+        <span id="total-price" class="text-5xl md:text-6xl font-bold text-gray-900 font-zen tracking-tighter transition-all">240,000</span>
+        <span class="text-xl font-bold text-gray-900 ml-1">円</span>
+      </div>
+      <div class="mt-4 flex justify-center gap-4 text-[10px] text-gray-500 font-medium"><span>✅ 標準施工費込</span><span>✅ 消費税込</span></div>
+    </div>
+
+    <div class="space-y-4">
+      <a href="/contact/" id="simulator-submit-btn" class="flex items-center justify-center w-full bg-green-700 text-white font-bold py-5 rounded-full shadow-xl shadow-green-900/20 hover:bg-green-800 hover:-translate-y-1 transition-all duration-300 text-lg">
+        この見積もりで無料調査を依頼する
+      </a>
+      <p class="text-[10px] text-gray-400 text-center leading-relaxed italic">※現場状況により費用は前後します。正確な金額は現地調査後に提示いたします。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const setupSimulator = () => {
+    const range = document.getElementById('area-range') as HTMLInputElement;
+    const areaDisplay = document.getElementById('area-display');
+    const totalPrice = document.getElementById('total-price');
+    const radioButtons = document.getElementsByName('condition');
+    const submitBtn = document.getElementById('simulator-submit-btn') as HTMLAnchorElement;
+
+    if (!range || !totalPrice || !areaDisplay || !submitBtn) return;
+
+    const calculate = () => {
+      const area = parseInt(range.value);
+      const basePrice = 12000;
+      let optionPrice = 0;
+      let conditionLabel = "土・砂利（撤去不要）";
+
+      radioButtons.forEach((radio: any) => {
+        if (radio.checked) {
+          optionPrice = parseInt(radio.value);
+          if (optionPrice > 0) conditionLabel = "天然芝あり（剥ぎ取り・処分あり）";
+        }
+      });
+
+      const total = area * (basePrice + optionPrice);
+      
+      areaDisplay.innerText = area.toString();
+      totalPrice.innerText = total.toLocaleString();
+
+      // URLパラメータの生成
+      const params = new URLSearchParams({
+        area: area.toString(),
+        cond: conditionLabel,
+        total: total.toLocaleString()
+      });
+      submitBtn.href = `/contact/?${params.toString()}`;
+    };
+
+    range.addEventListener('input', calculate);
+    radioButtons.forEach(radio => radio.addEventListener('change', calculate));
+    calculate(); // 初期実行
+  };
+
+  setupSimulator();
+  document.addEventListener('astro:after-swap', setupSimulator);
+</script>
+
+<style>
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 28px; height: 28px;
+    background: #15803d; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-radius: 50%; cursor: pointer;
+  }
+</style>

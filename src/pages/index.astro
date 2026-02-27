@@ -4,23 +4,11 @@ import Hero from '../components/Hero.astro';
 import TopProblems from '../components/TopProblems.astro';
 import TopUsp from '../components/TopUsp.astro';
 import TopLineup from '../components/TopLineup.astro';
-// TopPriceはTopFlowに統合されたため、インポートを削除しました
 import TopFlow from '../components/TopFlow.astro';
+import PriceSimulator from '../components/PriceSimulator.astro'; // 追加
 import TopReview from '../components/TopReview.astro';
 import TopWorks from '../components/TopWorks.astro';
 import TopContact from '../components/TopContact.astro';
-
-/**
- * 構成のロジック:
- * 1. Hero: ファーストビューでベネフィットを提示
- * 2. TopProblems: 顧客の悩みに共感
- * 3. TopUsp: 自社の強みを提示
- * 4. TopLineup: 扱う人工芝の種類を紹介
- * 5. TopFlow: 施工の流れと詳細な料金目安（旧TopPriceを統合）
- * 6. TopReview: 信頼性の裏付け（口コミ）
- * 7. TopWorks: 実際の施工事例
- * 8. TopContact: 最終的なアクション（CV）
- */
 ---
 
 <BaseLayout>
@@ -28,8 +16,44 @@ import TopContact from '../components/TopContact.astro';
   <TopProblems />
   <TopUsp />
   <TopLineup />
-  {/* 料金と工程を1つにまとめたTopFlowを配置 */}
+  
   <TopFlow />
+
+  <section id="simulator" class="py-24 bg-[#f9faf7] relative overflow-hidden">
+    {/* 装飾用背景 */}
+    <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white to-transparent"></div>
+    
+    <div class="max-w-4xl mx-auto px-5 relative z-10">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold font-zen text-gray-900 mb-6">
+          <span class="text-green-700 text-sm block mb-2 tracking-[0.3em] uppercase">Price Simulation</span>
+          お庭の概算費用をチェック
+        </h2>
+        <p class="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
+          リラガーデンは、安心の「面積×単価」の明朗会計。<br class="hidden md:block" />
+          まずはあなたの理想の広さで、費用の目安を確認してみましょう。
+        </p>
+      </div>
+
+      <PriceSimulator />
+
+      <div class="mt-12 flex flex-col md:flex-row items-center justify-center gap-8 text-gray-400">
+        <div class="flex items-center gap-2">
+          <span class="text-green-600 text-lg">✔</span>
+          <span class="text-xs font-bold">追加の営業電話なし</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-green-600 text-lg">✔</span>
+          <span class="text-xs font-bold">現地調査後のキャンセル無料</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-green-600 text-lg">✔</span>
+          <span class="text-xs font-bold">岡崎市周辺の地域密着対応</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <TopReview />
   <TopWorks />
   <TopContact />

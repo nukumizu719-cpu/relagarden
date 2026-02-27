@@ -55,7 +55,7 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
 
       <div class="form-group">
         <label>お問い合わせ内容 <span class="badge-required">必須</span></label>
-        <select name="category" required>
+        <select name="category" required id="formCategory">
           <option value="">選択してください</option>
           <option value="turf_construction_inquiry">人工芝施工のお問い合わせ</option>
           <option value="turf_purchase_inquiry">人工芝購入のお問い合わせ</option>
@@ -65,10 +65,9 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
 
       <div class="form-group">
         <label>内容 <span class="badge-required">必須</span></label>
-        <textarea name="message" rows="7" required placeholder="具体的なご要望や、施工場所の広さなどをご記入ください"></textarea>
+        <textarea name="message" id="formMessage" rows="7" required placeholder="具体的なご要望や、施工場所の広さなどをご記入ください"></textarea>
       </div>
 
-      {/* --- プライバシーポリシー同意 (1行維持設定) --- */}
       <div class="policy-agreement">
         <label class="checkbox-label">
           <input type="checkbox" name="policy_agreement" required id="policyCheck" />
@@ -78,7 +77,7 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
         </label>
       </div>
 
-      {/* Honeypot field */}
+      {/* Honeypot field for spam prevention */}
       <div style="display:none;">
         <label>Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
       </div>
@@ -135,7 +134,6 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
 
   .red { color: #d32f2f; }
 
-  /* フォームデザイン */
   .contact-form {
     max-width: 700px;
     margin: 0 auto;
@@ -189,15 +187,21 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     font-family: inherit;
   }
 
-  /* プライバシーポリシー同意エリア（1行化対応） */
+  .form-group input:focus, 
+  .form-group select:focus, 
+  .form-group textarea:focus {
+    outline: none;
+    border-color: #2e7d32;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+  }
+
   .policy-agreement {
     text-align: center;
     margin: 30px 0;
     padding: 12px;
     background: #f9f9f9;
     border-radius: 8px;
-    white-space: nowrap;
-    overflow: hidden;
   }
 
   .checkbox-label {
@@ -208,33 +212,11 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     cursor: pointer;
     font-weight: bold;
     font-size: 0.95rem;
-    max-width: 100%;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    cursor: pointer;
-    flex-shrink: 0;
   }
 
   .checkbox-text a {
     color: #2e7d32;
     text-decoration: underline;
-    text-underline-offset: 3px;
-    transition: color 0.2s;
-  }
-
-  .checkbox-text a:hover {
-    color: #1b5e20;
-    text-decoration-thickness: 2px;
-  }
-
-  .captcha-wrapper {
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
   }
 
   .submit-button {
@@ -258,6 +240,13 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     box-shadow: 0 6px 0 #1b5e20;
   }
 
+  .submit-button:disabled {
+    background: #ccc;
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+  }
+
   .status-message {
     text-align: center;
     margin-top: 15px;
@@ -269,27 +258,31 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     .contact-page-container { padding: 40px 15px; }
     .contact-form { padding: 25px 20px; }
     .contact-title { font-size: 1.8rem; }
-    .contact-intro { font-size: 0.85rem; }
     .pc-only { display: none; }
-    
-    .checkbox-label {
-      font-size: 0.85rem;
-      gap: 6px;
-    }
-    .checkbox-label input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-    }
-  }
-
-  @media (max-width: 340px) {
-    .checkbox-label {
-      font-size: 0.75rem;
-    }
   }
 </style>
 
 <script is:inline>
+  // 1. URLパラメータからシミュレーション結果を取得してフォームに埋めるロジック
+  function fillFromSimulator() {
+    const params = new URLSearchParams(window.location.search);
+    const area = params.get('area');
+    const cond = params.get('cond');
+    const total = params.get('total');
+    
+    const messageBox = document.getElementById('formMessage');
+    const categorySelect = document.getElementById('formCategory');
+
+    if (area && messageBox) {
+      messageBox.value = `【概算見積内容】\n・施工面積：${area} ㎡\n・現在の状況：${cond}\n・概算費用：約 ${total} 円\n\nこちらの内容で正式な現地調査・お見積もりを希望します。`;
+      
+      if (categorySelect) {
+        categorySelect.value = "turf_construction_inquiry";
+      }
+    }
+  }
+
+  // 2. GAS連携およびバリデーションロジック
   const ENDPOINT = "https://script.google.com/macros/s/AKfycbyLMiBdx8mhFKavAdvrotnnnDj0YhSVLpi7SMLURXNXPJhRsps-2FbPF0L3hagV_2Rz/exec";
   const MIN_FILL_MS = 3000;
   const form = document.getElementById("contactForm");
@@ -323,6 +316,8 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     }
   }
 
+  // 実行
+  fillFromSimulator();
   initToken(false);
 
   if (form) {
@@ -342,10 +337,11 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
 
       setStatus("送信中…");
       submitBtn.disabled = true;
+
       const fd = new FormData(form);
-      
       const tsInput = form.querySelector('input[name="cf-turnstile-response"]');
       const turnstileToken = tsInput ? (tsInput.value || "").trim() : "";
+      
       if (!turnstileToken) {
         setStatus("認証を完了させてください。", true);
         submitBtn.disabled = false;
@@ -374,21 +370,11 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
         const data = await res.json();
         
         if (data.ok) {
-          // --- Googleアナリティクス計測用イベント送信 ---
-          if (typeof gtag === 'function') {
-            gtag('event', 'generate_lead', {
-              'event_category': 'contact',
-              'event_label': 'contact_form_success',
-              'value': 1
-            });
-          }
-          // ------------------------------------------
-
           setStatus("お問い合わせを送信しました。ありがとうございます！");
           form.reset();
           initToken(true);
         } else {
-          setStatus("送信エラー: " + (data.error || "unknown"), true);
+          setStatus("エラー: " + (data.error || "unknown"), true);
           submitBtn.disabled = false;
         }
       } catch (e) {
