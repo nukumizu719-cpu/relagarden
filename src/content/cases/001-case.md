@@ -1,7 +1,7 @@
 ---
 title: "【岡崎市】雑草だらけの庭が劇的変身！子供が裸足で遊べる高品質人工芝へ"
 description: "毎年夏になると手に負えなかった雑草問題を、リラガーデンのオリジナル人工芝で解決。下地処理を徹底し、10年後も凹凸が出ない施工を行いました。"
-pubDate: 2026-02-10
+pubDate: 2025-10-10
 image: "/images/works/001a.jpg"
 beforeImage: "/images/works/001b.jpg"
 area: "岡崎市"
