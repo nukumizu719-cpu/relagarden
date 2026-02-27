@@ -3,34 +3,124 @@ import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
+interface Props {
+  exactTitle?: string;
+  description?: string;
+  ogImage?: string;
+}
+
 const { 
   exactTitle, 
-  description = "岡崎市の人工芝施工ならリラガーデン" 
+  description = "愛知県岡崎市を中心に高品質な人工芝施工を行うリラガーデン。下地処理に徹底的にこだわり、継ぎ目の目立たない美しい仕上がりと5年保証を提供します。見積もり相談無料。",
+  ogImage = "/ogp-main.png"
 } = Astro.props;
 
-const defaultTitle = "リラガーデン | 岡崎市の高品質人工芝施工";
+// SEOメタ設定
+const defaultTitle = "リラガーデン | 岡崎市の高品質人工芝施工・雑草対策";
+const title = exactTitle ? `${exactTitle} | リラガーデン` : defaultTitle;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+// JSON-LD (構造化データ)
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "LandscapingService",
+  "@id": "https://relagarden.jp/#organization",
+  "name": "リラガーデン",
+  "url": "https://relagarden.jp/",
+  "telephone": "+81-90-2133-4003",
+  "priceRange": "JPY",
+  "description": description,
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "岡崎市",
+    "addressRegion": "愛知県",
+    "postalCode": "444-0000",
+    "addressCountry": "JP"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 34.95,
+    "longitude": 137.17
+  },
+  "areaServed": [
+    { "@type": "City", "name": "岡崎市" },
+    { "@type": "City", "name": "安城市" },
+    { "@type": "City", "name": "幸田町" },
+    { "@type": "City", "name": "豊田市" }
+  ],
+  // 修正箇所：ogImageを絶対URLとして指定
+  "image": new URL(ogImage, Astro.site).toString(),
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    // 修正箇所：営業日を配列で指定
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "opens": "09:00",
+    "closes": "19:00"
+  }
+};
 ---
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    
-    <title>{exactTitle || defaultTitle}</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="canonical" href={canonicalURL} />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="title" content={title} />
     <meta name="description" content={description} />
-    
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={Astro.url} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={Astro.url} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={new URL(ogImage, Astro.site)} />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link 
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" 
+      rel="stylesheet" 
+      media="print" 
+      onload="this.media='all'" 
+    />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet" />
+    </noscript>
+
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
   </head>
   <body class="antialiased flex flex-col min-h-screen">
     <Header />
-    
-    <main class="flex-grow">
+    <main class="flex-grow focus:outline-none" id="main-content">
       <slot />
     </main>
-
     <Footer />
   </body>
 </html>
+
+<style is:global>
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+</style>
