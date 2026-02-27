@@ -4,15 +4,23 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
+    /* ブラウザの挙動を安定させるため、余計な余白をリセット */
+    @apply scroll-smooth antialiased;
   }
+  
   body {
-    /* デフォルトですべての文字に丸ゴシックを適用 */
-    @apply font-zen text-gray-900 bg-white;
+    /* 背景色と文字色を具体的に指定しつつ、フォントを適用 */
+    @apply font-zen text-gray-900 bg-white leading-relaxed;
   }
+
   img {
+    /* TailwindのPreflightが効いている前提ですが、
+       明示的にインラインブロックとの隙間を消す設定を推奨 */
     max-width: 100%;
     height: auto;
-    display: block;
+    vertical-align: middle;
+    /* 10件の事例画像など、表示速度を考慮して
+       基本はレイジーロードを推奨するがCSSでは形状のみ担保 */
+    font-style: italic; /* 画像未読み込み時のALTテキスト用 */
   }
 }
