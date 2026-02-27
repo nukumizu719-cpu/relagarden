@@ -1,0 +1,153 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('cases');
+  return entries.map(entry => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+const pageTitle = entry.data.title;
+---
+
+<BaseLayout pageTitle={pageTitle} description={entry.data.description}>
+  <article class="bg-white pb-20">
+    <div class="max-w-4xl mx-auto px-4 pt-12">
+      <nav class="flex text-xs text-gray-400 mb-6 gap-2">
+        <a href="/" class="hover:text-green-700 transition-colors">TOP</a>
+        <span>/</span>
+        <a href="/cases/" class="hover:text-green-700 transition-colors">施工事例</a>
+        <span>/</span>
+        <span class="text-gray-600">{entry.data.area}</span>
+      </nav>
+      
+      <h1 class="text-2xl md:text-3xl font-bold mb-10 font-zen leading-tight text-gray-900 border-b pb-6">
+        <span class="block text-sm text-green-700 mb-2">{entry.data.area}の施工事例</span>
+        {entry.data.title}
+      </h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+        {entry.data.beforeImage && (
+          <div class="space-y-3">
+            <div class="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50">
+              <span class="absolute top-4 left-4 bg-gray-800/80 backdrop-blur-sm text-white px-3 py-1 text-[10px] font-bold tracking-widest rounded z-10">BEFORE</span>
+              <img src={entry.data.beforeImage} class="w-full h-full object-cover grayscale-[0.2]" alt="施工前" />
+            </div>
+            <p class="text-center text-xs text-gray-400 italic font-medium">施工前のお悩みのお庭</p>
+          </div>
+        )}
+        <div class="space-y-3">
+          <div class="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-xl border-4 border-green-50">
+            <span class="absolute top-4 left-4 bg-green-700 text-white px-3 py-1 text-[10px] font-bold tracking-widest rounded z-10">AFTER</span>
+            <img src={entry.data.image} class="w-full h-full object-cover" alt="施工後" />
+          </div>
+          <p class="text-center text-xs text-green-700 font-bold">施工後の理想のお庭</p>
+        </div>
+      </div>
+
+      <div class="space-y-12 mb-20">
+        {entry.data.beforeConcerns && (
+          <div class="relative max-w-2xl mx-auto transform -rotate-1">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-400 rounded-full shadow-inner z-20 opacity-80"></div>
+            <div class="bg-[#f0f4f8] p-8 md:p-10 shadow-lg border-b-4 border-blue-100 rounded-sm">
+              <h3 class="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2 font-zen">
+                <span class="text-xl">😟</span> 施工前の悩み
+              </h3>
+              <p class="text-blue-900/80 leading-relaxed font-medium italic">{entry.data.beforeConcerns}</p>
+            </div>
+          </div>
+        )}
+
+        {entry.data.customerVoice && (
+          <div class="relative max-w-2xl mx-auto transform rotate-1">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-8 bg-red-500 rounded-full shadow-inner z-20 opacity-80"></div>
+            <div class="bg-[#ffffa0] p-8 md:p-10 shadow-lg border-b-4 border-yellow-200 rounded-sm">
+              <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2 font-zen">
+                <span class="text-xl">😊</span> 施工完了：お客様の声
+              </h3>
+              <p class="text-gray-800 leading-relaxed font-bold italic text-lg md:text-xl">{entry.data.customerVoice}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {entry.data.constructionPoints && entry.data.constructionPoints.length > 0 && (
+        <div class="mb-20">
+          <h2 class="text-center text-xl font-bold font-zen text-gray-800 mb-8 flex items-center justify-center gap-4">
+            <span class="w-8 h-px bg-green-200"></span>
+            施工のポイント
+            <span class="w-8 h-px bg-green-200"></span>
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {entry.data.constructionPoints.map((point) => (
+              <div class="bg-white border-t-4 border-green-700 p-6 shadow-md rounded-xl hover:-translate-y-1 transition-transform">
+                <div class="bg-green-50 w-8 h-8 rounded-full flex items-center justify-center text-green-700 font-bold mb-4 text-xs">✓</div>
+                <p class="text-[13px] md:text-sm text-gray-700 leading-relaxed font-bold">{point}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div class="prose prose-lg max-w-none prose-green pt-16 border-t border-gray-100
+        prose-h2:text-2xl prose-h2:font-zen prose-h2:text-gray-800 prose-h2:border-l-4 prose-h2:border-green-700 prose-h2:pl-4
+        prose-strong:text-green-900">
+        <Content />
+      </div>
+
+      {/* 問い合わせ誘導エリア（LINEリンクから修正） */}
+      <div class="mt-20 p-8 md:p-12 bg-green-900 rounded-[40px] text-center text-white shadow-2xl relative overflow-hidden">
+        <div class="relative z-10">
+          <h2 class="text-2xl md:text-3xl font-bold font-zen mb-4">あなたのお庭も、劇的に変えませんか？</h2>
+          <p class="text-green-100 mb-8 text-sm md:text-base opacity-90 leading-relaxed">
+            現地調査・お見積もりは無料です。<br class="md:hidden" />
+            まずはお気軽にお問い合わせフォームよりご相談ください。
+          </p>
+          <div class="flex flex-col md:flex-row items-center justify-center gap-4">
+            <a href="/contact/" class="w-full md:w-auto inline-block bg-white text-green-900 px-12 py-4 rounded-full font-bold shadow-lg hover:bg-green-50 transition-all">
+              無料見積もり・相談
+            </a>
+            <a href="tel:09021334003" class="w-full md:w-auto inline-block border border-white/30 bg-white/10 backdrop-blur-sm text-white px-10 py-4 rounded-full font-bold hover:bg-white/20 transition-all">
+              電話で相談する
+            </a>
+          </div>
+        </div>
+        {/* 装飾用背景 */}
+        <div class="absolute top-0 right-0 w-40 h-40 bg-green-800 rounded-full -mr-20 -mt-20 opacity-40"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 bg-green-950 rounded-full -ml-16 -mb-16 opacity-40"></div>
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style is:global>
+  /* 紙がめくれたような影の演出 */
+  .rotate-1 > div::after, .-rotate-1 > div::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    right: 12px;
+    bottom: 8px;
+    width: 45%;
+    height: 20%;
+    background: rgba(0, 0, 0, 0.2);
+    box-shadow: 0 15px 15px rgba(0, 0, 0, 0.3);
+    transform: rotate(4deg);
+  }
+
+  /* 本文内のリスト（チェックマーク）とマーカー線 */
+  .prose ul { list-style: none !important; padding-left: 0 !important; }
+  .prose li { position: relative; padding-left: 2rem !important; margin-bottom: 0.5rem !important; }
+  .prose li::before {
+    content: "✔";
+    position: absolute;
+    left: 0;
+    color: #15803d;
+    font-weight: bold;
+  }
+  .prose strong {
+    background: linear-gradient(transparent 70%, #dcfce7 70%);
+  }
+</style>

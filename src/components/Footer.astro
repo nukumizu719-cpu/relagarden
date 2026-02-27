@@ -5,11 +5,13 @@ const year = new Date().getFullYear();
   <div class="container footer-inner">
     
     <div class="footer-section footer-logo-area">
-      <img src="/images/logo.png" alt="RelaGarden" class="footer-logo" />
+      <a href="/" class="footer-logo-link">
+        <img src="/images/logo.png" alt="RelaGarden" class="footer-logo-img" />
+      </a>
     </div>
 
     <div class="footer-section footer-info-area">
-      <p class="brand-name">リラガーデン (RelaGarden)</p>
+      <p class="brand-name font-zen">リラガーデン (RelaGarden)</p>
       <p class="company-name">運営：FOURTEEN HEARTS</p>
       <p class="address">愛知県岡崎市森越町字与治43</p>
     </div>
@@ -23,6 +25,12 @@ const year = new Date().getFullYear();
   <div class="footer-copy">
     <div class="container">
       <nav class="footer-nav">
+        <a href="/about/">会社概要</a>
+        <span class="nav-divider">|</span>
+        <a href="/cases/">施工事例</a>
+        <span class="nav-divider">|</span>
+        <a href="/contact/">お問い合わせ</a>
+        <span class="nav-divider">|</span>
         <a href="/privacy/">プライバシーポリシー</a>
       </nav>
       <p class="copyright">&copy; {year} RelaGarden All Rights Reserved.</p>
@@ -35,6 +43,13 @@ const year = new Date().getFullYear();
     background-color: #333;
     color: #ffffff;
     padding: 60px 0 0 0;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
   }
 
   .footer-inner {
@@ -49,15 +64,21 @@ const year = new Date().getFullYear();
     flex: 0 1 auto; 
   }
 
-  /* ロゴ設定 */
-  .footer-logo {
-    width: 200px;
-    height: auto;
-    filter: grayscale(1) brightness(3);
+  /* ロゴエリア */
+  .footer-logo-link {
     display: block;
+    height: 48px;
+    width: auto;
   }
 
-  /* 会社情報 */
+  .footer-logo-img {
+    height: 100%;
+    width: auto;
+    display: block;
+    object-fit: contain;
+  }
+
+  /* 情報エリア */
   .footer-info-area {
     text-align: center;
     min-width: 250px;
@@ -75,60 +96,77 @@ const year = new Date().getFullYear();
     margin: 0;
   }
 
-  /* コーポレートアイコン */
+  /* アイコンエリア */
   .footer-corp-icon {
     width: 100px;
     height: auto;
     display: block;
-    filter: brightness(0.8);
   }
 
-  /* コピーライト & ナビエリア */
+  /* コピーライト・ナビエリア */
   .footer-copy {
     text-align: center;
-    padding: 30px 0; /* 上下の余白を少し広げてゆとりを持たせる */
+    padding: 30px 0;
     border-top: 1px solid #444;
   }
 
   .footer-nav {
-    margin-bottom: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px 15px;
   }
 
   .footer-nav a {
-    color: #ffffff; /* 白文字に指定 */
+    color: #ffffff;
     text-decoration: none;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: opacity 0.2s ease;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* さりげない下線 */
-    padding-bottom: 2px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    transition: color 0.2s;
   }
 
   .footer-nav a:hover {
-    opacity: 0.7; /* ホバー時に少し透過させて反応を示す */
-    border-bottom-color: #ffffff;
+    color: #2e7d32;
+  }
+
+  .nav-divider {
+    color: #555;
+    font-size: 0.8rem;
+    user-select: none;
   }
 
   .copyright {
     font-size: 0.75rem;
-    color: #aaaaaa; /* コピーライトは少し落として情報の優先度を下げる */
+    color: #aaaaaa;
     margin: 0;
+    letter-spacing: 0.05em;
   }
 
-  /* モバイル対応 (700px以下) */
+  /* レスポンシブ */
   @media (max-width: 700px) {
     .footer-inner {
       flex-direction: column;
       gap: 30px;
       padding-bottom: 30px;
     }
-    
+    /* スマホ時はアイコンを一番上に配置し、ロゴを下へ */
     .footer-icon-area { order: 1; }
     .footer-info-area { order: 2; }
     .footer-logo-area { order: 3; }
 
-    .footer-logo, .footer-corp-icon {
+    .footer-logo-link {
+      height: 40px;
       margin: 0 auto;
+    }
+    .footer-corp-icon {
+      margin: 0 auto;
+    }
+    .nav-divider {
+      display: none; /* スマホでは区切り線を消して間隔で調整 */
+    }
+    .footer-nav {
+      gap: 10px 20px;
     }
   }
 </style>

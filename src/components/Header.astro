@@ -1,51 +1,205 @@
 ---
-// Header.astro
+// ヘッダーコンポーネント
 ---
+
 <header class="site-header">
   <div class="header-inner">
-    <a href="/" class="logo">
-      <img src="/images/logo.png" alt="RelaGarden" />
+    <a href="/" class="header-logo-link">
+      <img src="/images/logo.png" alt="RelaGarden" class="header-logo-img" />
     </a>
+
     <div class="header-right">
-      <div class="contact-info">
-        <a href="tel:09021334003" class="tel">090-2133-4003</a>
-        <span class="hours">営業時間 9:00〜19:00(不定休)</span>
+      <nav class="pc-nav">
+        <a href="/about/" class="nav-item">会社概要</a>
+        <a href="/cases/" class="nav-item">施工事例</a>
+        <a href="/contact/" class="nav-item contact-btn">お問い合わせ</a>
+      </nav>
+
+      <div class="contact-sns-group">
+        <div class="contact-info">
+          <a href="tel:09021334003" class="tel-link">
+            <svg class="tel-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21.97 18.33C21.97 18.69 21.89 19.06 21.72 19.42C21.55 19.78 21.33 20.12 21.04 20.44C20.55 20.98 20.01 21.37 19.4 21.62C18.8 21.87 18.15 22 17.45 22C16.43 22 15.34 21.76 14.19 21.27C13.04 20.78 11.89 20.12 10.75 19.29C9.6 18.45 8.51 17.52 7.47 16.49C6.44 15.45 5.51 14.36 4.68 13.22C3.86 12.08 3.2 10.94 2.72 9.81C2.24 8.67 2 7.58 2 6.55C2 5.86 2.12 5.21 2.36 4.61C2.6 4.01 2.99 3.47 3.52 2.97C4.17 2.32 4.85 2 5.54 2C5.8 2 6.06 2.05 6.31 2.16C6.56 2.27 6.78 2.44 6.96 2.69L9.33 6.03C9.51 6.28 9.64 6.52 9.71 6.75C9.78 6.98 9.81 7.2 9.81 7.41C9.81 7.69 9.74 7.96 9.59 8.22C9.44 8.48 9.23 8.75 8.97 9.03L8.17 9.86C8.06 9.97 8 10.11 8 10.28C8 10.37 8.01 10.45 8.02 10.53C8.04 10.61 8.07 10.68 8.1 10.76C8.29 11.13 8.63 11.61 9.12 12.19C9.61 12.77 10.18 13.38 10.82 14.02C11.47 14.66 12.08 15.23 12.66 15.72C13.24 16.21 13.72 16.55 14.09 16.74C14.16 16.77 14.23 16.8 14.31 16.82C14.39 16.84 14.47 16.85 14.56 16.85C14.74 16.85 14.88 16.79 14.99 16.68L15.81 15.86C16.09 15.59 16.37 15.38 16.63 15.23C16.89 15.08 17.16 15.01 17.44 15.01C17.66 15.01 17.88 15.04 18.11 15.11C18.34 15.18 18.57 15.31 18.82 15.48L22.16 17.84C22.41 18.02 22.58 18.23 22.69 18.48C22.8 18.73 22.85 18.99 22.85 19.26C21.97 18.33 17.07 15.55 17.07 15.55" stroke="#2E7D32" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="tel-num">090-2133-4003</span>
+          </a>
+          <span class="hours pc-only">営業時間 9:00〜19:00(不定休)</span>
+        </div>
+
+        <div class="sns-icons">
+          <a href="https://www.instagram.com/relagarden" target="_blank" class="sns-link">
+            <img src="/images/instagram.png" alt="Instagram" />
+          </a>
+          <a href="https://www.youtube.com/@relagarden" target="_blank" class="sns-link">
+            <img src="/images/youtube.png" alt="YouTube" />
+          </a>
+        </div>
       </div>
-      <div class="sns-icons">
-        <a href="https://www.instagram.com/relagarden" target="_blank"><img src="/images/instagram.png" alt="Instagram" /></a>
-        <a href="https://www.youtube.com/@relagarden" target="_blank"><img src="/images/youtube.png" alt="YouTube" /></a>
-      </div>
+
+      <button id="menu-toggle" class="menu-toggle" aria-label="メニューを開く">
+        <span class="bar bar-top"></span>
+        <span class="bar bar-mid"></span>
+        <span class="bar bar-bottom"></span>
+      </button>
     </div>
   </div>
+
+  <nav id="mobile-menu" class="mobile-menu">
+    <div class="mobile-menu-inner">
+      <a href="/about/" class="mobile-nav-item">会社概要</a>
+      <a href="/cases/" class="mobile-nav-item">施工事例</a>
+      <a href="/contact/" class="mobile-nav-item mobile-contact-btn">お問い合わせフォーム</a>
+      <div class="mobile-info-bottom">
+        <p class="mobile-hours">営業時間 9:00〜19:00(不定休)</p>
+      </div>
+    </div>
+  </nav>
 </header>
+
+<script>
+  const btn = document.getElementById('menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const body = document.body;
+
+  btn?.addEventListener('click', () => {
+    btn.classList.toggle('is-active');
+    menu?.classList.toggle('is-active');
+    body.classList.toggle('menu-open');
+  });
+</script>
 
 <style>
   .site-header {
     position: sticky;
     top: 0;
-    z-index: 1000; /* Heroより必ず上 */
+    z-index: 2000;
     background: #ffffff;
     border-bottom: 1px solid #e6e6e6;
     width: 100%;
   }
+
   .header-inner {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 12px 24px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .logo img { height: 48px; width: auto; display: block; }
-  .header-right { display: flex; align-items: center; gap: 20px; }
-  .contact-info { display: flex; flex-direction: column; text-align: right; }
-  .tel { color: #2e7d32; font-weight: bold; font-size: 1.25rem; text-decoration: none; }
-  .hours { font-size: 0.8rem; color: #666; }
-  .sns-icons { display: flex; gap: 10px; }
-  .sns-icons img { width: 36px; height: 36px; }
 
-  @media (max-width: 700px) {
-    .header-inner { flex-direction: column; gap: 8px; padding: 10px; }
-    .contact-info { text-align: center; }
+  .header-logo-link {
+    display: block;
+    height: 44px;
+    flex-shrink: 0;
   }
+
+  .header-logo-img {
+    height: 100%;
+    width: auto;
+    display: block;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  /* ナビゲーション */
+  .pc-nav { display: flex; align-items: center; gap: 15px; margin-right: 10px; }
+  .nav-item { text-decoration: none; color: #333; font-weight: bold; font-size: 0.9rem; transition: color 0.3s; }
+  .nav-item:hover { color: #2e7d32; }
+  .contact-btn { background: #2e7d32; color: #fff !important; padding: 6px 15px; border-radius: 50px; }
+
+  /* 電話・SNSグループ */
+  .contact-sns-group { display: flex; align-items: center; gap: 12px; }
+  .contact-info { display: flex; flex-direction: column; text-align: right; }
+  
+  .tel-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #2e7d32;
+    font-weight: 900;
+    font-size: 1.1rem;
+    text-decoration: none;
+  }
+
+  /* SVGアイコンのスタイル */
+  .tel-icon-svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+  
+  .hours { font-size: 0.65rem; color: #888; margin-top: -2px; }
+
+  .sns-icons { display: flex; gap: 8px; }
+  .sns-icons img { width: 28px; height: 28px; transition: opacity 0.3s; }
+  .sns-icons img:hover { opacity: 0.7; }
+
+  /* ハンバーガー */
+  .menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    position: relative;
+    z-index: 2100;
+    padding: 0;
+  }
+  .bar { display: block; width: 24px; height: 2px; background: #333; position: absolute; left: 8px; transition: 0.3s; }
+  .bar-top { top: 13px; }
+  .bar-mid { top: 19px; }
+  .bar-bottom { top: 25px; }
+  .menu-toggle.is-active .bar-top { transform: translateY(6px) rotate(45deg); }
+  .menu-toggle.is-active .bar-mid { opacity: 0; }
+  .menu-toggle.is-active .bar-bottom { transform: translateY(-6px) rotate(-45deg); }
+
+  /* モバイルドロワー */
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.98);
+    transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mobile-menu.is-active { right: 0; }
+  .mobile-menu-inner { display: flex; flex-direction: column; gap: 24px; text-align: center; width: 80%; }
+  .mobile-nav-item { font-size: 1.4rem; font-weight: bold; color: #333; text-decoration: none; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+  .mobile-contact-btn { background: #2e7d32; color: #fff; padding: 15px; border-radius: 12px; border: none; }
+
+  /* --- レスポンシブ調整 --- */
+  @media (max-width: 1024px) {
+    .pc-nav { display: none; }
+    .menu-toggle { display: block; }
+  }
+
+  @media (max-width: 640px) {
+    .header-inner { padding: 8px 12px; }
+    .header-logo-link { height: 32px; }
+    .tel-num { display: none; } /* スマホではアイコンだけに調整 */
+    .tel-link { 
+        background: #f1f8f3; 
+        width: 38px; 
+        height: 38px; 
+        border-radius: 10px; /* シックな角丸 */
+        justify-content: center;
+        gap: 0;
+    }
+    .tel-icon-svg { width: 22px; height: 22px; }
+    .sns-icons img { width: 32px; height: 32px; }
+    .contact-sns-group { gap: 10px; }
+    .pc-only { display: none; }
+  }
+
+  :global(body.menu-open) { overflow: hidden; }
 </style>

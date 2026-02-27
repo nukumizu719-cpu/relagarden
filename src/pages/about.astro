@@ -1,0 +1,313 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Header from '../components/Header.astro';
+
+const exactTitle = "会社概要 | リラガーデン(RelaGarden)";
+
+const services = [
+  "人工芝の施工・販売",
+  "ウッドデッキ",
+  "フェンス",
+  "インターロッキング",
+  "花壇",
+  "伐採・抜根",
+  "砂利敷き",
+  "物置設置"
+];
+---
+
+<BaseLayout exactTitle={exactTitle}>
+  <Header slot="header-slot" />
+
+  <div class="about-page-container">
+    {/* ページヘッダー */}
+    <div class="about-header">
+      <h1 class="about-title">会社概要</h1>
+      <p class="about-intro">
+        株式会社フォーティーンハーツが運営するリラガーデンの、<br class="pc-only">
+        理念・代表挨拶および企業情報についてご紹介いたします。
+      </p>
+    </div>
+
+    {/* 代表挨拶セクション */}
+    <div class="ceo-section">
+      <div class="ceo-image">
+        <img src="/images/ceo.jpg" alt="代表取締役社長 谷口 徳明" />
+      </div>
+      <div class="ceo-content">
+        <h2 class="ceo-heading text-green-700 font-bold">「お庭」を、一番好きな居場所へ。</h2>
+        <div class="ceo-message">
+          <p>
+            家族で過ごす週末、お子様が裸足で走り回る時間。お庭は本来、家の中で最も自由で、心地よい場所であるべきだと私たちは考えます。
+          </p>
+          <p>
+            しかし、実際には雑草の手入れやメンテナンスに追われ、「手のかかる場所」になってしまっているケースも少なくありません。
+          </p>
+          <p>
+            私たちは人工芝の施工を軸に、お客様をメンテナンスの悩みから解放し、笑顔が生まれる理想の空間を提供しています。愛知県岡崎市を拠点に、地域に根ざした誠実な施工をお約束します。
+          </p>
+        </div>
+        <div class="ceo-signature">
+          <span class="ceo-post">代表取締役社長</span>
+          <span class="ceo-name">谷口 徳明</span>
+        </div>
+      </div>
+    </div>
+
+    {/* 企業情報テーブルセクション */}
+    <div class="info-card">
+      <h3 class="info-card-title">企業データ</h3>
+      <table class="info-table">
+        <tbody>
+          <tr>
+            <th>運営会社</th>
+            <td>株式会社フォーティーンハーツ (FOURTEEN HEARTS)</td>
+          </tr>
+          <tr>
+            <th>サービス名</th>
+            <td>リラガーデン (RelaGarden)</td>
+          </tr>
+          <tr>
+            <th>創立</th>
+            <td>2021年(令和3年) 9月</td>
+          </tr>
+          <tr>
+            <th>所在地</th>
+            <td>〒444-0901 愛知県岡崎市森越町字与治43</td>
+          </tr>
+          <tr>
+            <th>事業内容</th>
+            <td>造園・外構エクステリア事業全般</td>
+          </tr>
+          <tr>
+            <th>施工メニュー</th>
+            <td class="service-tags">
+              {services.map(service => (
+                <span class="service-tag">{service}</span>
+              ))}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {/* アクセスマップ */}
+    <div class="map-section">
+      <h3 class="info-card-title">アクセス</h3>
+      <div class="map-wrapper">
+        <iframe 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3271.74233777274!2d137.13524827641035!3d34.91289137284428!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6004bb1529124929%3A0x6207f2145983d91b!2z44CSNDQ0LTA5MDEg5oSb55-l55yM5bKh5bSO5biC5qOu6Yit55S65LiO5rK7NDM!5e0!3m2!1sja!2sjp!4v1710000000000!5m2!1sja!2sjp" 
+          width="100%" 
+          height="100%" 
+          style="border:0;" 
+          allowfullscreen="" 
+          loading="lazy">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* contact.astroと共通の世界観 */
+  .about-page-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 24px;
+    background-color: #fcfcfc;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .about-header {
+    max-width: 700px;
+    margin: 0 auto 60px;
+    text-align: center;
+  }
+
+  .about-title {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 20px;
+  }
+
+  .about-intro {
+    font-size: 0.95rem;
+    color: #666;
+    line-height: 1.8;
+  }
+
+  /* 代表挨拶セクション */
+  .ceo-section {
+    max-width: 900px;
+    margin: 0 auto 80px;
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 40px;
+    align-items: center;
+    background: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+
+  .ceo-image img {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  .ceo-heading {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+
+  .ceo-message {
+    font-size: 0.95rem;
+    color: #444;
+    line-height: 1.8;
+    margin-bottom: 30px;
+  }
+
+  .ceo-message p {
+    margin-bottom: 15px;
+  }
+
+  .ceo-signature {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ceo-post {
+    font-size: 0.8rem;
+    color: #888;
+  }
+
+  .ceo-name {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  /* 企業データカード */
+  .info-card {
+    max-width: 900px;
+    margin: 0 auto 40px;
+    background: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+
+  .info-card-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #2e7d32;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e8f5e9;
+    text-align: center;
+  }
+
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .info-table th, .info-table td {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+  }
+
+  .info-table th {
+    width: 30%;
+    text-align: left;
+    color: #2e7d32;
+    background-color: #f9fbf9;
+    font-weight: bold;
+  }
+
+  .info-table td {
+    color: #333;
+    line-height: 1.6;
+  }
+
+  /* 施工メニュータグ */
+  .service-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .service-tag {
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 20px;
+  }
+
+  /* マップセクション */
+  .map-section {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+  }
+
+  .map-wrapper {
+    width: 100%;
+    height: 400px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #eee;
+  }
+
+  /* レスポンシブ設定 */
+  @media (max-width: 900px) {
+    .ceo-section {
+      grid-template-columns: 1fr;
+      padding: 30px 20px;
+    }
+    .ceo-image {
+      max-width: 300px;
+      margin: 0 auto;
+    }
+    .info-table th {
+      width: 35%;
+      padding: 15px 10px;
+    }
+    .info-table td {
+      padding: 15px 10px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .about-page-container { padding: 40px 15px; }
+    .about-title { font-size: 1.8rem; }
+    .pc-only { display: none; }
+    .info-table tr {
+      display: flex;
+      flex-direction: column;
+    }
+    .info-table th {
+      width: 100%;
+      background: none;
+      padding-bottom: 5px;
+      border-bottom: none;
+    }
+    .info-table td {
+      width: 100%;
+      padding-top: 5px;
+    }
+    .map-wrapper { height: 300px; }
+  }
+</style>

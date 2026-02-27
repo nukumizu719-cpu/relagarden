@@ -3,16 +3,18 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 
-const pageTitle = "プライバシーポリシー";
+const exactTitle = "プライバシーポリシー | リラガーデン(RelaGarden)";
+const description = "RelaGarden（リラガーデン）の個人情報保護方針について。お客様からお預かりした個人情報の取り扱い、利用目的、管理方法について定めています。";
 ---
 
-<BaseLayout pageTitle={pageTitle}>
+<BaseLayout exactTitle={exactTitle} description={description}>
   <Header slot="header-slot" />
 
   <main class="privacy-page">
     <section class="page-header">
       <div class="container">
-        <h1>{pageTitle}</h1>
+        <span class="sub-title">Privacy Policy</span>
+        <h1>プライバシーポリシー</h1>
         <p class="lead-text">
           RelaGarden（以下「当店」）は、お客様の個人情報を適切に取り扱うことを重要な責務と考え、以下の方針に基づき個人情報の保護に努めます。
         </p>
@@ -21,7 +23,7 @@ const pageTitle = "プライバシーポリシー";
 
     <section class="privacy-content">
       <div class="container narrow-container">
-        <div class="privacy-body">
+        <div class="privacy-body card-style">
           <section class="policy-section">
             <h2>1. 個人情報の定義</h2>
             <p>
@@ -57,14 +59,14 @@ const pageTitle = "プライバシーポリシー";
           <section class="policy-section">
             <h2>5. 個人情報の開示・訂正・削除</h2>
             <p>
-              お客様ご本人から、当店が保有する自己の個人情報の開示・訂正・削除等のご希望があった場合には、ご本人確認 of うえ、合理的な範囲で速やかに対応いたします。
+              お客様ご本人から、当店が保有する自己の個人情報の開示・訂正・削除等のご希望があった場合には、ご本人確認のうえ、合理的な範囲で速やかに対応いたします。
             </p>
           </section>
 
           <section class="policy-section">
             <h2>6. アクセス解析ツールの利用について</h2>
             <p>
-              当店は、サイトの利用状況を把握しサービス向上に役立てるため、アクセス解析ツールを利用する場合があります。その際、クッキー等を通じて匿名のトラフィックデータを収集することがありますが、個人を特定するものではありません。
+              当店は、サイトの利用状況を把握しサービス向上に役立てるため、アクセス解析ツールを利用しています。これらはクッキー（Cookie）を通じてトラフィックデータを収集しますが、匿名であり個人を特定するものではありません。
             </p>
           </section>
 
@@ -78,7 +80,7 @@ const pageTitle = "プライバシーポリシー";
           <section class="policy-section">
             <h2>8. お問い合わせ窓口</h2>
             <p>
-              本ポリシーに関するお問い合わせは、<a href="/contact/">お問い合わせページ</a>または当店の連絡先までご連絡ください。
+              本ポリシーに関するお問い合わせは、<a href="/contact/">お問い合わせページ</a>よりご連絡ください。
             </p>
           </section>
         </div>
@@ -90,93 +92,116 @@ const pageTitle = "プライバシーポリシー";
 </BaseLayout>
 
 <style>
-  /* 下層ページ共通ヘッダー */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
   .page-header {
-    background-color: #f7f7f7;
-    padding: 80px 0 60px;
+    background-color: #f8faf8;
+    padding: 100px 0 60px;
     text-align: center;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid #e8f5e9;
+  }
+
+  .sub-title {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #2e7d32;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
   }
 
   .page-header h1 {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     font-weight: bold;
     color: #2e7d32;
-    margin: 0 0 20px 0;
+    margin: 0 0 25px 0;
     font-family: 'Zen Maru Gothic', sans-serif;
   }
 
   .lead-text {
     max-width: 700px;
     margin: 0 auto;
-    color: #666666;
+    color: #666;
     line-height: 1.8;
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
-  /* 本文エリア */
   .privacy-content {
-    padding: 80px 0;
-    background-color: #ffffff;
+    padding: 60px 0 100px;
+    background-color: #fcfcfc;
   }
 
   .narrow-container {
-    max-width: 800px;
+    max-width: 850px;
+  }
+
+  .card-style {
+    background: #fff;
+    padding: 60px;
+    border-radius: 12px;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
   }
 
   .policy-section {
     margin-bottom: 50px;
   }
 
+  .policy-section:last-child {
+    margin-bottom: 0;
+  }
+
   .policy-section h2 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: bold;
-    color: #333333;
-    border-left: 5px solid #2e7d32;
-    padding-left: 15px;
+    color: #333;
+    border-left: 6px solid #2e7d32;
+    padding: 2px 0 2px 15px;
     margin: 0 0 20px 0;
     font-family: 'Zen Maru Gothic', sans-serif;
   }
 
   .policy-section p {
-    color: #444444;
-    line-height: 1.9;
+    color: #444;
+    line-height: 2;
     margin: 0;
+    font-size: 0.95rem;
   }
 
   .policy-list {
-    margin: 15px 0 0 0;
+    margin: 20px 0 0 0;
     padding-left: 20px;
   }
 
   .policy-list li {
-    margin-bottom: 10px;
-    color: #444444;
+    margin-bottom: 12px;
+    color: #444;
     list-style: disc;
+    line-height: 1.7;
   }
 
   .policy-section a {
     color: #2e7d32;
     text-decoration: underline;
+    text-underline-offset: 4px;
     font-weight: bold;
+    transition: color 0.2s;
   }
 
-  /* モバイル対応 */
+  .policy-section a:hover {
+    color: #1b5e20;
+  }
+
   @media (max-width: 700px) {
-    .page-header {
-      padding: 60px 0 40px;
-    }
-    
-    .page-header h1 {
-      font-size: 1.8rem;
-    }
-
-    .privacy-content {
-      padding: 40px 0;
-    }
-
-    .policy-section h2 {
-      font-size: 1.2rem;
-    }
+    .page-header { padding: 60px 0 40px; }
+    .page-header h1 { font-size: 1.8rem; }
+    .card-style { padding: 30px 20px; border-radius: 0; border-left: none; border-right: none; }
+    .privacy-content { padding: 40px 0; }
+    .policy-section h2 { font-size: 1.15rem; }
   }
 </style>

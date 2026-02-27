@@ -1,109 +1,36 @@
 ---
-// BaseLayout.astro
-interface Props {
-  pageTitle?: string;
-  description?: string;
-  exactTitle?: string;
-}
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 
 const { 
-  pageTitle, 
-  exactTitle,
-  description = "愛知県岡崎市の人工芝施工・販売ならリラガーデン（RelaGarden / Relagarden / ReraGarden）。自社オリジナル人工芝を豊富にラインナップし、高品質な施工で理想の庭づくりを実現します。" 
+  exactTitle, 
+  description = "岡崎市の人工芝施工ならリラガーデン" 
 } = Astro.props;
 
-const siteName = "リラガーデン(RelaGarden)";
-const siteUrl = "https://relagarden.jp";
-
-// ★修正：ソフト404回避のため、現在のページのURLを正しく取得する
-const canonicalURL = new URL(Astro.url.pathname, siteUrl).href;
-
-/**
- * SEOロジック: 
- */
-const fullTitle = exactTitle
-  ? exactTitle
-  : pageTitle 
-    ? `${pageTitle} | 岡崎市の人工芝施工なら${siteName}`
-    : `岡崎市の人工芝施工・販売なら${siteName} | 理想の庭づくりを実現`;
+const defaultTitle = "リラガーデン | 岡崎市の高品質人工芝施工";
 ---
 <!DOCTYPE html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    
-    <title>{fullTitle}</title>
+    <title>{exactTitle || defaultTitle}</title>
     <meta name="description" content={description} />
-    
-    <link rel="canonical" href={canonicalURL} />
-
-    <meta property="og:site_name" content={siteName} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonicalURL} />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content={`${siteUrl}/ogp.png`} />
-    <meta name="twitter:card" content="summary_large_image" />
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
-
-    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-3BT9WT4PS9"></script>
-    <script is:inline>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-3BT9WT4PS9');
-    </script>
-
-    <script type="application/ld+json" is:inline>
-      {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": "リラガーデン(RelaGarden)",
-        "description": "愛知県岡崎市の人工芝施工専門店",
-        "url": "https://relagarden.jp",
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "岡崎市",
-          "addressRegion": "JP-23"
-        }
-      }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
   </head>
-  <body>
-    <slot name="header-slot" />
-    <main class="site-main">
+  <body class="antialiased flex flex-col min-h-screen">
+    <Header />
+    
+    <main class="flex-grow">
       <slot />
     </main>
-    <slot name="footer-slot" />
 
-    <style is:global>
-      :root {
-        --color-main: #2e7d32;
-        --color-text: #222222;
-        --color-bg-light: #f7f7f7;
-      }
-      * { box-sizing: border-box; }
-      body {
-        margin: 0; padding: 0;
-        color: var(--color-text);
-        font-family: 'Zen Maru Gothic', sans-serif;
-        line-height: 1.6;
-        background-color: #ffffff;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      .site-main { display: block; width: 100%; position: relative; min-height: 60vh; }
-      .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-      @media (max-width: 700px) { .container { padding: 0 15px; } }
-      img { max-width: 100%; height: auto; }
-      a { color: inherit; text-decoration: none; }
-      html { scroll-behavior: smooth; }
-    </style>
+    <Footer />
   </body>
 </html>

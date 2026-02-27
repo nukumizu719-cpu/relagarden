@@ -1,127 +1,91 @@
 ---
----
-<section class="works-section" id="top-works">
-  <div class="container">
-    <h2 class="section-title">施工事例</h2>
+import { getCollection } from 'astro:content';
 
-    <div class="instagram-embed-wrapper">
-      <iframe 
-        src="https://snapwidget.com/embed/1117353" 
-        class="snapwidget-widget" 
-        title="Posts from Instagram"
-        allowtransparency="true" 
-        frameborder="0" 
-        scrolling="no"
-      ></iframe>
+const allCases = await getCollection('cases');
+// 日付順にソートして最新3件を取得（アンダースコアで始まる下書きを除外）
+const recentCases = allCases
+  .filter(entry => !entry.slug.startsWith('_'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<section class="py-20 bg-[#f9faf7]" id="top-works">
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold font-zen text-gray-800 mb-4 flex items-center justify-center gap-3">
+        <span class="w-8 h-[2px] bg-green-700 hidden md:block"></span>
+        施工事例
+        <span class="w-8 h-[2px] bg-green-700 hidden md:block"></span>
+      </h2>
+      <p class="text-gray-600 font-medium font-zen">下地からこだわる、リラガーデンの確かな施工実績</p>
     </div>
 
-    <div class="button-area">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+      {recentCases.map((caseEntry) => (
+        <article class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col relative">
+          {/* カード全体へのリンク導線1：画像 */}
+          <a href={`/cases/${caseEntry.slug}/`} class="relative block overflow-hidden aspect-[16/10]">
+            <img 
+              src={caseEntry.data.image} 
+              alt={caseEntry.data.title} 
+              class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+            <span class="absolute top-4 left-4 bg-green-700/90 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-1 rounded-full tracking-wider z-10">
+              {caseEntry.data.area}
+            </span>
+            {caseEntry.data.beforeImage && (
+              <span class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-1 rounded z-10">
+                Before Afterあり
+              </span>
+            )}
+          </a>
+
+          <div class="p-8 flex-grow flex flex-col">
+            {/* カード全体へのリンク導線2：タイトル */}
+            <a href={`/cases/${caseEntry.slug}/`} class="block mb-4">
+              <h3 class="text-lg font-bold text-gray-800 line-clamp-2 leading-relaxed font-zen group-hover:text-green-700 transition-colors">
+                {caseEntry.data.title}
+              </h3>
+            </a>
+            
+            <div class="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between text-sm">
+              <div class="flex flex-col gap-1">
+                <span class="text-gray-400 text-[10px] uppercase tracking-widest font-sans">Cost</span>
+                <span class="font-bold text-gray-700 font-zen">{caseEntry.data.cost}</span>
+              </div>
+              <div class="flex flex-col gap-1 text-right">
+                <span class="text-gray-400 text-[10px] uppercase tracking-widest font-sans">Period</span>
+                <span class="font-bold text-gray-700 font-zen">{caseEntry.data.period}</span>
+              </div>
+            </div>
+
+            {/* カード全体へのリンク導線3：詳細ボタン */}
+            <div class="mt-6">
+              <a 
+                href={`/cases/${caseEntry.slug}/`} 
+                class="text-green-700 text-sm font-bold flex items-center w-fit group/btn"
+              >
+                詳細を見る
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1 transition-transform group-hover/btn:translate-x-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <div class="mt-16 text-center">
       <a 
-        href="https://www.instagram.com/relagarden/" 
-        target="_blank" 
-        rel="noopener"
-        class="insta-link-button"
+        href="/cases/" 
+        class="inline-flex items-center justify-center px-10 py-4 border-2 border-green-700 text-green-700 font-bold rounded-full hover:bg-green-700 hover:text-white transition-all duration-300 font-zen"
       >
-        <img src="/images/instagram.png" alt="" class="insta-icon" />
-        <span>Instagramでもっと見る</span>
+        すべての施工事例を見る
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
       </a>
     </div>
   </div>
 </section>
-
-<style>
-  .works-section {
-    padding: 80px 24px;
-    background-color: #ffffff;
-  }
-
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  .section-title {
-    text-align: center;
-    font-size: 2.2rem;
-    font-weight: bold;
-    margin-bottom: 50px;
-    color: #333;
-    font-family: 'Zen Maru Gothic', sans-serif;
-  }
-
-  /* SnapWidgetのレスポンシブ制御 */
-  .instagram-embed-wrapper {
-    max-width: 800px;
-    margin: 0 auto 40px;
-    background: #f9f9f9;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-  }
-
-  .snapwidget-widget {
-    width: 100%;
-    border: none;
-    overflow: hidden;
-    /* PCでの高さ設定 */
-    height: 510px;
-    display: block;
-  }
-
-  .button-area {
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  /* Instagramグラデーションボタン */
-  .insta-link-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 40px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 999px;
-    transition: all 0.3s ease;
-    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-    background-size: 200% auto;
-    box-shadow: 0 4px 15px rgba(220, 39, 67, 0.3);
-  }
-
-  .insta-link-button:hover {
-    background-position: right center;
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(220, 39, 67, 0.4);
-  }
-
-  .insta-icon {
-    width: 24px;
-    height: 24px;
-    filter: brightness(0) invert(1); /* 白く反転 */
-  }
-
-  /* モバイル対応 (700px以下) */
-  @media (max-width: 700px) {
-    .works-section {
-      padding: 40px 15px;
-    }
-    
-    .section-title {
-      font-size: 1.8rem;
-      margin-bottom: 30px;
-    }
-
-    .snapwidget-widget {
-      height: 300px; /* スマホでは高さを抑える */
-    }
-
-    .insta-link-button {
-      padding: 14px 30px;
-      font-size: 1rem;
-      width: 100%; /* スマホではフルワイド */
-      justify-content: center;
-    }
-  }
-</style>

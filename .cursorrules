@@ -3,15 +3,25 @@
 ## Technical Stack
 - Framework: Astro
 - Language: TypeScript (Strict mode)
-- Styling: Tailwind CSS (if installed) or Scoped CSS in .astro files
+- Styling: Tailwind CSS
 - Components: Astro Components (.astro) preferred
 
 ## Coding Rules
 - Use Functional Components for any React/UI logic.
 - Keep `.astro` files clean: separate Logic (frontmatter) and Template.
-- Prioritize Astro's native components over client-side frameworks unless interactivity is required.
-- Use `client:load` or `client:visible` directives only when necessary for performance.
+- Prioritize Astro's native components.
 - Image optimization: Always use the `<Image />` component from `astro:assets`.
+
+## Content Collections (Cases) Rules
+- New case studies MUST be created in `src/content/cases/`.
+- Every case study MUST include these frontmatter fields:
+  - `title`, `description`, `pubDate` (YYYY-MM-DD)
+  - `image` (After image path), `beforeImage` (Before image path)
+  - `area`, `cost`, `period`, `tags`
+  - `beforeConcerns`: User's pain points before construction (for blue post-it).
+  - `customerVoice`: User's feedback after construction (for yellow post-it).
+  - `constructionPoints`: An array of 3 technical highlights (for info cards).
+- Use Markdown for the main story section. Use **bold** for markers and lists for checkmarks.
 
 ## Directory Structure
 - `src/components/`: Reusable UI elements.
@@ -20,6 +30,5 @@
 - `src/content/`: Content Collections for Markdown/MDX.
 
 ## Naming Conventions
-- Components: PascalCase (e.g., HeaderCard.astro)
-- Utilities/Hooks: camelCase (e.g., useFormatDate.ts)
-- CSS Classes: Tailwind standard or BEM if using raw CSS.
+- Components: PascalCase
+- Content Files: kebab-case (e.g., 001-okazaki-case.md)
