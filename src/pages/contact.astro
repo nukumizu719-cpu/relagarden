@@ -263,7 +263,7 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
 </style>
 
 <script is:inline>
-  // 1. URLパラメータからシミュレーション結果を取得してフォームに埋めるロジック
+  // 1. URLパラメータからシミュレーション結果を取得してフォームに埋める
   function fillFromSimulator() {
     const params = new URLSearchParams(window.location.search);
     const area = params.get('area');
@@ -282,7 +282,7 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     }
   }
 
-  // 2. GAS連携およびバリデーションロジック
+  // 2. GAS連携、バリデーション、およびリダイレクト
   const ENDPOINT = "https://script.google.com/macros/s/AKfycbyLMiBdx8mhFKavAdvrotnnnDj0YhSVLpi7SMLURXNXPJhRsps-2FbPF0L3hagV_2Rz/exec";
   const MIN_FILL_MS = 3000;
   const form = document.getElementById("contactForm");
@@ -316,7 +316,6 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
     }
   }
 
-  // 実行
   fillFromSimulator();
   initToken(false);
 
@@ -370,9 +369,14 @@ const exactTitle = "お問い合わせ | リラガーデン(RelaGarden)";
         const data = await res.json();
         
         if (data.ok) {
-          setStatus("お問い合わせを送信しました。ありがとうございます！");
+          // --- 変更箇所：リダイレクト処理の追加 ---
+          setStatus("お問い合わせを送信しました。サンクスページへ移動します...");
           form.reset();
-          initToken(true);
+          
+          setTimeout(() => {
+            window.location.href = "/thanks/";
+          }, 1500);
+          // --------------------------------------
         } else {
           setStatus("エラー: " + (data.error || "unknown"), true);
           submitBtn.disabled = false;
