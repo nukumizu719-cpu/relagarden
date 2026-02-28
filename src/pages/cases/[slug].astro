@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets'; // 追加：画像最適化用
 
 export async function getStaticPaths() {
   const entries = await getCollection('cases');
@@ -9,17 +10,17 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await entry.render();
 
-// SEO対策：地域名を含めたタイトルの最適化
+// SEO対策
 const pageTitle = `【${entry.data.area}】${entry.data.title} | 人工芝施工事例`;
 const description = `${entry.data.area}での人工芝施工事例。${entry.data.beforeConcerns?.slice(0, 80)}... 施工費用の目安：${entry.data.cost}`;
 
-// JSON-LD（Googleに施工事例として正しく認識させるための構造化データ）
+// JSON-LD（画像URLを文字列として抽出するために .src を使用）
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": pageTitle,
   "description": description,
-  "image": [entry.data.image],
+  "image": [entry.data.image.src], // .src を追加してURL文字列に変換
   "author": {
     "@type": "Organization",
     "name": "リラガーデン"
@@ -36,7 +37,6 @@ const jsonLd = {
 
   <article class="bg-white pb-20" itemscope itemtype="https://schema.org/Service">
     <div class="max-w-4xl mx-auto px-4 pt-12">
-      {/* パンくずリスト：SEOに非常に重要（Googleがサイト構造を理解するため） */}
       <nav class="flex text-xs text-gray-400 mb-6 gap-2" aria-label="Breadcrumb">
         <a href="/" class="hover:text-green-700 transition-colors">TOP</a>
         <span>/</span>
@@ -50,7 +50,6 @@ const jsonLd = {
           <span class="block text-sm text-green-700 mb-2 font-bold tracking-widest uppercase">Works / {entry.data.area}</span>
           {entry.data.title}
         </h1>
-        {/* 実績データ（費用や期間）をヘッダー付近に配置し、ユーザーが即座に知りたい情報を提示 */}
         <div class="flex gap-4 mt-6">
           <div class="bg-gray-50 px-4 py-2 rounded-lg">
             <p class="text-[10px] text-gray-400 uppercase font-bold">Cost</p>
@@ -63,13 +62,20 @@ const jsonLd = {
         </div>
       </header>
 
-      {/* 画像セクション：alt属性を具体的にして画像検索を強化 */}
+      {/* 画像セクション：Imageコンポーネントに差し替え */}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
         {entry.data.beforeImage && (
           <div class="space-y-3">
             <div class="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-gray-50 group">
               <span class="absolute top-4 left-4 bg-gray-800/80 backdrop-blur-sm text-white px-3 py-1 text-[10px] font-bold tracking-widest rounded z-10">BEFORE</span>
-              <img src={entry.data.beforeImage} class="w-full h-full object-cover grayscale-[0.2] transition-transform duration-500 group-hover:scale-105" alt={`${entry.data.area}の人工芝施工前の庭の様子`} />
+              <Image 
+                src={entry.data.beforeImage} 
+                width={800} 
+                height={600} 
+                format="avif"
+                class="w-full h-full object-cover grayscale-[0.2] transition-transform duration-500 group-hover:scale-105" 
+                alt={`${entry.data.area}の人工芝施工前の庭の様子`} 
+              />
             </div>
             <p class="text-center text-xs text-gray-400 italic font-medium">施工前のお悩みのお庭</p>
           </div>
@@ -77,12 +83,20 @@ const jsonLd = {
         <div class="space-y-3">
           <div class="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-xl border-4 border-green-50 group">
             <span class="absolute top-4 left-4 bg-green-700 text-white px-3 py-1 text-[10px] font-bold tracking-widest rounded z-10">AFTER</span>
-            <img src={entry.data.image} class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={`${entry.data.area}で人工芝を施工した後の美しい庭`} />
+            <Image 
+              src={entry.data.image} 
+              width={800} 
+              height={600} 
+              format="avif"
+              class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+              alt={`${entry.data.area}で人工芝を施工した後の美しい庭`} 
+            />
           </div>
           <p class="text-center text-xs text-green-700 font-bold font-zen">施工後の理想のお庭</p>
         </div>
       </div>
 
+      {/* 以降のコンテンツ部分は変更なし */}
       <div class="space-y-12 mb-20">
         {entry.data.beforeConcerns && (
           <section class="relative max-w-2xl mx-auto transform -rotate-1" aria-label="施工前のお悩み">
@@ -127,14 +141,12 @@ const jsonLd = {
         </section>
       )}
 
-      {/* 本文エリア：h2タグなどに地域名を入れるとSEO効果大 */}
       <div class="prose prose-lg max-w-none prose-green pt-16 border-t border-gray-100
         prose-h2:text-2xl prose-h2:font-zen prose-h2:text-gray-800 prose-h2:border-l-4 prose-h2:border-green-700 prose-h2:pl-4
         prose-strong:text-green-900">
         <Content />
       </div>
 
-      {/* 問い合わせ誘導エリア */}
       <div class="mt-20 p-8 md:p-12 bg-green-900 rounded-[40px] text-center text-white shadow-2xl relative overflow-hidden">
         <div class="relative z-10">
           <h2 class="text-2xl md:text-3xl font-bold font-zen mb-4">あなたのお庭も、劇的に変えませんか？</h2>
