@@ -2,8 +2,8 @@
 title: "【豊川市】新築の砂利庭を「癒やしの空間」へ。ウッドデッキと繋がる人工芝"
 description: "新築時にとりあえず敷いた砂利。歩きにくく活用できていなかったお庭を、ウッドデッキとフラットに繋がる人工芝へリフォーム。メンテナンスフリーな美しい景観を実現しました。"
 pubDate: 2025-10-30
-image: "/images/works/002a.jpg"
-beforeImage: "/images/works/002b.jpg"
+image: "../../assets/works/002a.jpg"
+beforeImage: "../../assets/works/002b.jpg"
 area: "豊川市"
 cost: "約28万円（25㎡）"
 period: "1.5日間"

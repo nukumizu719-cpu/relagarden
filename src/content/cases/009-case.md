@@ -2,8 +2,8 @@
 title: "【豊田市】コンクリート横のデッドスペースを有効活用。外壁に映える緑のモダン外構"
 description: "駐車スペース横の土が露出していたエリアを、手入れ不要の人工芝へ。ネイビーの外観を引き立てるデザインと、雨水桝を意識した機能的な施工を行った豊田市の事例です。"
 pubDate: 2026-01-19
-image: "/images/works/009a.jpg"
-beforeImage: "/images/works/009b.jpg"
+image: "../../assets/works/009a.jpg"
+beforeImage: "../../assets/works/009b.jpg"
 area: "豊田市"
 cost: "約18万円（15㎡）"
 period: "1日間"

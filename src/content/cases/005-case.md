@@ -2,8 +2,8 @@
 title: "【四日市市】ウッドデッキ周りの雑草を解消！目隠しフェンスに映える緑のプライベート空間"
 description: "ウッドデッキの下やフェンス際まで生い茂る雑草にお悩みだった四日市市のご自宅。下地処理を徹底し、掃き出し窓からいつでも美しい緑を楽しめる癒やしの庭へリフォームしました。"
 pubDate: 2025-11-27
-image: "/images/works/005a.jpg"
-beforeImage: "/images/works/005b.jpg"
+image: "../../assets/works/005a.jpg"
+beforeImage: "../../assets/works/005b.jpg"
 area: "四日市市"
 cost: "約25万円（22㎡）"
 period: "1.5日間"

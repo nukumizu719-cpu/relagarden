@@ -2,8 +2,8 @@
 title: "【弥富市】広大な土のお庭を「家族のパーク」へ。奥行きを活かした贅沢な人工芝施工"
 description: "雨の日の泥跳ねや砂埃が悩みだった広いお庭。下地から徹底的に作り込み、大型犬や子供たちが全力で走り回れる開放感あふれる空間へリフォームしました。"
 pubDate: 2026-02-13
-image: "/images/works/010a.jpg"
-beforeImage: "/images/works/010b.jpg"
+image: "../../assets/works/010a.jpg"
+beforeImage: "../../assets/works/010b.jpg"
 area: "弥富市"
 cost: "約48万円（40㎡）"
 period: "2.5日間"

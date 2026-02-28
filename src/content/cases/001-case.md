@@ -2,8 +2,8 @@
 title: "【岡崎市】雑草だらけの庭が劇的変身！子供が裸足で遊べる高品質人工芝へ"
 description: "毎年夏になると手に負えなかった雑草問題を、リラガーデンのオリジナル人工芝で解決。下地処理を徹底し、10年後も凹凸が出ない施工を行いました。"
 pubDate: 2025-10-10
-image: "/images/works/001a.jpg"
-beforeImage: "/images/works/001b.jpg"
+image: "../../assets/works/001a.jpg"
+beforeImage: "../../assets/works/001b.jpg"
 area: "岡崎市"
 cost: "約30万円（30㎡）"
 period: "2日間"

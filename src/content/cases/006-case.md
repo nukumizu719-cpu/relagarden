@@ -2,8 +2,8 @@
 title: "【東海市】玄関横の「お悩みスペース」を解消。室外機周りもスッキリ美しい人工芝へ"
 description: "玄関アプローチ横や室外機周りなど、狭くて手入れが困難だったスペースを人工芝でリフォーム。雑草を防ぐだけでなく、家の外観に清潔感を与える「魅せる空間」に生まれ変わりました。"
 pubDate: 2025-12-02
-image: "/images/works/006a.jpg"
-beforeImage: "/images/works/006b.jpg"
+image: "../../assets/works/006a.jpg"
+beforeImage: "../../assets/works/006b.jpg"
 area: "東海市"
 cost: "約13万円（8㎡）"
 period: "0.5日間"

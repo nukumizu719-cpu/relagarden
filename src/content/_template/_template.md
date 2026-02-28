@@ -2,8 +2,8 @@
 title: "【エリア名】タイトルをここに記述（30文字〜40文字程度）"
 description: "Google検索結果や一覧に表示される説明文。施工の要約を100文字程度で。"
 pubDate: 2026-02-27
-image: "/images/works/after.jpg"
-beforeImage: "/images/works/before.jpg"
+image: "../../assets/works/after.jpg"
+beforeImage: "../../assets/works/before.jpg"
 area: "岡崎市"
 cost: "約XX万円"
 period: "X日間"

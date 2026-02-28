@@ -2,8 +2,8 @@
 title: "【名古屋市】天然芝の管理を卒業。ウッドデッキと繋がる「年中美しい」お庭へ"
 description: "伸びすぎてしまった天然芝と雑草にお悩みだった名古屋市のご自宅。すべての芝を剥がし、メンテナンスフリーな高品質人工芝へ。ウッドデッキからの眺めが劇的に変わりました。"
 pubDate: 2025-11-10
-image: "/images/works/004a.jpg"
-beforeImage: "/images/works/004b.jpg"
+image: "../../assets/works/004a.jpg"
+beforeImage: "../../assets/works/004b.jpg"
 area: "名古屋市"
 cost: "約40万円（35㎡）"
 period: "2日間"

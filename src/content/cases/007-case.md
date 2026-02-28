@@ -2,8 +2,8 @@
 title: "【岡崎市】雑草の「野原」がドッグランに。大型犬も思い切り走れる広大な人工芝空間"
 description: "背丈ほどまで伸びる雑草にお悩みだった広大な敷地を、一面の高品質人工芝へ。1㎡あたり12,000円の適正価格で、10年先まで管理不要なプライベートパークを実現しました。"
 pubDate: 2025-12-11
-image: "/images/works/007a.jpg"
-beforeImage: "/images/works/007b.jpg"
+image: "../../assets/works/007a.jpg"
+beforeImage: "../../assets/works/007b.jpg"
 area: "岡崎市"
 cost: "約60万円（50㎡）"
 period: "3日間"

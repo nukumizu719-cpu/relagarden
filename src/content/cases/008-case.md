@@ -2,8 +2,8 @@
 title: "【小牧市】植栽を活かした和モダンな庭。雑草対策とデザインを両立した人工芝リフォーム"
 description: "生い茂る雑草で隠れてしまった植栽を救出し、メンテナンスフリーな人工芝へ。1㎡あたり12,000円の明瞭会計で、家事動線もスムーズになる美しいお庭を実現しました。"
 pubDate: 2025-12-24
-image: "/images/works/008a.jpg"
-beforeImage: "/images/works/008b.jpg"
+image: "../../assets/works/008a.jpg"
+beforeImage: "../../assets/works/008b.jpg"
 area: "小牧市"
 cost: "約24万円（20㎡）"
 period: "1.5日間"

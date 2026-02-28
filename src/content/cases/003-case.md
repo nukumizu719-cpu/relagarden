@@ -2,8 +2,8 @@
 title: "【日進市】泥跳ねの悩みから解放！飛び石を活かした「魅せる庭」へのリニューアル"
 description: "土の状態だったお庭を、既存の植栽や花壇を活かしつつ人工芝へ。雨の日の泥汚れを防ぎ、景観の美しさと機能性を両立させた日進市の施工事例です。"
 pubDate: 2025-11-05
-image: "/images/works/003a.jpg"
-beforeImage: "/images/works/003b.jpg"
+image: "../../assets/works/003a.jpg"
+beforeImage: "../../assets/works/003b.jpg"
 area: "日進市"
 cost: "約24万円（20㎡）"
 period: "1日間"
