@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// ★ここが重要：Astroに「9件ずつページを分けて」と指示します
+export async function getStaticPaths({ paginate }) {
+  const allCases = await getCollection('cases');
+  const sortedCases = allCases.sort(
+    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+  );
+  return paginate(sortedCases, { pageSize: 9 });
+}
+
+// ★ここが重要：ページデータを受け取ります
+const { page } = Astro.props;
+const sortedCases = page.data;
+
+const pageTitle = "施工事例一覧";
+const description = "リラガーデンが手掛けた愛知県岡崎市周辺の人工芝施工実績をご紹介します。";
+---
+
+<BaseLayout pageTitle={pageTitle} description={description}>
+  <div class="bg-[#f9faf7] min-h-screen pb-20">
+    <section class="bg-white border-b border-gray-100 pt-16 pb-12 mb-12">
+      <div class="max-w-6xl mx-auto px-5 text-center">
+        <h1 class="text-3xl md:text-5xl font-bold font-zen text-gray-900 mb-4">施工事例</h1>
+        <p class="text-gray-500 max-w-2xl mx-auto leading-relaxed">
+          「雑草に困っている」「子供が遊べる庭にしたい」<br class="hidden md:block" />
+          そんなお悩みを解決した、リラガーデンの確かな施工実績です。
+        </p>
+      </div>
+    </section>
+
+    <div class="max-w-6xl mx-auto px-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+        {sortedCases.map((caseEntry) => (
+          <article class="group relative bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
+            <a href={`/cases/${caseEntry.slug}/`} class="block h-full flex flex-col">
+              <div class="relative overflow-hidden aspect-[16/10]">
+                <img src={caseEntry.data.image} alt={caseEntry.data.title} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
+                <span class="absolute top-4 left-4 bg-green-700/90 backdrop-blur-sm text-white text-[10px] font-bold px-3 py-1.5 rounded-full tracking-wider">
+                  {caseEntry.data.area}
+                </span>
+              </div>
+
+              <div class="p-8 flex-grow flex flex-col">
+                <time class="text-[10px] text-gray-400 font-bold mb-3 tracking-widest uppercase">
+                  {caseEntry.data.pubDate.toLocaleDateString('ja-JP')}
+                </time>
+                <h2 class="text-lg font-bold text-gray-800 mb-4 line-clamp-2 leading-relaxed font-zen group-hover:text-green-700 transition-colors">
+                  {caseEntry.data.title}
+                </h2>
+                <div class="mt-auto pt-5 border-t border-gray-50 flex items-center justify-between text-xs">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-gray-400 text-[9px] uppercase tracking-widest">Cost</span>
+                    <span class="font-bold text-gray-700">{caseEntry.data.cost}</span>
+                  </div>
+                  <div class="flex flex-col gap-1 text-right">
+                    <span class="text-gray-400 text-[9px] uppercase tracking-widest">Period</span>
+                    <span class="font-bold text-gray-700">{caseEntry.data.period}</span>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+
+      <nav class="flex justify-center items-center mt-16 gap-2" aria-label="ページ移動">
+        
+        {/* 「前へ」矢印 */}
+        {page.url.prev ? (
+          <a href={page.url.prev} class="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-green-700 hover:text-white transition-all">
+            &larr;
+          </a>
+        ) : (
+          <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 text-gray-300 border border-gray-100 cursor-not-allowed">&larr;</span>
+        )}
+
+        {/* 数字のリスト：1 2 3 ... */}
+        <div class="flex gap-2">
+          {Array.from({ length: page.lastPage }, (_, i) => i + 1).map((num) => (
+            <a
+              href={num === 1 ? "/cases/" : `/cases/${num}/`}
+              class={`w-10 h-10 flex items-center justify-center rounded-lg border font-bold transition-all ${
+                page.currentPage === num
+                  ? "bg-green-700 border-green-700 text-white shadow-md"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-green-700 hover:text-green-700"
+              }`}
+            >
+              {num}
+            </a>
+          ))}
+        </div>
+
+        {/* 「次へ」矢印 */}
+        {page.url.next ? (
+          <a href={page.url.next} class="w-10 h-10 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:bg-green-700 hover:text-white transition-all">
+            &rarr;
+          </a>
+        ) : (
+          <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-gray-50 text-gray-300 border border-gray-100 cursor-not-allowed">&rarr;</span>
+        )}
+
+      </nav>
+
+      <div class="mt-20 p-10 bg-green-800 rounded-[40px] text-center text-white shadow-2xl relative overflow-hidden">
+        <div class="relative z-10">
+          <h2 class="text-2xl font-bold font-zen mb-4">あなたのお庭も、劇的に変えませんか？</h2>
+          <p class="text-green-100 mb-8 text-sm opacity-90">現地調査・お見積もりは無料です。まずはお気軽にお問い合わせフォームよりご相談ください。</p>
+          <a href="/contact/" class="inline-block bg-white text-green-800 px-12 py-4 rounded-full font-bold hover:bg-green-50 transition-colors shadow-lg">無料見積もり・お問い合わせ</a>
+        </div>
+        <div class="absolute top-0 right-0 w-32 h-32 bg-green-700 rounded-full -mr-16 -mt-16 opacity-50"></div>
+        <div class="absolute bottom-0 left-0 w-24 h-24 bg-green-900 rounded-full -ml-12 -mb-12 opacity-50"></div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
