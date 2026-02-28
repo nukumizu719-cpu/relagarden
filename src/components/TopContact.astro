@@ -6,29 +6,67 @@
     <div class="contact-content">
       <p class="contact-lead">
         人工芝の施工、製品に関するご相談・お見積りは、<br class="pc-only">
-        以下のフォームよりお気軽にお問い合わせください。
+        LINE、お電話、または以下のフォームよりお気軽にお問い合わせください。<br>
+        <span class="highlight-text">★ LINEなら、お庭の写真を送るだけで概算見積もりが可能です！</span>
       </p>
-      <div class="button-wrapper">
-        <a href="/contact/" class="contact-cta-button">
-          お問い合わせフォームはこちら
+
+      <div class="contact-grid">
+        {/* LINEカード：ユーザーお気に入りの外部ロゴ参照 */}
+        <a href="https://line.me/R/ti/p/@073lvwdr" target="_blank" rel="noopener noreferrer" class="contact-card line">
+          <div class="card-icon">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" alt="LINE" width="40" height="40" />
+          </div>
+          <div class="card-body">
+            <span class="card-label">一番手軽に相談</span>
+            <h3 class="card-title">LINEで無料見積り</h3>
+            <p class="card-desc">お庭の写真を撮って送るだけ！</p>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        {/* 電話カード */}
+        <a href="tel:09021334003" class="contact-card tel">
+          <div class="card-icon">
+            <span class="icon-emoji">📞</span>
+          </div>
+          <div class="card-body">
+            <span class="card-label">お急ぎの方はこちら</span>
+            <h3 class="card-title">090-2133-4003</h3>
+            <p class="card-desc">受付時間：9:00〜19:00</p>
+          </div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        {/* フォームカード */}
+        <a href="/contact/" class="contact-card form">
+          <div class="card-icon">
+            <span class="icon-emoji">✉</span>
+          </div>
+          <div class="card-body">
+            <span class="card-label">24時間受付中</span>
+            <h3 class="card-title">メールフォーム</h3>
+            <p class="card-desc">詳細なご相談はこちらから</p>
+          </div>
+          <span class="card-arrow">→</span>
         </a>
       </div>
     </div>
   </div>
 </section>
 
-<a href="/contact/" id="floating-cta" class="floating-cta">
-  <span class="cta-icon">✉</span>
-  <span class="cta-text">無料相談・見積り</span>
+{/* 追従CTAボタン：アイコンをインラインSVG（白）に固定 */}
+<a href="https://line.me/R/ti/p/@073lvwdr" id="floating-cta" class="floating-cta" target="_blank" rel="noopener noreferrer">
+  <svg class="cta-line-icon-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M24 10.3c0-5.1-4.8-9.3-10.8-9.3S2.4 5.2 2.4 10.3c0 4.6 3.8 8.5 9 9.2.3 0 .8.2.9.6l.3 1.8s.1.4.3.4l2.1-1.3c.3-.2.6-.2.8-.2 5 0 8.2-4.1 8.2-10.5z" fill="#fff"/>
+  </svg>
+  <span class="cta-text">LINEで写真相談</span>
 </a>
 
 <style>
-  /* --- 通常セクションのスタイル --- */
   .top-contact-section {
-    padding: 80px 24px;
-    background-color: #f7f7f7;
+    padding: 100px 24px;
+    background-color: #fcfcfc;
     text-align: center;
-    overflow: hidden; /* はみ出し防止 */
   }
 
   .container {
@@ -39,52 +77,111 @@
   .section-title { 
     font-size: 2.2rem; 
     font-weight: bold; 
-    margin-bottom: 30px; 
-    color: #333; 
+    margin-bottom: 20px; 
+    color: #2e7d32; 
     font-family: 'Zen Maru Gothic', sans-serif; 
-    white-space: nowrap; /* 念のためここも1行維持 */
   }
 
   .contact-lead {
     font-size: 1.1rem;
     line-height: 1.8;
-    margin-bottom: 40px;
+    margin-bottom: 50px;
     color: #444;
-    font-family: 'Zen Maru Gothic', sans-serif; /* フォント統一 */
+    font-family: 'Zen Maru Gothic', sans-serif;
   }
 
-  .contact-cta-button {
-    display: inline-flex; 
-    align-items: center; 
-    justify-content: center;
-    padding: 20px 40px;
-    background-color: #2e7d32; 
-    color: #fff !important; 
+  .highlight-text {
+    display: block;
+    margin-top: 10px;
+    color: #2e7d32;
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+
+  /* --- Contact Grid --- */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .contact-card {
+    display: flex;
+    align-items: center;
+    padding: 24px;
+    background: #fff;
+    border-radius: 16px;
     text-decoration: none;
-    font-size: 1.4rem; 
-    font-weight: bold; 
-    border-radius: 12px; 
-    transition: all 0.3s;
-    font-family: 'Zen Maru Gothic', sans-serif; /* フォントを明示的に指定 */
-    white-space: nowrap; /* 絶対に1行 */
-    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+    text-align: left;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border: 1px solid #eee;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
   }
 
-  .contact-cta-button:hover {
-    background-color: #1b5e20;
-    transform: translateY(-2px);
+  .contact-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-color: #2e7d32;
   }
 
-  .arrow {
-    margin-left: 10px;
+  .card-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    flex-shrink: 0;
+  }
+
+  .icon-emoji { font-size: 2rem; }
+
+  .card-body { flex-grow: 1; }
+
+  .card-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+    font-family: 'Zen Maru Gothic', sans-serif;
+  }
+
+  .card-desc {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 4px 0 0;
+  }
+
+  .card-arrow {
+    font-size: 1.2rem;
+    color: #ccc;
+    font-weight: bold;
     transition: transform 0.3s;
   }
 
-  .contact-cta-button:hover .arrow {
+  .contact-card:hover .card-arrow {
     transform: translateX(5px);
+    color: #2e7d32;
   }
 
-  /* --- 追従ボタンのスタイル --- */
+  /* 下線アクセント */
+  .contact-card.line { border-bottom: 5px solid #06C755; }
+  .contact-card.tel { border-bottom: 5px solid #2e7d32; }
+  .contact-card.form { border-bottom: 5px solid #444; }
+
+  /* --- 追従CTAボタン --- */
   .floating-cta {
     position: fixed;
     right: 20px;
@@ -93,14 +190,14 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 15px 25px;
-    background: #22812a;
+    padding: 12px 24px;
+    background: #06C755;
     color: #fff !important;
     text-decoration: none;
     font-weight: bold;
     border-radius: 50px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    font-family: 'Zen Maru Gothic', sans-serif; /* フォント統一 */
+    box-shadow: 0 6px 20px rgba(6, 199, 85, 0.4);
+    font-family: 'Zen Maru Gothic', sans-serif;
     white-space: nowrap;
     
     transform: translateY(150%);
@@ -113,33 +210,33 @@
     opacity: 1;
   }
 
-  .cta-icon { font-size: 1.4rem; }
+  .cta-line-icon-svg {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: block;
+  }
 
-  /* --- モバイル対応 (700px以下) --- */
-  @media (max-width: 700px) {
-    .top-contact-section { padding: 50px 15px; }
-
-    .section-title { font-size: 1.35rem; }
-
-    .contact-lead { font-size: 0.95rem; margin-bottom: 30px; }
-
-    .contact-cta-button {
-      font-size: 1.1rem; /* スマホで1行に収まるサイズ */
-      padding: 18px 20px;
-      width: 100%; /* 横幅いっぱい使って1行にする */
-      max-width: 320px;
-      margin: 0 auto;
-      letter-spacing: -0.02em;
+  /* --- モバイル対応 --- */
+  @media (max-width: 900px) {
+    .contact-grid {
+      grid-template-columns: 1fr;
+      max-width: 500px;
     }
+  }
 
+  @media (max-width: 700px) {
+    .top-contact-section { padding: 60px 15px; }
+    .section-title { font-size: 1.8rem; }
+    .contact-lead { font-size: 0.95rem; }
+    .pc-only { display: none; }
+    
     .floating-cta {
-      right: 15px; 
-      bottom: 15px; 
-      padding: 12px 20px; 
+      right: 15px;
+      bottom: 15px;
+      padding: 10px 20px;
       font-size: 0.9rem;
     }
-
-    .pc-only { display: none; }
   }
 </style>
 
@@ -148,7 +245,7 @@
   const contactSection = document.getElementById('contact');
 
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 300) {
+    if (window.scrollY > 400) {
       const rect = contactSection.getBoundingClientRect();
       if (rect.top > window.innerHeight) {
         floatingBtn.classList.add('is-visible');
@@ -164,13 +261,11 @@
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         floatingBtn.classList.remove('is-visible');
-      } else if (window.scrollY > 300) {
+      } else if (window.scrollY > 400) {
         floatingBtn.classList.add('is-visible');
       }
     });
-  }, {
-    threshold: 0.1
-  });
+  }, { threshold: 0.1 });
 
   observer.observe(contactSection);
 </script>
