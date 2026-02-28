@@ -2,24 +2,35 @@
 const year = new Date().getFullYear();
 ---
 <footer class="site-footer">
-  <div class="container footer-inner">
-    
-    <div class="footer-section footer-logo-area">
-      <a href="/" class="footer-logo-link">
-        <img src="/images/logo.png" alt="RelaGarden" class="footer-logo-img" />
+  <div class="container">
+    {/* フッター内LINE導線：読了後の受け皿 */}
+    <div class="footer-line-wrapper">
+      <p class="footer-line-lead">＼ 写真を送るだけで概算見積もり！ ／</p>
+      <a href="https://line.me/R/ti/p/@073lvwdr" target="_blank" rel="noopener noreferrer" class="footer-line-btn">
+        <svg class="footer-line-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 10.3c0-5.1-4.8-9.3-10.8-9.3S2.4 5.2 2.4 10.3c0 4.6 3.8 8.5 9 9.2.3 0 .8.2.9.6l.3 1.8s.1.4.3.4l2.1-1.3c.3-.2.6-.2.8-.2 5 0 8.2-4.1 8.2-10.5z" fill="#fff"/>
+        </svg>
+        <span>公式LINEで無料相談</span>
       </a>
     </div>
 
-    <div class="footer-section footer-info-area">
-      <p class="brand-name font-zen">リラガーデン (RelaGarden)</p>
-      <p class="company-name">運営：FOURTEEN HEARTS</p>
-      <p class="address">愛知県岡崎市森越町字与治43</p>
-    </div>
+    <div class="footer-inner">
+      <div class="footer-section footer-logo-area">
+        <a href="/" class="footer-logo-link">
+          <img src="/images/logo.png" alt="RelaGarden" class="footer-logo-img" />
+        </a>
+      </div>
 
-    <div class="footer-section footer-icon-area">
-      <img src="/images/footer.png" alt="Corporate Icon" class="footer-corp-icon" />
-    </div>
+      <div class="footer-section footer-info-area">
+        <p class="brand-name font-zen">リラガーデン (RelaGarden)</p>
+        <p class="company-name">運営：FOURTEEN HEARTS</p>
+        <p class="address">愛知県岡崎市森越町字与治43</p>
+      </div>
 
+      <div class="footer-section footer-icon-area">
+        <img src="/images/footer.png" alt="Corporate Icon" class="footer-corp-icon" />
+      </div>
+    </div>
   </div>
 
   <div class="footer-copy">
@@ -52,6 +63,48 @@ const year = new Date().getFullYear();
     padding: 0 24px;
   }
 
+  /* LINE導線エリア */
+  .footer-line-wrapper {
+    text-align: center;
+    margin-bottom: 50px;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+  }
+
+  .footer-line-lead {
+    font-size: 0.9rem;
+    color: #06C755;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  .footer-line-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #06C755;
+    color: #fff !important;
+    text-decoration: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: transform 0.3s, opacity 0.3s;
+    box-shadow: 0 4px 15px rgba(6, 199, 85, 0.3);
+  }
+
+  .footer-line-btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+
+  .footer-line-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* 既存のレイアウト維持 */
   .footer-inner {
     display: flex;
     align-items: center;
@@ -64,7 +117,6 @@ const year = new Date().getFullYear();
     flex: 0 1 auto; 
   }
 
-  /* ロゴエリア */
   .footer-logo-link {
     display: block;
     height: 48px;
@@ -78,7 +130,6 @@ const year = new Date().getFullYear();
     object-fit: contain;
   }
 
-  /* 情報エリア */
   .footer-info-area {
     text-align: center;
     min-width: 250px;
@@ -96,14 +147,12 @@ const year = new Date().getFullYear();
     margin: 0;
   }
 
-  /* アイコンエリア */
   .footer-corp-icon {
     width: 100px;
     height: auto;
     display: block;
   }
 
-  /* コピーライト・ナビエリア */
   .footer-copy {
     text-align: center;
     padding: 30px 0;
@@ -127,7 +176,7 @@ const year = new Date().getFullYear();
   }
 
   .footer-nav a:hover {
-    color: #2e7d32;
+    color: #06C755; /* LINE色に合わせる */
   }
 
   .nav-divider {
@@ -145,12 +194,21 @@ const year = new Date().getFullYear();
 
   /* レスポンシブ */
   @media (max-width: 700px) {
+    .footer-line-wrapper {
+      padding: 20px 15px;
+      margin-bottom: 40px;
+    }
+    .footer-line-btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
     .footer-inner {
       flex-direction: column;
       gap: 30px;
       padding-bottom: 30px;
     }
-    /* スマホ時はアイコンを一番上に配置し、ロゴを下へ */
     .footer-icon-area { order: 1; }
     .footer-info-area { order: 2; }
     .footer-logo-area { order: 3; }
@@ -163,7 +221,7 @@ const year = new Date().getFullYear();
       margin: 0 auto;
     }
     .nav-divider {
-      display: none; /* スマホでは区切り線を消して間隔で調整 */
+      display: none;
     }
     .footer-nav {
       gap: 10px 20px;
