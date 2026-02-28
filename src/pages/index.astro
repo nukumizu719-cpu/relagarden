@@ -5,20 +5,30 @@ import TopProblems from '../components/TopProblems.astro';
 import TopUsp from '../components/TopUsp.astro';
 import TopLineup from '../components/TopLineup.astro';
 import TopFlow from '../components/TopFlow.astro';
-import PriceSimulator from '../components/PriceSimulator.astro'; // 追加
+import PriceSimulator from '../components/PriceSimulator.astro';
 import TopReview from '../components/TopReview.astro';
 import TopWorks from '../components/TopWorks.astro';
 import TopContact from '../components/TopContact.astro';
 ---
 
 <BaseLayout>
+  {/* 1. 導入：ブランドイメージと課題への共感 */}
   <Hero />
   <TopProblems />
+
+  {/* 2. 解決策：リラガーデンの強みと選べるラインナップ */}
   <TopUsp />
   <TopLineup />
   
+  {/* 3. 信頼の証明：実績とお客様の声をここで提示し、検討意欲を高める */}
+  <TopWorks />
+  <TopReview />
+  
+  {/* 4. 具体的な行動イメージ：工事の流れを説明して不安を解消 */}
   <TopFlow />
 
+  {/* 5. 最終判断の材料：価格の透明性を提示。
+      ここからシームレスにお問い合わせへ繋げるロジックを最大化 */}
   <section id="simulator" class="py-24 bg-[#f9faf7] relative overflow-hidden">
     {/* 装飾用背景 */}
     <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white to-transparent"></div>
@@ -54,7 +64,6 @@ import TopContact from '../components/TopContact.astro';
     </div>
   </section>
 
-  <TopReview />
-  <TopWorks />
+  {/* 6. クロージング：熱量が高まった状態でフォームへ誘導 */}
   <TopContact />
 </BaseLayout>
