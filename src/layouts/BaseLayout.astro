@@ -15,12 +15,10 @@ const {
   ogImage = "/ogp-main.png"
 } = Astro.props;
 
-// SEOメタ設定
 const defaultTitle = "リラガーデン | 岡崎市の高品質人工芝施工・雑草対策";
 const title = exactTitle ? `${exactTitle} | リラガーデン` : defaultTitle;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
-// JSON-LD (構造化データ)
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "LandscapingService",
@@ -48,20 +46,10 @@ const structuredData = {
     { "@type": "City", "name": "幸田町" },
     { "@type": "City", "name": "豊田市" }
   ],
-  // 修正箇所：ogImageを絶対URLとして指定
   "image": new URL(ogImage, Astro.site).toString(),
   "openingHoursSpecification": {
     "@type": "OpeningHoursSpecification",
-    // 修正箇所：営業日を配列で指定
-    "dayOfWeek": [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday"
-    ],
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     "opens": "09:00",
     "closes": "19:00"
   }
@@ -92,17 +80,39 @@ const structuredData = {
     <meta property="twitter:description" content={description} />
     <meta property="twitter:image" content={new URL(ogImage, Astro.site)} />
 
+    {/* 修正1：Google Fontsの読み込みを高速かつ安定させる（チラつき防止） */}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link 
-      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" 
+      href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=block" 
       rel="stylesheet" 
-      media="print" 
-      onload="this.media='all'" 
     />
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet" />
-    </noscript>
+
+    {/* 修正2：クリティカルCSS（外部ファイル読み込み前に適用させる最小限のスタイル） */}
+    <style is:inline>
+      /* 背景色とフォントファミリーの初期固定 */
+      html {
+        background-color: #fcfcfc;
+        font-family: 'Zen Maru Gothic', sans-serif;
+      }
+      /* Heroエリアの黒チラつき対策：画像が来るまで黒ではなく近似色（深い緑等）にするか、
+         あるいはHeroセクション自体の背景色をここで予約する */
+      #hero {
+        background-color: #1a2e1a; /* 例：画像に近い暗色 */
+      }
+      /* フォント読み込み完了まで非表示にする（FOUT対策） */
+      body {
+        opacity: 0;
+      }
+    </style>
+
+    {/* 修正3：bodyのフェードイン制御（一瞬で完了します） */}
+    <script is:inline>
+      window.addEventListener('DOMContentLoaded', () => {
+        document.body.style.transition = 'opacity 0.2s ease-in';
+        document.body.style.opacity = '1';
+      });
+    </script>
 
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -122,5 +132,6 @@ const structuredData = {
     font-family: 'Zen Maru Gothic', sans-serif;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    background-color: #fcfcfc;
   }
 </style>
