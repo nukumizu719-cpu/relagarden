@@ -15,12 +15,8 @@ const services = [
   "物置設置"
 ];
 
-// 【完全版】ご提示いただいた座標 (34.98144756771798, 137.14361142919316) をピンポイントで表示
-// !3d34.9814475!4d137.1436114 が緯度経度の指定部分です
-// 【最終確定版】最新の座標 34.98154799233056, 137.14332266252893 を使用
-// 埋め込み用URL (src用)// About.astro の --- 内に貼り付けてください
+// 座標で指定
 const googleMapUrl = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d816.5105342468305!2d137.1435266788268!3d34.98142839820485!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzTCsDU4JzUzLjEiTiAxMzfCsDA4JzM2LjciRQ!5e0!3m2!1sja!2sjp!4v1700000000000!5m2!1sja!2sjp";
-
 const externalMapUrl = "https://www.google.com/maps?q=34.98142839820485,137.1435266788268";
 ---
 
@@ -75,7 +71,7 @@ const externalMapUrl = "https://www.google.com/maps?q=34.98142839820485,137.1435
       </table>
     </div>
 
-    {/* アクセスマップ（座標指定版） */}
+    {/* アクセスマップ */}
     <div class="map-section">
       <h3 class="info-card-title">アクセス</h3>
       <div class="map-wrapper">
@@ -99,24 +95,39 @@ const externalMapUrl = "https://www.google.com/maps?q=34.98142839820485,137.1435
 </BaseLayout>
 
 <style>
-  /* スタイルは一貫性を保ちつつ最適化 */
+  /* 基本レイアウト */
   .about-page-container { max-width: 1100px; margin: 0 auto; padding: 60px 24px; background-color: #fcfcfc; font-family: 'Zen Maru Gothic', sans-serif; }
+  
+  /* ヘッダーエリア */
   .about-header { max-width: 700px; margin: 0 auto 60px; text-align: center; }
   .about-title { font-size: 2.2rem; font-weight: bold; color: #2e7d32; margin-bottom: 10px; }
   .title-underline { width: 60px; height: 4px; background: #81c784; margin: 0 auto 20px; border-radius: 2px; }
-  .about-intro { font-size: 0.95rem; color: #666; line-height: 1.8; }
+  
+  /* 【修正ポイント】スマホ・PC共通とPC個別設定 */
+  .about-intro { 
+    font-size: 0.95rem; 
+    color: #666; 
+    line-height: 1.8; 
+    word-break: keep-all; 
+    overflow-wrap: break-word; 
+  }
+  .pc-only { display: block; }
 
+  /* 代表挨拶 */
   .ceo-section { max-width: 950px; margin: 0 auto 80px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; background: #fff; padding: 50px; border-radius: 24px; border: 1px solid #e5e5e5; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
   .ceo-image img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 16px; }
   .ceo-heading { font-size: 1.6rem; color: #2e7d32; font-weight: bold; margin-bottom: 25px; line-height: 1.4; }
   .ceo-message { font-size: 1rem; color: #444; line-height: 1.9; margin-bottom: 30px; }
   .ceo-signature { text-align: right; border-top: 1px solid #eee; padding-top: 20px; }
-  .ceo-name { font-size: 1.5rem; font-weight: bold; color: #333; }
+  .ceo-name { font-size: 1.5rem; font-weight: bold; color: #333; margin-left: 10px; }
+  .ceo-post { color: #666; font-size: 0.9rem; }
 
+  /* 企業データ・マップ共通 */
   .info-card, .map-section { max-width: 950px; margin: 0 auto 40px; background: #fff; padding: 40px; border-radius: 24px; border: 1px solid #e5e5e5; }
   .info-card-title { font-size: 1.4rem; font-weight: bold; color: #2e7d32; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
   .info-card-title::before { content: ""; width: 6px; height: 24px; background: #2e7d32; border-radius: 3px; }
 
+  /* テーブル設定 */
   .info-table { width: 100%; border-collapse: collapse; }
   .info-table th, .info-table td { padding: 22px; border-bottom: 1px solid #f0f0f0; font-size: 1rem; }
   .info-table th { width: 25%; text-align: left; color: #2e7d32; font-weight: bold; vertical-align: top; }
@@ -128,19 +139,34 @@ const externalMapUrl = "https://www.google.com/maps?q=34.98142839820485,137.1435
   .map-wrapper { width: 100%; height: 450px; border-radius: 16px; overflow: hidden; border: 1px solid #eee; }
   .map-btn-wrapper { margin-top: 20px; text-align: center; }
   .map-external-link { display: inline-block; padding: 12px 30px; background-color: #f5f5f5; color: #666; text-decoration: none; border-radius: 30px; font-size: 0.9rem; font-weight: bold; transition: background 0.2s; }
-  .map-external-link:hover { background-color: #e0e0e0; }
 
+  /* タブレットサイズ調整 */
   @media (max-width: 950px) {
     .ceo-section { grid-template-columns: 1fr; padding: 40px 30px; }
     .ceo-image { max-width: 350px; margin: 0 auto; }
   }
 
+  /* 【最重要】スマホサイズ調整（700px以下） */
   @media (max-width: 700px) {
-    .about-page-container { padding: 40px 15px; }
+    .about-page-container { padding: 40px 16px; }
+    
+    /* 導入テキストのスマホ最適化 */
+    .about-intro { 
+      font-size: 13px; /* 改行を防ぐためにサイズダウン */
+      letter-spacing: -0.01em; /* わずかに詰め */
+      line-height: 1.7;
+    }
+    .pc-only { display: none; } /* スマホでは<br>を無効化 */
+
+    .ceo-heading { font-size: 1.3rem; }
+    .ceo-message { font-size: 0.95rem; }
+
+    .info-card, .map-section { padding: 30px 20px; }
     .info-table tr { display: flex; flex-direction: column; }
-    .info-table th, .info-table td { width: 100%; padding: 10px 0; }
-    .info-table th { border-bottom: none; color: #888; font-size: 0.85rem; }
-    .info-table td { border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
-    .map-wrapper { height: 350px; }
+    .info-table th, .info-table td { width: 100%; padding: 10px 0; font-size: 0.95rem; }
+    .info-table th { border-bottom: none; color: #888; font-size: 0.8rem; padding-bottom: 2px; }
+    .info-table td { border-bottom: 1px solid #f5f5f5; margin-bottom: 15px; }
+    
+    .map-wrapper { height: 300px; }
   }
 </style>
