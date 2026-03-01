@@ -1,5 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// 既存のコンポーネント群
 import Hero from '../components/Hero.astro';
 import TopProblems from '../components/TopProblems.astro';
 import TopUsp from '../components/TopUsp.astro';
@@ -9,28 +12,97 @@ import PriceSimulator from '../components/PriceSimulator.astro';
 import TopReview from '../components/TopReview.astro';
 import TopWorks from '../components/TopWorks.astro';
 import TopContact from '../components/TopContact.astro';
+
+// --- ロジカル・データ統合レイヤー ---
+
+// 1. データの取得（Content Collections）
+const allCases = await getCollection('cases').catch(() => []);
+const allNews = await getCollection('news').catch(() => []);
+
+// 2. 施工事例のフィルタリング（下書き除外）
+const activeCases = allCases
+  .filter(entry => !entry.slug.startsWith('_'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// 3. ニュース統合ロジック（施工事例の更新を自動で新着情報に変換）
+const caseAsNews = activeCases.map(c => ({
+  date: c.data.pubDate,
+  title: `【施工事例】${c.data.area}：${c.data.title}を公開しました`,
+  url: `/cases/${c.slug}/`,
+  label: '施工事例'
+}));
+
+const manualNews = allNews.map(n => ({
+  date: n.data.pubDate,
+  title: n.data.title,
+  url: `/news/${n.slug}/`,
+  label: n.data.category || 'お知らせ'
+}));
+
+// 合体させて最新3〜5件を抽出
+const combinedNews = [...caseAsNews, ...manualNews]
+  .sort((a, b) => b.date.valueOf() - a.date.valueOf())
+  .slice(0, 5);
 ---
 
 <BaseLayout>
-  {/* 1. 導入：ブランドイメージと課題への共感 */}
+  {/* 1. 導入：ブランドイメージ */}
   <Hero />
+
+  {/* 【新着情報：自動統合セクション】
+      Heroと課題解決の間に挟むことで、サイトが「生きている（更新されている）」ことを即座に伝えます。
+  */}
+  <section class="py-10 bg-white border-b border-gray-50">
+    <div class="max-w-4xl mx-auto px-5">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-4">
+          <h2 class="text-lg font-bold font-zen text-gray-800 tracking-wider">新着情報</h2>
+          <span class="text-[10px] text-green-700 font-bold uppercase tracking-widest border border-green-700/30 px-2 py-0.5 rounded">News</span>
+        </div>
+        <a href="/news/" class="text-[11px] text-gray-400 hover:text-green-700 transition-colors">一覧を見る →</a>
+      </div>
+
+      <div class="divide-y divide-gray-50">
+        {combinedNews.length > 0 ? (
+          combinedNews.map((item) => (
+            <a href={item.url} class="group flex flex-col md:flex-row md:items-center py-3.5 hover:bg-gray-50 transition-all px-2 -mx-2 rounded-md">
+              <div class="flex items-center gap-4 mb-1 md:mb-0 md:w-48 shrink-0">
+                <time class="text-xs font-sans text-gray-400">
+                  {item.date.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.')}
+                </time>
+                <span class={`text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap ${
+                  item.label === '施工事例' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'
+                }`}>
+                  {item.label}
+                </span>
+              </div>
+              <p class="text-gray-700 text-sm font-zen group-hover:text-green-700 transition-colors truncate pr-4">
+                {item.title}
+              </p>
+            </a>
+          ))
+        ) : (
+          <p class="py-4 text-center text-gray-400 text-xs font-zen italic">現在、新しいお知らせはありません。</p>
+        )}
+      </div>
+    </div>
+  </section>
+
   <TopProblems />
 
-  {/* 2. 解決策：リラガーデンの強みと選べるラインナップ */}
+  {/* 2. 解決策：リラガーデンの強み */}
   <TopUsp />
   <TopLineup />
   
-  {/* 3. 信頼の証明：実績とお客様の声をここで提示し、検討意欲を高める */}
+  {/* 3. 信頼の証明：実績とお客様の声 */}
   <TopWorks />
   <TopReview />
   
-  {/* 4. 具体的な行動イメージ：工事の流れを説明して不安を解消 */}
+  {/* 4. 具体的な行動イメージ：工事の流れ */}
   <TopFlow />
 
-  {/* 5. 最終判断の材料：価格の透明性を提示。
-      ここからシームレスにお問い合わせへ繋げるロジックを最大化 */}
+  {/* 5. 最終判断の材料：価格の透明性 */}
   <section id="simulator" class="py-24 bg-[#f9faf7] relative overflow-hidden">
-    {/* 装飾用背景 */}
     <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white to-transparent"></div>
     
     <div class="max-w-4xl mx-auto px-5 relative z-10">
@@ -64,6 +136,6 @@ import TopContact from '../components/TopContact.astro';
     </div>
   </section>
 
-  {/* 6. クロージング：熱量が高まった状態でフォームへ誘導 */}
+  {/* 6. クロージング：お問い合わせフォーム */}
   <TopContact />
 </BaseLayout>

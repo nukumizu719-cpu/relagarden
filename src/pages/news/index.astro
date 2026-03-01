@@ -1,0 +1,51 @@
+---
+/**
+ * news/index.astro
+ * ニュース一覧の1ページ目を表示するためのエントリポイント
+ */
+import { getCollection } from 'astro:content';
+import PageContent from './[page].astro'; // 【重要】同じ階層の[page].astroをコンポーネントとして読み込む
+
+// 1. データの取得（施工事例とニュースの両方）
+const allCases = await getCollection('cases').catch(() => []);
+const allNews = await getCollection('news').catch(() => []);
+
+// 2. 施工事例をニュース形式のフォーマットに変換
+const caseAsNews = allCases
+  .filter(entry => !entry.slug.startsWith('_'))
+  .map(c => ({
+    date: c.data.pubDate,
+    title: `【施工事例】${c.data.area}：${c.data.title}`,
+    url: `/cases/${c.slug}/`,
+    category: '施工事例',
+    description: c.data.description
+  }));
+
+// 3. 手動ニュース（content/news）を統合
+const manualNews = allNews.map(n => ({
+  date: n.data.pubDate,
+  title: n.data.title,
+  url: `/news/${n.slug}/`,
+  category: n.data.category || 'お知らせ',
+  description: n.data.description
+}));
+
+// 4. 全データを統合して新しい順（降順）にソート
+const sortedNews = [...caseAsNews, ...manualNews].sort(
+  (a, b) => b.date.valueOf() - a.date.valueOf()
+);
+
+// 5. ページネーションデータの擬似作成（1ページあたり9件）
+const pageSize = 9;
+const page = {
+  data: sortedNews.slice(0, pageSize),
+  url: {
+    prev: undefined,
+    next: sortedNews.length > pageSize ? "/news/2/" : undefined,
+  },
+  currentPage: 1,
+  lastPage: Math.ceil(sortedNews.length / pageSize),
+};
+---
+
+<PageContent page={page} />
