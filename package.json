@@ -7,6 +7,7 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "case:add": "node scripts/add-before-after-case.mjs",
     "astro": "astro"
   },
   "dependencies": {
