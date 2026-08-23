@@ -1,4 +1,15 @@
-# Astro Starter Kit: Minimal
+# リラガーデン ホームページ
+
+Astroで構築されたリラガーデン公式ホームページです。
+
+## Before / After施工事例の追加
+
+施工前・施工後写真を1組として安全に追加する手順は
+[`docs/BEFORE_AFTER_UPLOAD_GUIDE.md`](docs/BEFORE_AFTER_UPLOAD_GUIDE.md)を参照してください。
+
+登録ツールは既存ファイルを上書きせず、ローカルの公開候補だけを作成します。
+
+## Astro開発情報
 
 ```sh
 npm create astro@latest -- --template minimal
