@@ -11,6 +11,7 @@ import TopFlow from '../components/TopFlow.astro';
 import PriceSimulator from '../components/PriceSimulator.astro';
 import TopReview from '../components/TopReview.astro';
 import TopWorks from '../components/TopWorks.astro';
+import LatestBeforeAfter from '../components/LatestBeforeAfter.astro';
 import TopContact from '../components/TopContact.astro';
 
 // --- ロジカル・データ統合レイヤー ---
@@ -96,6 +97,11 @@ const combinedNews = [...caseAsNews, ...manualNews]
   
   {/* 3. 信頼の証明：実績とお客様の声 */}
   <TopWorks />
+
+  {/* 管理画面から登録されたBefore / After。
+      データが取れないときは、この欄だけが表示されない。 */}
+  <LatestBeforeAfter />
+
   <TopReview />
   
   {/* 4. 具体的な行動イメージ：工事の流れ */}

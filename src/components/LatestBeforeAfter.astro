@@ -1,0 +1,268 @@
+---
+/**
+ * 管理画面から公開された Before / After を表示する欄。
+ *
+ * 既存の施工事例（src/content/cases/ の11件）とは別系統で、
+ * 谷口さんが管理画面から登録したものを表示する。見た目は
+ * 既存の「施工事例」欄と揃えており、別サイトのようには見せない。
+ *
+ * 重要な性質:
+ * - データはブラウザーが表示時に読み込む（サイト再ビルド不要）
+ * - 読み込みに失敗しても、この欄が消えるだけでページ全体は壊れない
+ * - 初期状態は hidden。データが1件以上取れたときだけ表示する
+ */
+import {
+  BEFORE_AFTER_FEED_URL,
+  BEFORE_AFTER_MAX_ITEMS,
+  BEFORE_AFTER_TIMEOUT_MS,
+} from '../config/beforeAfter';
+---
+
+<section
+  id="latest-before-after"
+  class="py-20 bg-white hidden"
+  data-feed={BEFORE_AFTER_FEED_URL}
+  data-max={BEFORE_AFTER_MAX_ITEMS}
+  data-timeout={BEFORE_AFTER_TIMEOUT_MS}
+>
+  <div class="max-w-6xl mx-auto px-5">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold font-zen text-gray-800 mb-4 flex items-center justify-center gap-3">
+        <span class="w-8 h-[2px] bg-green-700 hidden md:block"></span>
+        施工前・施工後
+        <span class="w-8 h-[2px] bg-green-700 hidden md:block"></span>
+      </h2>
+      <p class="text-gray-600 font-medium font-zen text-[13px] md:text-base tracking-tight md:tracking-normal">
+        現場でその日に撮影した、ありのままの変化をご覧ください
+      </p>
+    </div>
+
+    <div id="latest-before-after-grid" class="grid grid-cols-1 md:grid-cols-2 gap-10"></div>
+  </div>
+</section>
+
+<template id="latest-before-after-card">
+  <article class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col border border-gray-100">
+    <div class="grid grid-cols-2">
+      <figure class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+        <img
+          data-role="before"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="w-full h-full object-cover"
+        />
+        <figcaption class="absolute top-3 left-3 bg-gray-900/70 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded tracking-wider">
+          BEFORE
+        </figcaption>
+      </figure>
+      <figure class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+        <img
+          data-role="after"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="w-full h-full object-cover"
+        />
+        <figcaption class="absolute top-3 left-3 bg-green-700/90 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded tracking-wider">
+          AFTER
+        </figcaption>
+      </figure>
+    </div>
+
+    <div class="p-7 flex-grow flex flex-col">
+      <div class="flex items-center gap-2 mb-3">
+        <span
+          data-role="area"
+          class="bg-green-700/90 text-white text-[11px] font-bold px-3 py-1 rounded-full tracking-wider"
+        ></span>
+        <time data-role="date" class="text-xs font-sans text-gray-400"></time>
+      </div>
+
+      <h3
+        data-role="title"
+        class="text-lg font-bold text-gray-800 leading-relaxed font-zen mb-3"
+      ></h3>
+
+      <p
+        data-role="comment"
+        class="text-sm text-gray-600 leading-relaxed font-zen line-clamp-3"
+      ></p>
+
+      <dl class="mt-auto pt-5 border-t border-gray-100 flex items-center justify-between text-sm">
+        <div data-role="work-wrap" class="flex flex-col gap-1 hidden">
+          <dt class="text-gray-400 text-[10px] uppercase tracking-widest font-sans">Work</dt>
+          <dd data-role="work" class="font-bold text-gray-700 font-zen"></dd>
+        </div>
+        <div data-role="size-wrap" class="flex flex-col gap-1 text-right hidden">
+          <dt class="text-gray-400 text-[10px] uppercase tracking-widest font-sans">Size</dt>
+          <dd data-role="size" class="font-bold text-gray-700 font-zen"></dd>
+        </div>
+      </dl>
+    </div>
+  </article>
+</template>
+
+<script>
+  /**
+   * 公開済みBefore / Afterを読み込んで表示する。
+   *
+   * 失敗しても例外を外へ出さず、欄をhiddenのままにする。
+   * ホームページの他の部分には一切影響させない。
+   */
+  type PublicCase = {
+    id?: string;
+    title?: string;
+    area?: string;
+    work?: string;
+    sizeSqm?: number | string;
+    comment?: string;
+    beforeUrl?: string;
+    afterUrl?: string;
+    publishedAt?: string;
+  };
+
+  const section = document.getElementById('latest-before-after');
+  const grid = document.getElementById('latest-before-after-grid');
+  const template = document.getElementById(
+    'latest-before-after-card'
+  ) as HTMLTemplateElement | null;
+
+  /** 表示してよい画像URLだけを通す（同一オリジンの相対パスに限定）。 */
+  function safeImageUrl(value: unknown): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    if (!trimmed.startsWith('/')) return null;
+    if (trimmed.startsWith('//')) return null;
+    return trimmed;
+  }
+
+  function textOf(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+  }
+
+  function formatDate(value: unknown): string {
+    const raw = textOf(value);
+    if (!raw) return '';
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.valueOf())) return '';
+    return parsed
+      .toLocaleDateString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      })
+      .replace(/\//g, '.');
+  }
+
+  async function loadBeforeAfter(): Promise<void> {
+    if (!section || !grid || !template) return;
+
+    const feedUrl = section.dataset.feed;
+    if (!feedUrl) return;
+
+    const maxItems = Number(section.dataset.max ?? '6');
+    const timeoutMs = Number(section.dataset.timeout ?? '6000');
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+    let payload: unknown;
+    try {
+      const response = await fetch(feedUrl, {
+        signal: controller.signal,
+        headers: { Accept: 'application/json' },
+      });
+      if (!response.ok) return;
+      payload = await response.json();
+    } catch {
+      // 管理画面が未設置・通信不良・タイムアウトのいずれでも、
+      // 欄を出さないだけにする。
+      return;
+    } finally {
+      window.clearTimeout(timer);
+    }
+
+    const items = Array.isArray((payload as { items?: unknown })?.items)
+      ? ((payload as { items: PublicCase[] }).items ?? [])
+      : [];
+
+    const fragment = document.createDocumentFragment();
+    let rendered = 0;
+
+    for (const item of items) {
+      if (rendered >= maxItems) break;
+
+      const beforeUrl = safeImageUrl(item?.beforeUrl);
+      const afterUrl = safeImageUrl(item?.afterUrl);
+      const title = textOf(item?.title);
+      // Before / After / タイトルが揃っていないものは表示しない。
+      if (!beforeUrl || !afterUrl || !title) continue;
+
+      const card = template.content.cloneNode(true) as DocumentFragment;
+      const pick = (role: string) =>
+        card.querySelector<HTMLElement>(`[data-role="${role}"]`);
+
+      const beforeImg = pick('before') as HTMLImageElement | null;
+      const afterImg = pick('after') as HTMLImageElement | null;
+      if (!beforeImg || !afterImg) continue;
+
+      beforeImg.src = beforeUrl;
+      beforeImg.alt = `${title} の施工前`;
+      afterImg.src = afterUrl;
+      afterImg.alt = `${title} の施工後`;
+
+      const titleEl = pick('title');
+      if (titleEl) titleEl.textContent = title;
+
+      const areaEl = pick('area');
+      const area = textOf(item?.area);
+      if (areaEl) {
+        if (area) areaEl.textContent = area;
+        else areaEl.classList.add('hidden');
+      }
+
+      const dateEl = pick('date');
+      const date = formatDate(item?.publishedAt);
+      if (dateEl) dateEl.textContent = date;
+
+      const commentEl = pick('comment');
+      const comment = textOf(item?.comment);
+      if (commentEl) {
+        if (comment) commentEl.textContent = comment;
+        else commentEl.classList.add('hidden');
+      }
+
+      const work = textOf(item?.work);
+      const workWrap = pick('work-wrap');
+      const workEl = pick('work');
+      if (work && workWrap && workEl) {
+        workEl.textContent = work;
+        workWrap.classList.remove('hidden');
+      }
+
+      const sizeRaw = item?.sizeSqm;
+      const size =
+        typeof sizeRaw === 'number' && Number.isFinite(sizeRaw)
+          ? String(sizeRaw)
+          : textOf(sizeRaw);
+      const sizeWrap = pick('size-wrap');
+      const sizeEl = pick('size');
+      if (size && sizeWrap && sizeEl) {
+        sizeEl.textContent = `${size}㎡`;
+        sizeWrap.classList.remove('hidden');
+      }
+
+      fragment.appendChild(card);
+      rendered += 1;
+    }
+
+    // 1件も表示できるものが無ければ、空の欄を出さない。
+    if (rendered === 0) return;
+
+    grid.appendChild(fragment);
+    section.classList.remove('hidden');
+  }
+
+  void loadBeforeAfter();
+</script>

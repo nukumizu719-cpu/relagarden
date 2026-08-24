@@ -24,13 +24,28 @@ jobs:
       - name: Build Astro
         run: npm run build
 
+      # ⚠ --delete は「dist/ に無いものをサーバーから消す」動作をします。
+      #
+      # 管理画面(admin/)と、そこからアップロードされた公開画像(uploads/)は
+      # このリポジトリのビルド結果には含まれません。除外しないと、
+      # mainへpushするたびに谷口さんが登録した画像が消えます。
+      #
+      # 除外だけに頼らず、次の三重で守っています。
+      #   1) ここで admin/ と uploads/ を除外する
+      #   2) 原本画像とDBは public_html の外(private/)へ置く
+      #   3) 公開前に自動バックアップを取る
+      # 詳しくは docs/ADMIN_IMAGES_SETUP.md を参照してください。
       - name: Deploy via rsync
         uses: Burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete
+          switches: >-
+            -avzr --delete
+            --exclude=admin/
+            --exclude=uploads/
+            --exclude=.well-known/
+            --exclude=.htaccess
           path: dist/
           # 💡 Xserverの公開ディレクトリ
-          # your-domain.com の部分は実際のドメイン名に変更してください
           remote_path: /home/xs674757/relagarden.jp/public_html/
           remote_host: ${{ secrets.XSERVER_HOST }}
           remote_user: ${{ secrets.XSERVER_USER }}
