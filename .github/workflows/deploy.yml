@@ -24,10 +24,28 @@ jobs:
       - name: Build Astro
         run: npm run build
 
+      # ⚠ --delete は「dist/ に無いものをサーバーから消す」動作をします。
+      #
+      # このリポジトリのビルド結果(dist/)に含まれないものは、mainへpushする
+      # たびに public_html から削除されます。今後ここへ置く予定の
+      #   admin/   … 管理画面
+      #   uploads/ … 掲載許可済みの公開画像
+      # を除外しておかないと、谷口さんが登録した画像や管理画面が
+      # 何気ないpush一回で消えます。
+      #
+      # 除外だけに頼らず、DBと画像の原本は public_html の外(private/)へ
+      # 置く方針です。.well-known は SSL の更新確認に使われるため残します。
       - name: Deploy via rsync
         uses: Burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete
+          switches: >-
+            -avzr --delete
+            --exclude=admin/
+            --exclude=uploads/
+            --exclude=api/
+            --exclude=line/
+            --exclude=.well-known/
+            --exclude=.htaccess
           path: dist/
           # 💡 Xserverの公開ディレクトリ
           # your-domain.com の部分は実際のドメイン名に変更してください
