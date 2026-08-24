@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>【モック】リラガーデン 画像管理</title>
+<style>
+  :root {
+    --green: #15803d;
+    --green-dark: #166534;
+    --ink: #1f2937;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9faf7;
+    --warn-bg: #fff7ed;
+    --warn-line: #fdba74;
+    --warn-ink: #9a3412;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.7;
+    -webkit-text-size-adjust: 100%;
+  }
+  .mock-banner {
+    background: var(--warn-bg);
+    border-bottom: 2px solid var(--warn-line);
+    color: var(--warn-ink);
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .mock-banner span { font-weight: 400; display: block; font-size: 13px; margin-top: 2px; }
+  header.bar {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  header.bar h1 { font-size: 17px; margin: 0; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 64px; }
+  .card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 18px;
+  }
+  h2 { font-size: 16px; margin: 0 0 14px; }
+  label { display: block; font-weight: 700; font-size: 14px; margin: 16px 0 6px; }
+  .req { color: #b91c1c; font-size: 12px; margin-left: 4px; }
+  input[type=text], input[type=number], input[type=password], textarea, select {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fff;
+  }
+  textarea { min-height: 96px; resize: vertical; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 18px 20px;
+    border-radius: 12px;
+    border: 0;
+    font-size: 17px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-secondary { background: #fff; color: var(--ink); border: 2px solid var(--line); }
+  .btn-danger { background: #fff; color: #b91c1c; border: 2px solid #fecaca; }
+  .photo-slot {
+    border: 2px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 28px 16px;
+    text-align: center;
+    background: #fcfdfc;
+    margin-top: 8px;
+  }
+  .photo-slot .big { font-size: 34px; line-height: 1; }
+  .photo-slot .label { font-weight: 800; margin-top: 10px; font-size: 15px; }
+  .pair { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 640px) { .pair { grid-template-columns: 1fr 1fr; } }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 999px;
+    letter-spacing: .05em;
+  }
+  .badge-before { background: #374151; color: #fff; }
+  .badge-after { background: var(--green); color: #fff; }
+  .badge-draft { background: #fef3c7; color: #92400e; }
+  .badge-live { background: #dcfce7; color: #166534; }
+  .consent {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 18px;
+  }
+  .consent input { width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f3f4f6; }
+  .row:last-child { border-bottom: 0; }
+  .steps { counter-reset: s; padding: 0; margin: 0; list-style: none; }
+  .steps li { counter-increment: s; padding: 10px 0 10px 40px; position: relative; font-size: 14px; }
+  .steps li::before {
+    content: counter(s);
+    position: absolute; left: 0; top: 10px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="mock-banner">
+  ⚠ これは見た目を確認するためのモックです
+  <span>ログインもアップロードも公開も動きません。本番の画面ではありません。</span>
+</div>
+
+<header class="bar">
+  <h1>リラガーデン 画像管理</h1>
+  <span class="badge badge-draft">MOCK</span>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>1. ログイン画面（見た目のみ）</h2>
+    <label for="u">ユーザー名</label>
+    <input id="u" type="text" autocomplete="off" placeholder="taniguchi" />
+    <label for="p">パスワード</label>
+    <input id="p" type="password" autocomplete="off" placeholder="••••••••" />
+    <button class="btn btn-primary" type="button" onclick="alert('モックです。実際のログイン処理はありません。')">ログイン</button>
+    <p class="hint">
+      本番ではサーバー側で本人確認します。パスワードはそのまま保存せず、
+      ハッシュ化して保管します。画面のJavaScriptだけで判定する作りにはしません。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>2. 施工前・施工後の写真を選ぶ</h2>
+    <div class="pair">
+      <div>
+        <span class="badge badge-before">BEFORE</span>
+        <div class="photo-slot">
+          <div class="big">📷</div>
+          <div class="label">施工前の写真を選ぶ</div>
+          <div class="hint">iPhoneならカメラまたは写真から</div>
+        </div>
+      </div>
+      <div>
+        <span class="badge badge-after">AFTER</span>
+        <div class="photo-slot">
+          <div class="big">📷</div>
+          <div class="label">施工後の写真を選ぶ</div>
+          <div class="hint">同じ場所・同じ向きで撮ると伝わります</div>
+        </div>
+      </div>
+    </div>
+    <p class="hint">
+      写真に含まれる位置情報は、公開用の画像を作るときにサーバー側で自動的に消します。
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>3. 内容を入力する</h2>
+
+    <label for="t">タイトル<span class="req">必須</span></label>
+    <input id="t" type="text" placeholder="例：雑草だらけの庭を人工芝へ" />
+
+    <label for="a">施工場所</label>
+    <input id="a" type="text" placeholder="例：岡崎市" />
+    <p class="hint">市区町村までにしてください。番地は入れません。</p>
+
+    <label for="w">施工内容</label>
+    <input id="w" type="text" placeholder="例：人工芝施工" />
+
+    <label for="s">面積（㎡）</label>
+    <input id="s" type="number" inputmode="numeric" placeholder="例：30" />
+
+    <label for="c">コメント</label>
+    <textarea id="c" placeholder="例：下地から転圧し、10年後も凹凸が出ない施工にしました。"></textarea>
+
+    <div class="consent">
+      <input id="consent" type="checkbox" />
+      <label for="consent" style="margin:0; font-weight:700;">
+        お客様から写真の掲載許可をいただきました<span class="req">必須</span>
+        <span style="display:block; font-weight:400; font-size:13px; color:var(--muted); margin-top:4px;">
+          ここにチェックが無いと公開できません。
+        </span>
+      </label>
+    </div>
+
+    <button class="btn btn-primary" type="button" onclick="alert('モックです。保存されません。')">下書きとして保存</button>
+    <button class="btn btn-secondary" type="button" onclick="alert('モックです。')">プレビューで確認する</button>
+  </div>
+
+  <div class="card">
+    <h2>4. 登録した写真の一覧（見本）</h2>
+    <div class="row">
+      <div>
+        <div style="font-weight:700;">雑草だらけの庭を人工芝へ</div>
+        <div class="hint">岡崎市／2026.08.24</div>
+      </div>
+      <span class="badge badge-live">公開中</span>
+    </div>
+    <div class="row">
+      <div>
+        <div style="font-weight:700;">駐車場わきの防草対策</div>
+        <div class="hint">豊田市／保存日 2026.08.20</div>
+      </div>
+      <span class="badge badge-draft">下書き</span>
+    </div>
+    <button class="btn btn-secondary" type="button" onclick="alert('モックです。')">選んだものを公開する</button>
+    <button class="btn btn-danger" type="button" onclick="alert('モックです。')">公開をやめて非公開に戻す</button>
+  </div>
+
+  <div class="card">
+    <h2>公開までの流れ</h2>
+    <ol class="steps">
+      <li>施工前・施工後の写真を選ぶ</li>
+      <li>タイトルと掲載許可を入力する</li>
+      <li>下書きとして保存する</li>
+      <li>プレビューで見え方を確認する</li>
+      <li>「公開する」を押す</li>
+      <li>ホームページの「施工前・施工後」欄に表示される</li>
+    </ol>
+    <p class="hint">
+      公開ボタンを押すまで、ホームページには一切表示されません。
+      押したあとでも「非公開に戻す」で取り下げられます。
+    </p>
+  </div>
+
+</div>
+</body>
+</html>
