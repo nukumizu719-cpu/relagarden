@@ -73,6 +73,19 @@ final class Router
                 return [200, ['ok' => true] + $service->status(is_string($caseId) ? $caseId : '')];
             }
 
+            if ($route === '/unpublish') {
+                $this->requireMethod($method, 'POST');
+                $deviceId = $auth->requireDevice($headers['authorization'] ?? null);
+                $limiter->hit(
+                    'unpub_' . $deviceId,
+                    $this->config->int('rate_max_unpublishes'),
+                    'しばらく時間をおいてからお試しください'
+                );
+                $service = new PublishService($this->config, $this->storage, $this->github);
+                $result = $service->unpublish($this->json($rawBody), $deviceId);
+                return [200, ['ok' => true] + $result];
+            }
+
             if ($route === '/unpair') {
                 $this->requireMethod($method, 'POST');
                 $deviceId = $auth->requireDevice($headers['authorization'] ?? null);

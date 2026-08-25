@@ -476,6 +476,79 @@ test('状態を後から確かめられる', function (): void {
     assertSame('case-status', $status['slug']);
 });
 
+test('掲載削除で記事と専用画像だけが消える', function (): void {
+    $storage = freshStorage();
+    $github = new FakeGitHubClient();
+    $service = new PublishService(testConfig(), $storage, $github);
+    $service->publish(validPayload('case-remove'), 'dev1');
+    $github->files['src/content/cases/keep.md'] = '残す';
+
+    $result = $service->unpublish([
+        'caseId' => 'local-1',
+        'slug' => 'case-remove',
+    ], 'dev1');
+
+    assertSame('draft', $result['status']);
+    assertTrue(!isset($github->files['src/content/cases/case-remove.md']), '記事が残っている');
+    assertTrue(!isset($github->files['src/assets/works/case-remove-before-01.jpg']), 'Before画像が残っている');
+    assertTrue(!isset($github->files['src/assets/works/case-remove-after-01.jpg']), 'After画像が残っている');
+    assertTrue(isset($github->files['src/content/cases/keep.md']), '関係ない記事を消した');
+    assertSame('draft', $service->status('local-1')['status']);
+});
+
+test('違う記事名では掲載削除できない', function (): void {
+    $storage = freshStorage();
+    $github = new FakeGitHubClient();
+    $service = new PublishService(testConfig(), $storage, $github);
+    $service->publish(validPayload('case-remove-check'), 'dev1');
+    assertThrows(409, fn() => $service->unpublish([
+        'caseId' => 'local-1',
+        'slug' => 'case-other',
+    ], 'dev1'));
+    assertTrue(isset($github->files['src/content/cases/case-remove-check.md']), '記事が消えた');
+});
+
+test('掲載時に記録していないパスは削除しない', function (): void {
+    $storage = freshStorage();
+    $github = new FakeGitHubClient();
+    $service = new PublishService(testConfig(), $storage, $github);
+    $service->publish(validPayload('case-safe-remove'), 'dev1');
+    $record = $storage->get('status', 'local-1') ?? [];
+    $record['files'][] = 'src/content/cases/important.md';
+    $storage->put('status', 'local-1', $record);
+    $github->files['src/content/cases/important.md'] = '重要';
+
+    $service->unpublish(['caseId' => 'local-1', 'slug' => 'case-safe-remove'], 'dev1');
+    assertTrue(isset($github->files['src/content/cases/important.md']), '任意ファイルを消せてしまった');
+});
+
+test('古い記録だけでは安全確認できないため削除しない', function (): void {
+    $storage = freshStorage();
+    $storage->put('status', 'local-1', [
+        'status' => 'published',
+        'slug' => 'case-old',
+        'url' => 'https://relagarden.jp/cases/case-old/',
+    ]);
+    $service = new PublishService(testConfig(), $storage, new FakeGitHubClient());
+    assertThrows(409, fn() => $service->unpublish([
+        'caseId' => 'local-1',
+        'slug' => 'case-old',
+    ], 'dev1'));
+});
+
+test('掲載削除が失敗したら状態を残す', function (): void {
+    $storage = freshStorage();
+    // Before、After、記事の3作成後、最初の削除で失敗させる。
+    $github = new FakeGitHubClient(failAfter: 3);
+    $service = new PublishService(testConfig(), $storage, $github);
+    $service->publish(validPayload('case-remove-fail'), 'dev1');
+    assertThrows(502, fn() => $service->unpublish([
+        'caseId' => 'local-1',
+        'slug' => 'case-remove-fail',
+    ], 'dev1'));
+    assertSame('delete_failed', $service->status('local-1')['status']);
+});
+
 // ══════════════════════════════════════════════════════════
 group('受け口');
 
@@ -505,6 +578,8 @@ test('認証なしの投稿を断る', function (): void {
     $router = new Router(testConfig(), freshStorage(), new FakeGitHubClient());
     [$status] = $router->handle('POST', '/publish', '{}', [], '127.0.0.1');
     assertSame(401, $status);
+    [$deleteStatus] = $router->handle('POST', '/unpublish', '{}', [], '127.0.0.1');
+    assertSame(401, $deleteStatus);
 });
 
 test('連携から投稿まで通しで動く', function (): void {
@@ -532,6 +607,17 @@ test('連携から投稿まで通しで動く', function (): void {
     assertSame(200, $s2, '投稿が通らなかった: ' . ($b2['message'] ?? ''));
     assertSame('published', $b2['status']);
     assertTrue(isset($github->files['src/content/cases/case-e2e.md']), '記事が置かれていない');
+
+    [$s3, $b3] = $router->handle(
+        'POST',
+        '/unpublish',
+        json_encode(['caseId' => 'local-1', 'slug' => 'case-e2e']),
+        ['authorization' => 'Bearer ' . $token],
+        '127.0.0.1'
+    );
+    assertSame(200, $s3, '掲載削除が通らなかった: ' . ($b3['message'] ?? ''));
+    assertSame('draft', $b3['status']);
+    assertTrue(!isset($github->files['src/content/cases/case-e2e.md']), '記事が残っている');
 });
 
 test('合言葉の総当たりを止める', function (): void {

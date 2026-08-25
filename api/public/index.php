@@ -10,18 +10,28 @@ declare(strict_types=1);
  * public_html の外にある private/config.php から読む。
  */
 
-require __DIR__ . '/../src/ApiError.php';
-require __DIR__ . '/../src/Config.php';
-require __DIR__ . '/../src/Storage.php';
-require __DIR__ . '/../src/Auth.php';
-require __DIR__ . '/../src/RateLimiter.php';
-require __DIR__ . '/../src/Validator.php';
-require __DIR__ . '/../src/CaseMarkdown.php';
-require __DIR__ . '/../src/GitHubClient.php';
-require __DIR__ . '/../src/GitHubApiClient.php';
-require __DIR__ . '/../src/FakeGitHubClient.php';
-require __DIR__ . '/../src/PublishService.php';
-require __DIR__ . '/../src/Router.php';
+$sourceDir = getenv('RELAGARDEN_API_SOURCE') ?: '';
+if ($sourceDir === '') {
+    // リポジトリ内では api/src、本番では public_html の外の api-src を使う。
+    $localSource = dirname(__DIR__) . '/src';
+    $sourceDir = is_dir($localSource)
+        ? $localSource
+        : dirname(__DIR__, 2) . '/api-src';
+}
+$sourceDir = rtrim($sourceDir, '/');
+
+require $sourceDir . '/ApiError.php';
+require $sourceDir . '/Config.php';
+require $sourceDir . '/Storage.php';
+require $sourceDir . '/Auth.php';
+require $sourceDir . '/RateLimiter.php';
+require $sourceDir . '/Validator.php';
+require $sourceDir . '/CaseMarkdown.php';
+require $sourceDir . '/GitHubClient.php';
+require $sourceDir . '/GitHubApiClient.php';
+require $sourceDir . '/FakeGitHubClient.php';
+require $sourceDir . '/PublishService.php';
+require $sourceDir . '/Router.php';
 
 use Relagarden\Api\Config;
 use Relagarden\Api\ConfigMissing;

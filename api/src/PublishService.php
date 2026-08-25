@@ -124,7 +124,11 @@ final class PublishService
         }
 
         $url = rtrim($this->config->str('site_base_url'), '/') . '/cases/' . $slug . '/';
-        $this->setStatus($caseId, 'published', $slug, $url);
+        $files = array_merge([$casePath], array_map(
+            static fn(string $name): string => 'src/assets/works/' . $name,
+            array_merge($beforeNames, $afterNames)
+        ));
+        $this->setStatus($caseId, 'published', $slug, $url, $files);
         $this->storage->log(sprintf(
             'published device=%s slug=%s images=%d',
             $deviceId,
@@ -138,6 +142,68 @@ final class PublishService
             'url' => $url,
             'caseId' => $caseId,
         ];
+    }
+
+    /**
+     * このAPIで掲載した記事と、その記事専用の画像だけを削除する。
+     *
+     * @param array<string,mixed> $input
+     * @return array{status:string,slug:string,url:string,caseId:string}
+     */
+    public function unpublish(array $input, string $deviceId): array
+    {
+        $caseId = Validator::optionalText($input['caseId'] ?? '', '事例ID', 64);
+        if ($caseId === '') {
+            throw new ApiError(400, '事例IDがありません');
+        }
+        $key = Storage::safeKey($caseId);
+        $record = $this->storage->get('status', $key);
+        if ($record === null || ($record['status'] ?? '') !== 'published') {
+            throw new ApiError(404, '掲載中の施工事例が見つかりません');
+        }
+
+        $slug = Validator::slug($record['slug'] ?? '');
+        $requestedSlug = Validator::slug($input['slug'] ?? '');
+        if ($requestedSlug !== $slug) {
+            throw new ApiError(409, '掲載情報が一致しません');
+        }
+
+        $casePath = 'src/content/cases/' . $slug . '.md';
+        $storedFiles = is_array($record['files'] ?? null) ? $record['files'] : [];
+        if (!in_array($casePath, $storedFiles, true)) {
+            throw new ApiError(409, 'この施工事例はアプリから削除できません');
+        }
+        $files = [$casePath];
+        $assetPattern = '#^src/assets/works/' . preg_quote($slug, '#')
+            . '-(?:before|after)-[0-9]{2}\.(?:jpg|png)$#';
+        foreach ($storedFiles as $path) {
+            if (is_string($path) && preg_match($assetPattern, $path) === 1) {
+                $files[] = $path;
+            }
+        }
+
+        try {
+            foreach ($files as $path) {
+                $this->github->deleteFile(
+                    $path,
+                    sprintf('chore(cases): %s の掲載を削除', $slug)
+                );
+            }
+        } catch (ApiError $e) {
+            $url = is_string($record['url'] ?? null) ? $record['url'] : '';
+            $this->setStatus($caseId, 'delete_failed', $slug, $url, $files);
+            $this->storage->log(sprintf(
+                'unpublish failed device=%s slug=%s status=%d',
+                $deviceId,
+                $slug,
+                $e->status
+            ));
+            throw $e;
+        }
+
+        $this->setStatus($caseId, 'draft', '', '', []);
+        $this->storage->log(sprintf('unpublished device=%s slug=%s', $deviceId, $slug));
+        return ['status' => 'draft', 'slug' => '', 'url' => '', 'caseId' => $caseId];
     }
 
     /** @return array{status:string,slug:string,url:string} */
@@ -181,7 +247,14 @@ final class PublishService
         return $area . 'の施工事例です。';
     }
 
-    private function setStatus(string $caseId, string $status, string $slug, string $url): void
+    /** @param list<string> $files */
+    private function setStatus(
+        string $caseId,
+        string $status,
+        string $slug,
+        string $url,
+        array $files = []
+    ): void
     {
         if ($caseId === '') {
             return;
@@ -190,6 +263,7 @@ final class PublishService
             'status' => $status,
             'slug' => $slug,
             'url' => $url,
+            'files' => $files,
             'updatedAt' => gmdate('c'),
         ]);
     }

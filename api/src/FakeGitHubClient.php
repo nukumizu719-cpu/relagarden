@@ -30,17 +30,30 @@ final class FakeGitHubClient implements GitHubClient
 
     public function createFile(string $path, string $contents, string $message): bool
     {
-        if ($this->failAfter === 0) {
-            throw new ApiError(502, 'ホームページへの反映に失敗しました');
-        }
-        if ($this->failAfter > 0) {
-            $this->failAfter--;
-        }
+        $this->maybeFail();
         if (isset($this->files[$path])) {
             return false;
         }
         $this->files[$path] = $contents;
         $this->messages[] = $message;
         return true;
+    }
+
+    public function deleteFile(string $path, string $message): bool
+    {
+        $this->maybeFail();
+        unset($this->files[$path]);
+        $this->messages[] = $message;
+        return true;
+    }
+
+    private function maybeFail(): void
+    {
+        if ($this->failAfter === 0) {
+            throw new ApiError(502, 'ホームページへの反映に失敗しました');
+        }
+        if ($this->failAfter > 0) {
+            $this->failAfter--;
+        }
     }
 }

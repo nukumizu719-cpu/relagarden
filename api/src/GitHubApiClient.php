@@ -47,6 +47,33 @@ final class GitHubApiClient implements GitHubClient
         throw new ApiError(502, 'ホームページへの反映に失敗しました');
     }
 
+    public function deleteFile(string $path, string $message): bool
+    {
+        [$readStatus, $readBody] = $this->request('GET', $this->contentsUrl($path), null);
+        if ($readStatus === 404) {
+            return true;
+        }
+        $metadata = json_decode($readBody, true);
+        $sha = is_array($metadata) && is_string($metadata['sha'] ?? null)
+            ? $metadata['sha']
+            : '';
+        if ($readStatus !== 200 || $sha === '') {
+            $this->storage->log(sprintf('github delete lookup failed status=%d path=%s', $readStatus, $path));
+            throw new ApiError(502, 'ホームページから削除できませんでした');
+        }
+
+        [$status] = $this->request('DELETE', $this->contentsUrl($path), [
+            'message' => $message,
+            'sha' => $sha,
+            'branch' => $this->branch,
+        ]);
+        if ($status === 200 || $status === 404) {
+            return true;
+        }
+        $this->storage->log(sprintf('github delete failed status=%d path=%s', $status, $path));
+        throw new ApiError(502, 'ホームページから削除できませんでした');
+    }
+
     private function contentsUrl(string $path): string
     {
         return sprintf(

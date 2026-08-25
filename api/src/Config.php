@@ -61,6 +61,7 @@ final class Config
             'max_request_bytes' => 40 * 1024 * 1024,
             'rate_window_seconds' => 3600,
             'rate_max_publishes' => 10,
+            'rate_max_unpublishes' => 5,
             'rate_max_pairings' => 5,
             'site_base_url' => 'https://relagarden.jp',
         ];

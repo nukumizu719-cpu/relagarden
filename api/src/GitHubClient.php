@@ -21,4 +21,7 @@ interface GitHubClient
      * @param string $contents 生のバイト列（画像でも文章でもよい）
      */
     public function createFile(string $path, string $contents, string $message): bool;
+
+    /** ファイルを1つ削除する。すでに無ければ成功として扱う。 */
+    public function deleteFile(string $path, string $message): bool;
 }

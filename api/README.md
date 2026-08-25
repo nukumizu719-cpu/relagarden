@@ -39,9 +39,13 @@ GitHubのトークンも合言葉も、Xserverの `public_html` の外に置い�
     └── storage/          ← 自動で作られる
 ```
 
-`public_html/api/index.php` の `require` は `../src/` を見ています。
-上のように `api-src` へ置く場合は、`index.php` の先頭にある
-`__DIR__ . '/../src/'` を実際の場所へ合わせてください。
+`main` へ反映された後は既存のGitHub Actionsが、`api/public/` を
+`public_html/api/` へ、`api/src/` を公開領域外の `api-src/` へ配置します。
+Webサイトの同期では `api/` を削除対象から除外するため、次回のWeb更新でも
+APIが消えることはありません。
+
+`private/config.php` と `private/storage/` は自動配信・削除の対象外です。
+秘密情報はXserver側で一度だけ設定してください。
 
 ### 2. 設定ファイルを作る
 
@@ -74,6 +78,7 @@ curl -sS -X POST https://relagarden.jp/api/pairing \
 | --- | --- | --- |
 | POST | `/api/pairing` | 端末の初回連携。合言葉と引き換えに端末専用トークンを返す |
 | POST | `/api/publish` | 施工事例の投稿。要トークン |
+| POST | `/api/unpublish` | このAPIで掲載した施工事例と専用画像の削除。要トークン |
 | GET | `/api/status?caseId=...` | 投稿の状態確認。要トークン |
 | POST | `/api/unpair` | 連携の解除。要トークン |
 
@@ -91,6 +96,7 @@ curl -sS -X POST https://relagarden.jp/api/pairing \
 | ファイル名の細工を防ぐ | 送られてきた名前は使わず、こちらで組み立てる |
 | 番地を出さない | サーバー側でも市区町村までに丸める。アプリ任せにしない |
 | 二重投稿を防ぐ | 同じ記事名・同じ事例IDを断る。上書きもしない |
+| 削除対象を限定 | APIが掲載時に記録した記事と、その記事名で始まる専用画像だけを削除 |
 | 秘密を記録に残さない | 記録へ書く前にトークンらしき文字を伏せる |
 | 内部の事情を返さない | 利用者へは短い日本語だけ。詳細は記録の側 |
 

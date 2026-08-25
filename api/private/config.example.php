@@ -42,6 +42,8 @@ return [
     // 1端末あたり、この秒数の間に投稿できる回数
     'rate_window_seconds' => 3600,
     'rate_max_publishes' => 10,
+    // 1端末あたり、この秒数の間に掲載削除できる回数
+    'rate_max_unpublishes' => 5,
     // ペアリングの試行回数（同じIPから）
     'rate_max_pairings' => 5,
 
