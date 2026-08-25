@@ -1,0 +1,3 @@
+# 本番の設定と保存データはGitへ入れない
+private/config.php
+private/storage/
