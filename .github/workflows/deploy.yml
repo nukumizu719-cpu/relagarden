@@ -27,11 +27,34 @@ jobs:
       - name: Deploy via rsync
         uses: Burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete
+          # APIは別工程で配置する。Web更新でAPIや保存データを消さない。
+          switches: -avzr --delete --exclude=api/
           path: dist/
           # 💡 Xserverの公開ディレクトリ
           # your-domain.com の部分は実際のドメイン名に変更してください
           remote_path: /home/xs674757/relagarden.jp/public_html/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Deploy API source outside public_html
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: api/src/
+          remote_path: /home/xs674757/relagarden.jp/api-src/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Deploy API public entry
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: api/public/
+          remote_path: /home/xs674757/relagarden.jp/public_html/api/
           remote_host: ${{ secrets.XSERVER_HOST }}
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
