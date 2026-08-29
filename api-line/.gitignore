@@ -1,0 +1,3 @@
+# 本番の設定と受信データはGitへ入れない
+private/line-config.php
+private/storage/

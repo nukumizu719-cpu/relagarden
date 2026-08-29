@@ -1,0 +1,9 @@
+# LINE受信の入口だけを通す。ほかのファイルへ直接触れないようにする。
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# 中身の一覧を見せない
+Options -Indexes
