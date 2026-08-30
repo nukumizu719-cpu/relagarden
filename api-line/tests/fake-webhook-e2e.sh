@@ -12,6 +12,8 @@ PORT=${PORT:-8791}
 SECRET='e2e-channel-secret-for-local-only'
 TOKEN='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
 BASE="http://127.0.0.1:$PORT"
+# 並行して送るときの、確認用のお客様。記録の検査でも同じ値を見る。
+USER_ID='Ue2e0000000000000000000000000001'
 
 # 前回の確認用サーバーが残っていると、そちらへつないでしまう。
 if curl -s --max-time 2 -o /dev/null "http://127.0.0.1:${PORT:-8791}/inbox" 2>/dev/null; then
@@ -31,6 +33,19 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# 起動できなかったときだけ、サーバーの記録を見せる。
+# 合言葉とチャネルシークレットは伏せる。
+show_server_log() {
+  echo '--- server.log（秘密は伏せています）---'
+  if [ -s "$work/server.log" ]; then
+    sed -e "s/$SECRET/***/g" -e "s/$TOKEN/***/g" \
+        -e 's/[0-9a-f]\{32,\}/***/g' "$work/server.log" | tail -40
+  else
+    echo '(記録なし)'
+  fi
+  echo '--------------------------------------'
+}
+
 cat > "$work/line-config.php" <<PHP
 <?php
 return [
@@ -49,7 +64,38 @@ RELAGARDEN_LINE_CONFIG="$work/line-config.php" \
 RELAGARDEN_LINE_SOURCE="$(pwd)/api-line/src" \
   php -S "127.0.0.1:$PORT" -t api-line/public > "$work/server.log" 2>&1 &
 server_pid=$!
-sleep 1
+
+# 端数の待ち時間を使えるシェルかどうかを、最初に一度だけ確かめる。
+if sleep 0.2 2>/dev/null; then
+  nap() { sleep 0.2; }
+else
+  nap() { sleep 1; }
+fi
+
+# つながるまで短く待つ。決め打ちの sleep だと、遅い機械で始まる前に進んでしまう。
+ready=0
+tries=0
+while [ "$tries" -lt 50 ]; do
+  if ! kill -0 "$server_pid" 2>/dev/null; then
+    echo "確認用サーバーが起動できませんでした（PHPの起動に失敗）。"
+    show_server_log
+    exit 1
+  fi
+  code=$(curl -s --max-time 2 -o /dev/null -w '%{http_code}' "$BASE/inbox" 2>/dev/null || true)
+  # 合言葉を付けていないので 401 が返れば、受け付けられる状態。
+  if [ -n "$code" ] && [ "$code" != "000" ]; then
+    ready=1
+    break
+  fi
+  nap
+  tries=$((tries + 1))
+done
+
+if [ "$ready" -ne 1 ]; then
+  echo "確認用サーバーへ $BASE でつながりませんでした。"
+  show_server_log
+  exit 1
+fi
 
 sign() { printf '%s' "$1" | openssl dgst -sha256 -hmac "$SECRET" -binary | base64; }
 
@@ -82,7 +128,7 @@ expect '合言葉なしでは受信箱を読めない' "$(curl -s --max-time 15 
 expect 'LINEの検証（イベントなし）は通る' "$(post_hook '{"destination":"U0","events":[]}')" 200
 
 # 同じ配信を10回、同時に送る
-same=$(event 'E2E-SAME' 'M-SAME' 'Ue2e0000000000000000000000000001' 1756000000000 '同じ配信を並行で')
+same=$(event 'E2E-SAME' 'M-SAME' "$USER_ID" 1756000000000 '同じ配信を並行で')
 # サーバーも同じシェルの子なので、待つのは curl の番号だけにする
 # （引数なしの wait だとサーバーの終了まで待ってしまう）。
 i=0
@@ -99,7 +145,11 @@ expect '同じ配信を10回同時に送っても1件だけ' "$(inbox_count)" 1
 i=0
 pids=''
 while [ "$i" -lt 5 ]; do
-  post_hook "$(event "E2E-M$i" "M-M$i" 'Ue2e0000000000000000000000000001' "$((1756000100000 + i))" "並行の$i通目")" > /dev/null &
+  # 入れ子の引用符を作らないよう、本文を先に組み立ててから渡す。
+  # 変数の切れ目は ${i} と書いて、続く日本語と混ざらないようにする。
+  stamp=$((1756000100000 + i))
+  body=$(event "E2E-M${i}" "M-M${i}" "$USER_ID" "$stamp" "並行の${i}通目")
+  post_hook "$body" > /dev/null &
   pids="$pids $!"
   i=$((i + 1))
 done
@@ -122,7 +172,7 @@ expect '掲載の入口は無い' \
 
 # 記録に本文・ユーザーID・秘密が出ていないこと
 log=$(cat "$work/storage/logs/"*.log 2>/dev/null || true)
-for word in '並行' 'Ue2e0000000000000000000000000001' "$SECRET" "$TOKEN" 'E2E-SAME'; do
+for word in '並行' "$USER_ID" "$SECRET" "$TOKEN" 'E2E-SAME'; do
   case "$log" in
     *"$word"*) ng "記録に「$word」が混ざっている" ;;
     *) : ;;
