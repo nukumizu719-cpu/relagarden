@@ -3,7 +3,7 @@
  * LINE受信用の設定の見本。
  *
  * この見本をコピーして、Xserverの **public_html の外** へ置く。
- *   /home/xs674757/relagarden.jp/private/line-config.php
+ *   /home/<アカウント>/relagarden.jp/private/line-config.php
  *
  * 本物の line-config.php は絶対にGitへ入れない（.gitignore 済み）。
  * ここに書く値は、GitHubやXserverの管理パスワードではなく、

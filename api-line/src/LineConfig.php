@@ -66,6 +66,9 @@ final class LineConfig
             'keep_days' => 30,
             'rate_window_seconds' => 3600,
             'rate_max_inbox' => 240,
+            // Webhookの上限。LINEからの正規の配信を落とさないよう十分に大きく取る。
+            // ここを超えると429を返し、LINE側の再送に任せる。
+            'rate_max_webhook' => 600,
             // 表示名を取りに行くときの待ち時間（秒）。
             'profile_timeout' => 5,
             // 1回の受信箱で返す最大件数。

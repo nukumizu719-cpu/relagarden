@@ -42,6 +42,14 @@ final class LineRouter
 
             if ($route === '/webhook') {
                 $this->requireMethod($method, 'POST');
+                // 上限は十分に大きく取る。正規の配信を落とすと問い合わせが消えるため、
+                // ここで断るのは明らかに異常な量のときだけ。断っても LINE が再送する。
+                $limiter = new LineRateLimiter($this->store, $this->config->int('rate_window_seconds'));
+                $limiter->hit(
+                    'hook_' . $clientIp,
+                    $this->config->int('rate_max_webhook'),
+                    'ただいま受け取れません'
+                );
                 $service = new LineWebhookService($this->config, $this->store, $this->profile);
                 return [200, $service->receive($rawBody, $headers)];
             }

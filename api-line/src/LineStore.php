@@ -39,24 +39,35 @@ final class LineStore
         return substr($clean, 0, 128);
     }
 
-    /** @param array<string,mixed> $data */
-    public function put(string $bucket, string $key, array $data): void
+    /**
+     * 保存する。**書けたかどうかを必ず返す。**
+     *
+     * 書けていないのに「受け取りました」と答えると、LINEは再送してくれず、
+     * お客様の問い合わせがどこにも残らないまま消える。
+     *
+     * @param array<string,mixed> $data
+     */
+    public function put(string $bucket, string $key, array $data): bool
     {
         $path = $this->pathFor($bucket, $key);
         if ($path === null) {
-            return;
+            return false;
         }
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($json === false) {
-            return;
+            return false;
         }
         // 途中で落ちても壊れた内容が残らないよう、書いてから差し替える。
         $tmp = $path . '.tmp';
-        if (file_put_contents($tmp, $json, LOCK_EX) === false) {
-            return;
+        if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
+            return false;
         }
         @chmod($tmp, 0600);
-        @rename($tmp, $path);
+        if (!@rename($tmp, $path)) {
+            @unlink($tmp);
+            return false;
+        }
+        return true;
     }
 
     /** @return array<string,mixed>|null */

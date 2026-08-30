@@ -8,7 +8,12 @@ namespace Relagarden\Line;
  * 公式LINEに届いたメッセージを受け取って、受信箱へ入れる。
  *
  * **ここでは返信を一切送らない。** 自動応答（応答メッセージ）は
- * LINE側の設定のまま動く。このAPIは受け取って控えるだけ。
+ * LINE側の設定のまま動く。このAPIは受け取って控えるだけで、
+ * 送信・一斉配信・既読・画像の取得のいずれも行わない。
+ * 呼ぶLINEの機能は「表示名の取得」1つだけ。
+ *
+ * 受け取るのは1対1の**文字のメッセージだけ**。
+ * 写真・スタンプ・友だち追加は、二度処理しない印だけ残して読み捨てる。
  *
  * 同じ webhookEventId ・ messageId は二度処理しない。
  * LINEは同じ配信を再送することがあるため、印を残して弾く。
@@ -42,7 +47,7 @@ final class LineWebhookService
         }
 
         $data = json_decode($rawBody === '' ? '{}' : $rawBody, true);
-        if (!is_array($data)) {
+        if (!is_array($data) || (isset($data['events']) && !is_array($data['events']))) {
             throw new LineError(400, '内容を読み取れません', 'webhook body not json');
         }
         /** @var list<mixed> $events */
@@ -102,25 +107,37 @@ final class LineWebhookService
         $isDirect = ($source['type'] ?? '') === 'user' && $lineUserId !== '';
 
         // 印だけ先に残す。ここから先で何が起きても、同じ配信を二度扱わない。
+        // 印を書けないときは、受け取ったふりをせずに断る（LINEの再送に任せる）。
         foreach ($marks as $mark) {
-            $this->store->put('events', $mark, ['at' => gmdate('c')]);
+            if (!$this->store->put('events', $mark, ['at' => gmdate('c')])) {
+                throw new LineError(500, 'ただいま受け取れません', 'event mark write failed');
+            }
         }
 
-        // 1対1のメッセージ以外（友だち追加・グループ・スタンプの既読など）は
-        // 受信箱へ入れない。お客様1件として扱えないため。
+        // 1対1のメッセージ以外（友だち追加・グループなど）は受信箱へ入れない。
+        // お客様1件として扱えないため。
         if (!$isMessage || !$isDirect) {
             return false;
         }
 
+        // 文字のメッセージだけを受け取る。写真・スタンプ・位置情報は
+        // 中身を取りに行かず、印だけ残して読み捨てる
+        // （勝手に画像を取得しない、という決めごとのため）。
         $kind = is_string($message['type'] ?? null) ? $message['type'] : 'unknown';
-        $text = '';
-        if ($kind === 'text' && is_string($message['text'] ?? null)) {
-            // 本文は書き換えない。長すぎるものだけ切る。
-            $text = mb_substr($message['text'], 0, 4000);
+        if ($kind !== 'text' || !is_string($message['text'] ?? null)) {
+            return false;
         }
+        // 本文は書き換えない。長すぎるものだけ切る。
+        $text = mb_substr($message['text'], 0, 4000);
 
         if (!array_key_exists($lineUserId, $nameCache)) {
-            $nameCache[$lineUserId] = $this->profile->displayNameOf($lineUserId);
+            try {
+                $nameCache[$lineUserId] = $this->profile->displayNameOf($lineUserId);
+            } catch (\Throwable $e) {
+                // 表示名が取れなくても、本文は必ず受け取る。
+                // 名前は空欄のままアプリへ渡し、画面では仮の呼び名を出す。
+                $nameCache[$lineUserId] = '';
+            }
         }
 
         $timestamp = $event['timestamp'] ?? null;
@@ -131,7 +148,7 @@ final class LineWebhookService
             return false;
         }
 
-        $this->store->put('inbox', $key, [
+        $saved = $this->store->put('inbox', $key, [
             'id' => $key,
             'eventKey' => $eventId !== '' ? $eventId : $messageId,
             'messageId' => $messageId,
@@ -142,6 +159,11 @@ final class LineWebhookService
             'receivedAt' => gmdate('c', (int) ($receivedMs / 1000)),
             'takenAt' => '',
         ]);
+        if (!$saved) {
+            // 保存できていないのに200を返さない。
+            // 200を返すとLINEは再送してくれず、問い合わせが消えてしまう。
+            throw new LineError(500, 'ただいま受け取れません', 'inbox write failed');
+        }
         // 本文もユーザーIDも記録へは書かない。件数だけ分かればよい。
         $this->store->log('inbox stored kind=' . $kind);
         return true;
