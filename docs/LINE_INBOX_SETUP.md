@@ -47,8 +47,10 @@ Xserver のままです。`/publish` `/status` `/unpublish` `/pairing` はこの
     └── line-storage/      ← 自動で作られる
 ```
 
-`public_html/api/line/` は、ホームページ更新のrsyncから除外済みです
-（`--exclude=api/line/`）。除外が効いているかは手元で確かめられます。
+`public_html/api/line/` は、2段階のrsyncから保護します。
+ホームページ更新では `api/` 全体を除外し、通常API更新では `line/` だけを
+除外します。通常APIは更新・掃除しつつ、LINE受信口だけを残します。
+除外が効いているかは手元で確かめられます。
 
 ```sh
 sh scripts/deploy-exclude-test.sh

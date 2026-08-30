@@ -11,8 +11,20 @@ const { entry } = Astro.props;
 const { Content } = await entry.render();
 
 // SEO対策
-const pageTitle = `【${entry.data.area}】${entry.data.title} | 人工芝施工事例`;
-const description = `${entry.data.area}での人工芝施工事例。${entry.data.beforeConcerns?.slice(0, 80)}... 施工費用の目安：${entry.data.cost}`;
+// 記事のタイトルに【地域】が入っているものと、入っていないものがある。
+// 入っているものへ重ねて付けると【岡崎市】【岡崎市】…になるので分ける。
+const headline = entry.data.title.startsWith('【')
+  ? entry.data.title
+  : `【${entry.data.area}】${entry.data.title}`;
+const pageTitle = `${headline} | 人工芝施工事例`;
+
+// 施工前の悩みと費用は任意項目。無い記事で「undefined」を出さない。
+const concernSummary = entry.data.beforeConcerns?.slice(0, 80);
+const description = [
+  `${entry.data.area}での人工芝施工事例。`,
+  concernSummary ? `${concernSummary}... ` : '',
+  entry.data.cost ? `施工費用の目安：${entry.data.cost}` : '',
+].join('');
 
 // JSON-LD（画像URLを文字列として抽出するために .src を使用）
 const jsonLd = {
@@ -32,7 +44,7 @@ const jsonLd = {
 };
 ---
 
-<BaseLayout pageTitle={pageTitle} description={description}>
+<BaseLayout exactTitle={pageTitle} description={description}>
   <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
   <article class="bg-white pb-20" itemscope itemtype="https://schema.org/Service">

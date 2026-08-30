@@ -5,6 +5,12 @@ on:
     branches:
       - main  # mainブランチにpushしたときに実行
 
+# 複数の更新が続いてもXserverへの転送を同時実行しない。
+# 古い途中状態が新しい完成版を上書きする404を防ぐ。
+concurrency:
+  group: relagarden-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,28 +30,41 @@ jobs:
       - name: Build Astro
         run: npm run build
 
-      # ⚠ --delete は「dist/ に無いものをサーバーから消す」動作をします。
-      #
-      # 公式LINEの受信は public_html/api/line/ に置いてあり、
-      # ビルド結果(dist/)には含まれません。除外しないと、ホームページを
-      # 更新するたびにLINEの受信口が消え、お問い合わせが届かなくなります。
-      #
-      # 守るのは api/line/ だけにしています。api/ 全体を除外すると、
-      # 将来そこへ置いた要らないものが消せなくなるためです。
-      # LINEの設定と受信データは public_html の外(private/)にあるので、
-      # ここでの除外とは別に守られています。
-      #
-      # この除外が効いているかは scripts/deploy-exclude-test.sh で確かめられます。
+      # APIは下の別工程で配置する。Web更新ではapi/全体を守り、
+      # API更新では公式LINEの受信口(line/)だけを守る。
+      # 2段階の除外は scripts/deploy-exclude-test.sh で確かめる。
       - name: Deploy via rsync
         uses: Burnett01/rsync-deployments@7.0.1
         with:
-          switches: >-
-            -avzr --delete
-            --exclude=api/line/
+          # APIは別工程で配置する。Web更新でAPIや保存データを消さない。
+          switches: -avzr --delete --exclude=api/
           path: dist/
           # 💡 Xserverの公開ディレクトリ
           # your-domain.com の部分は実際のドメイン名に変更してください
           remote_path: /home/xs674757/relagarden.jp/public_html/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Deploy API source outside public_html
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: api/src/
+          remote_path: /home/xs674757/relagarden.jp/api-src/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Deploy API public entry
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          # LINE受信口は別設置。通常APIの更新で消さない。
+          switches: -avzr --delete --exclude=line/
+          path: api/public/
+          remote_path: /home/xs674757/relagarden.jp/public_html/api/
           remote_host: ${{ secrets.XSERVER_HOST }}
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
