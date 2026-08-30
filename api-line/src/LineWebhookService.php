@@ -20,6 +20,9 @@ namespace Relagarden\Line;
  */
 final class LineWebhookService
 {
+    /** 1回の配信で受け取るイベントの上限。 */
+    public const maxEventsPerRequest = 100;
+
     public function __construct(
         private readonly LineConfig $config,
         private readonly LineStore $store,
@@ -52,6 +55,11 @@ final class LineWebhookService
         }
         /** @var list<mixed> $events */
         $events = is_array($data['events'] ?? null) ? $data['events'] : [];
+        // 1回の配信に入るイベントは、実際には数件しかない。
+        // 極端な数を送りつけられて保存が膨らむのを防ぐ。
+        if (count($events) > self::maxEventsPerRequest) {
+            throw new LineError(413, '内容が大きすぎます', 'too many events in one delivery');
+        }
 
         $stored = 0;
         $skipped = 0;

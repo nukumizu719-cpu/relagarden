@@ -131,7 +131,9 @@ final class LineStore
      */
     public function log(string $message): void
     {
-        $line = sprintf("%s\t%s\n", gmdate('c'), self::maskSecrets($message));
+        // 改行やタブを混ぜて、記録の行を偽装されないようにする。
+        $flat = str_replace(["\r", "\n", "\t"], ' ', $message);
+        $line = sprintf("%s\t%s\n", gmdate('c'), self::maskSecrets(mb_substr($flat, 0, 500)));
         @file_put_contents(
             $this->dir . '/logs/' . gmdate('Y-m') . '.log',
             $line,

@@ -315,6 +315,24 @@ test('本文が大きすぎる配信は断る', function (): void {
     assertSame(0, count($store->keys('inbox')));
 });
 
+test('極端な数のイベントを送りつけられても受け取らない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $events = [];
+    for ($i = 0; $i < 200; $i++) {
+        $events[] = [
+            'type' => 'message',
+            'webhookEventId' => 'EV-MANY-' . $i,
+            'timestamp' => 1756000000000,
+            'source' => ['type' => 'user', 'userId' => 'U17171717171717171717171717171717'],
+            'message' => ['id' => 'MSG-MANY-' . $i, 'type' => 'text', 'text' => '連投'],
+        ];
+    }
+    [$status] = postWebhook($router, json_encode(['events' => $events]));
+    assertSame(413, $status);
+    assertSame(0, count($store->keys('inbox')));
+});
+
 test('署名は正しくても、壊れた内容は断る', function (): void {
     $store = freshStore();
     $router = routerWith($store);
