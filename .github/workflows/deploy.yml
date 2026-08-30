@@ -69,3 +69,27 @@ jobs:
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
+
+      # 公式LINEの受信APIは通常の掲載APIと分離して配置する。
+      # private/ の設定と保存データは対象外なので、ここでは上書きしない。
+      - name: Deploy LINE API source outside public_html
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: api-line/src/
+          remote_path: /home/xs674757/relagarden.jp/api-line-src/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Deploy LINE API public entry
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete
+          path: api-line/public/
+          remote_path: /home/xs674757/relagarden.jp/public_html/api/line/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
