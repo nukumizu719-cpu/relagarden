@@ -7,8 +7,11 @@ namespace Relagarden\Line;
 /**
  * 回数の制限。受信箱の合言葉の総当たりを防ぐ。
  *
- * **Webhookそのものには制限をかけない。** LINEからの配信を断ると
- * 再送が続き、お客様の問い合わせを取りこぼすため。
+ * 数えるところは、読んで足して書くまでを一度に行う（[LineStore::update]）。
+ * 途中で割り込まれると、同時に叩かれたぶんが数え落とされてしまうため。
+ *
+ * Webhookの上限は十分に大きく取る。LINEからの正規の配信を落とすと
+ * お客様の問い合わせが消えるので、断るのは明らかに異常な量のときだけ。
  */
 final class LineRateLimiter
 {
@@ -23,19 +26,27 @@ final class LineRateLimiter
     {
         $safe = LineStore::safeKey($key);
         $now = time();
-        $record = $this->store->get('rate', $safe) ?? [];
+        $window = max(1, $this->windowSeconds);
+        $overLimit = false;
 
-        /** @var list<int> $times */
-        $times = [];
-        foreach ((array) ($record['times'] ?? []) as $t) {
-            if (is_int($t) && $t > $now - max(1, $this->windowSeconds)) {
-                $times[] = $t;
+        $this->store->update('rate', $safe, function (array $record) use ($now, $window, $max, &$overLimit): array {
+            /** @var list<int> $times */
+            $times = [];
+            foreach ((array) ($record['times'] ?? []) as $t) {
+                if (is_int($t) && $t > $now - $window) {
+                    $times[] = $t;
+                }
             }
-        }
-        if (count($times) >= $max) {
+            if (count($times) >= $max) {
+                $overLimit = true;
+                return ['times' => $times];
+            }
+            $times[] = $now;
+            return ['times' => $times];
+        });
+
+        if ($overLimit) {
             throw new LineError(429, $message !== '' ? $message : 'しばらく時間をおいてからお試しください');
         }
-        $times[] = $now;
-        $this->store->put('rate', $safe, ['times' => $times]);
     }
 }

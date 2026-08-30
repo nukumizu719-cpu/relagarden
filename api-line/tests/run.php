@@ -23,6 +23,8 @@ require __DIR__ . '/../src/LineRouter.php';
 
 use Relagarden\Line\FakeLineProfile;
 use Relagarden\Line\LineConfig;
+use Relagarden\Line\LineConfigMissing;
+use Relagarden\Line\LineStorageUnavailable;
 use Relagarden\Line\LineInboxService;
 use Relagarden\Line\LineRouter;
 use Relagarden\Line\LineSignature;
@@ -72,7 +74,8 @@ function assertSame(mixed $expected, mixed $actual, string $message = ''): void
 
 // ── 準備 ────────────────────────────────────────────────
 const SECRET = 'test-channel-secret-0123456789';
-const INBOX_TOKEN = 'test-inbox-token-0123456789abcdef';
+// 本番と同じ長さ（openssl rand -hex 32 相当の64文字）で確かめる。
+const INBOX_TOKEN = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 function freshStore(): LineStore
 {
@@ -104,18 +107,31 @@ final class BrokenLineProfile implements \Relagarden\Line\LineProfile
     }
 }
 
-/**
- * 保存フォルダーを書けない状態にして、その場所を返す。
- *
- * 実際に書き込みが失敗する状況を作り、200を返してしまわないかを確かめる。
- */
-function readOnlyStorageDir(LineStore $store): string
+/** 保存フォルダーの場所を取り出す。 */
+function storageDirOf(LineStore $store): string
 {
     $reflection = new ReflectionProperty(LineStore::class, 'dir');
-    $dir = (string) $reflection->getValue($store);
-    chmod($dir . '/events', 0500);
-    chmod($dir . '/inbox', 0500);
-    return $dir;
+    return (string) $reflection->getValue($store);
+}
+
+/** その月の記録を読む。 */
+function readLog(LineStore $store): string
+{
+    $path = storageDirOf($store) . '/logs/' . gmdate('Y-m') . '.log';
+    return is_file($path) ? (string) file_get_contents($path) : '';
+}
+
+/** 決めたフォルダーを書けない状態にする。 */
+function makeUnwritable(LineStore $store, string $sub): string
+{
+    $path = storageDirOf($store) . '/' . $sub;
+    chmod($path, 0500);
+    return $path;
+}
+
+function makeWritable(string $path): void
+{
+    @chmod($path, 0700);
 }
 
 /** テキストメッセージ1件分のWebhook本文を作る。 */
@@ -302,7 +318,10 @@ test('文字以外を読み捨てても、印は残って二度処理しない',
         ]],
     ]);
     postWebhook($router, $body);
-    assertTrue($store->exists('events', 'e' . 'EV-IMG2'), '印が残っていない');
+    assertTrue(
+        $store->exists('events', 'e' . LineStore::hashKey('EV-IMG2')),
+        '印が残っていない'
+    );
 });
 
 test('本文が大きすぎる配信は断る', function (): void {
@@ -360,16 +379,17 @@ test('表示名の取得が失敗しても、本文は必ず受け取る', funct
 test('保存できないときは200を返さない（LINEの再送に任せる）', function (): void {
     $store = freshStore();
     $router = routerWith($store);
-    $dir = readOnlyStorageDir($store);
+    $inbox = makeUnwritable($store, 'inbox');
 
     try {
         $body = textEvent('EV-RO', 'MSG-RO', 'U14141414141414141414141414141414', '保存できないはず');
         [$status, $payload] = postWebhook($router, $body);
         assertSame(500, $status, '書けていないのに受け取ったと答えた');
         assertSame(false, $payload['ok']);
+        // 印も残っていない＝再送されたときに、もう一度きちんと試せる。
+        assertSame(0, count($store->keys('events')), '本文が無いのに処理済みの印が残った');
     } finally {
-        @chmod($dir . '/events', 0700);
-        @chmod($dir . '/inbox', 0700);
+        makeWritable($inbox);
     }
 });
 
@@ -435,6 +455,195 @@ test('GETでWebhookを叩いても受け付けない', function (): void {
     $router = routerWith($store);
     [$status] = $router->handle('GET', '/webhook', '', [], '203.0.113.10');
     assertSame(405, $status);
+});
+
+// ── 途中で失敗したとき ──────────────────────────────────
+group('書いている途中で失敗したとき');
+
+test('本文は残ったが印を書けなかったとき、再送で印を付け直す（本文は増えない）', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $body = textEvent('EV-MARK', 'MSG-MARK', 'U19191919191919191919191919191919', '消えては困る問い合わせ');
+
+    $events = makeUnwritable($store, 'events');
+    try {
+        [$status] = postWebhook($router, $body);
+        assertSame(500, $status, '印を書けていないのに受け取ったと答えた');
+    } finally {
+        makeWritable($events);
+    }
+
+    // 本文は残っている（ここが消えると問い合わせが失われる）。
+    assertSame(1, count($store->keys('inbox')), '本文が残っていない');
+    assertSame(0, count($store->keys('events')), '書けないはずの印が残っている');
+
+    // LINEが再送してきた。印を付け直し、本文は増やさない。
+    [$status2, $payload2] = postWebhook($router, $body);
+    assertSame(200, $status2);
+    assertSame(0, $payload2['stored'], '本文を二重に保存した');
+    assertSame(1, $payload2['repaired'], '印を付け直していない');
+    assertSame(1, count($store->keys('inbox')), '本文が増えた');
+    assertSame(2, count($store->keys('events')), '印が揃っていない');
+
+    // 3回目以降は何もしない。
+    [, $payload3] = postWebhook($router, $body);
+    assertSame(0, $payload3['stored']);
+    assertSame(0, $payload3['repaired']);
+    assertSame(1, count($store->keys('inbox')));
+});
+
+test('印の1つ目は書けて2つ目が書けないときも、再送で揃う', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $body = textEvent('EV-HALF', 'MSG-HALF', 'U20202020202020202020202020202020', '半分だけ書けた');
+
+    // 2つ目の印（messageId 側）の置き場所を、書き込めない形でふさぐ。
+    $blocked = storageDirOf($store) . '/events/m' . LineStore::hashKey('MSG-HALF') . '.json';
+    mkdir($blocked, 0700, true);
+
+    [$status] = postWebhook($router, $body);
+    assertSame(500, $status);
+    assertSame(1, count($store->keys('inbox')), '本文が残っていない');
+    assertTrue($store->exists('events', 'e' . LineStore::hashKey('EV-HALF')), '1つ目の印が無い');
+
+    rmdir($blocked);
+
+    [, $payload] = postWebhook($router, $body);
+    assertSame(0, $payload['stored'], '本文を二重に保存した');
+    assertSame(1, $payload['repaired']);
+    assertTrue($store->exists('events', 'm' . LineStore::hashKey('MSG-HALF')), '2つ目の印が無い');
+    assertSame(1, count($store->keys('inbox')));
+});
+
+test('同じ配信を10回続けて送っても、受信箱は1件のまま', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $body = textEvent('EV-10', 'MSG-10', 'U21212121212121212121212121212121', '同じ配信');
+
+    for ($i = 0; $i < 10; $i++) {
+        [$status] = postWebhook($router, $body);
+        assertSame(200, $status);
+    }
+    assertSame(1, count($store->keys('inbox')));
+    assertSame(1, count(getInbox($router)[1]['items']));
+});
+
+test('同じお客様からの別のメッセージは、どちらも残る', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $user = 'U22222222222222222222222222222299';
+
+    postWebhook($router, textEvent('EV-A1', 'MSG-A1', $user, '1通目', 1756000000000));
+    postWebhook($router, textEvent('EV-A2', 'MSG-A2', $user, '2通目', 1756000000000));
+
+    $items = getInbox($router)[1]['items'];
+    assertSame(2, count($items), '同じ時刻でも別のメッセージなら2件残る');
+});
+
+// ── 番号の扱い ──────────────────────────────────────────
+group('番号（ID）の扱い');
+
+test('webhookEventIdだけでも受け取る', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $body = json_encode([
+        'events' => [[
+            'type' => 'message',
+            'webhookEventId' => 'EV-ONLY',
+            'timestamp' => 1756000000000,
+            'source' => ['type' => 'user', 'userId' => 'U23232323232323232323232323232323'],
+            'message' => ['type' => 'text', 'text' => '番号は片方だけ'],
+        ]],
+    ]);
+    [, $payload] = postWebhook($router, $body);
+    assertSame(1, $payload['stored']);
+    // 再送しても増えない。
+    postWebhook($router, $body);
+    assertSame(1, count($store->keys('inbox')));
+});
+
+test('messageIdだけでも受け取る', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $body = json_encode([
+        'events' => [[
+            'type' => 'message',
+            'timestamp' => 1756000000000,
+            'source' => ['type' => 'user', 'userId' => 'U24242424242424242424242424242424'],
+            'message' => ['id' => 'MSG-ONLY', 'type' => 'text', 'text' => '番号は片方だけ'],
+        ]],
+    ]);
+    [, $payload] = postWebhook($router, $body);
+    assertSame(1, $payload['stored']);
+    postWebhook($router, $body);
+    assertSame(1, count($store->keys('inbox')));
+});
+
+test('番号がどちらも無い配信は保存しない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $body = json_encode([
+        'events' => [[
+            'type' => 'message',
+            'timestamp' => 1756000000000,
+            'source' => ['type' => 'user', 'userId' => 'U25252525252525252525252525252525'],
+            'message' => ['type' => 'text', 'text' => '番号が無い'],
+        ]],
+    ]);
+    [$status, $payload] = postWebhook($router, $body);
+    assertSame(200, $status, 'LINEへは200を返す（再送させても同じため）');
+    assertSame(0, $payload['stored'], '二度と見分けられないものを保存した');
+    assertSame(0, count($store->keys('inbox')));
+});
+
+test('記号だけが違う番号を、同じものとして扱わない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $user = 'U26262626262626262626262626262626';
+
+    // 記号を落とすと同じ文字列になる番号たち。
+    foreach (['EV-1', 'EV/1', 'EV.1', 'EV_1'] as $i => $eventId) {
+        [, $payload] = postWebhook(
+            $router,
+            textEvent($eventId, 'MSG-SYM-' . $i, $user, '記号ちがい ' . $i, 1756000000000 + $i * 1000)
+        );
+        assertSame(1, $payload['stored'], $eventId . ' が別のものとして扱われていない');
+    }
+    assertSame(4, count($store->keys('inbox')));
+});
+
+test('フォルダーの外へ出ようとする番号でも壊れない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $dir = storageDirOf($store);
+
+    [, $payload] = postWebhook($router, textEvent(
+        '../../../../etc/passwd',
+        '../../evil',
+        'U27272727272727272727272727272727',
+        'パストラバーサル'
+    ));
+    assertSame(1, $payload['stored']);
+    // 置き場所の外にファイルが作られていない。
+    assertTrue(!file_exists($dir . '/../evil.json'), '外へ書き出している');
+    foreach ($store->keys('events') as $key) {
+        assertTrue(!str_contains($key, '.'), '鍵に危ない文字が残っている: ' . $key);
+    }
+});
+
+test('長すぎる番号は受け取らない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $long = str_repeat('E', 200);
+    [$status, $payload] = postWebhook($router, textEvent(
+        $long,
+        'MSG-LONG',
+        'U28282828282828282828282828282828',
+        '長すぎる番号'
+    ));
+    assertSame(200, $status);
+    assertSame(0, $payload['stored']);
+    assertSame(0, count($store->keys('inbox')));
 });
 
 // ── 受信箱 ──────────────────────────────────────────────
@@ -522,6 +731,131 @@ test('取り込めていない問い合わせは、日数が経っても消さ�
     assertTrue($store->exists('inbox', '00000000000002-bbbbbbbbbbbb'), '未取り込みを消してしまった');
 });
 
+test('一度に送れる取り込み済みの数を超えたら断る', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $ids = [];
+    for ($i = 0; $i < 201; $i++) {
+        $ids[] = 'id-' . $i;
+    }
+    [$status] = postSync($router, $ids);
+    assertSame(413, $status);
+});
+
+test('長すぎる番号や大きすぎる本文の取り込み済みは断る', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+
+    [$longId] = postSync($router, [str_repeat('x', 200)]);
+    assertSame(400, $longId);
+
+    $huge = json_encode(['ids' => ['x'], 'padding' => str_repeat('a', 100000)]);
+    [$bigBody] = $router->handle(
+        'POST',
+        '/sync',
+        (string) $huge,
+        ['authorization' => 'Bearer ' . INBOX_TOKEN],
+        '203.0.113.10'
+    );
+    assertSame(413, $bigBody);
+
+    [$shape] = $router->handle(
+        'POST',
+        '/sync',
+        '{"ids":"配列ではない"}',
+        ['authorization' => 'Bearer ' . INBOX_TOKEN],
+        '203.0.113.10'
+    );
+    assertSame(400, $shape);
+});
+
+test('取り込み済みの印を書けなかったら、成功と答えない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    postWebhook($router, textEvent('EV-ACK', 'MSG-ACK', 'U29292929292929292929292929292929', '印を書けない'));
+    $id = getInbox($router)[1]['items'][0]['id'];
+
+    $inbox = makeUnwritable($store, 'inbox');
+    try {
+        [$status, $payload] = postSync($router, [$id]);
+        assertSame(500, $status, '書けていないのに済んだと答えた');
+        assertSame(false, $payload['ok']);
+    } finally {
+        makeWritable($inbox);
+    }
+
+    // まだ取り込み済みになっていない＝アプリが次にもう一度知らせられる。
+    assertSame(1, count(getInbox($router)[1]['items']), '未確認のまま残っていない');
+
+    // 書ける状態に戻れば、やり直せる。
+    [$retry, $ok] = postSync($router, [$id]);
+    assertSame(200, $retry);
+    assertSame(1, $ok['marked']);
+    assertSame(0, count(getInbox($router)[1]['items']));
+});
+
+// ── 設定と置き場所 ──────────────────────────────────────
+group('設定と置き場所の守り');
+
+test('合言葉が64文字未満なら起動しない', function (): void {
+    $path = tempnam(sys_get_temp_dir(), 'linecfg') . '.php';
+    file_put_contents($path, '<?php return ' . var_export([
+        'channel_secret' => SECRET,
+        'inbox_token' => 'みじかい合言葉',
+        'storage_dir' => sys_get_temp_dir() . '/relagarden-line-cfg',
+    ], true) . ';');
+
+    try {
+        LineConfig::load($path);
+        throw new RuntimeException('短い合言葉で起動してしまった');
+    } catch (LineConfigMissing $e) {
+        assertSame('E_CONFIG_TOKEN', $e->getMessage());
+    } finally {
+        @unlink($path);
+    }
+});
+
+test('置き場所が公開領域なら起動しない', function (): void {
+    $path = tempnam(sys_get_temp_dir(), 'linecfg') . '.php';
+    file_put_contents($path, '<?php return ' . var_export([
+        'channel_secret' => SECRET,
+        'inbox_token' => INBOX_TOKEN,
+        'storage_dir' => '/home/example/relagarden.jp/public_html/api/line/data',
+    ], true) . ';');
+
+    try {
+        LineConfig::load($path);
+        throw new RuntimeException('公開領域を置き場所にして起動してしまった');
+    } catch (LineConfigMissing $e) {
+        assertSame('E_CONFIG_STORAGE_PUBLIC', $e->getMessage());
+    } finally {
+        @unlink($path);
+    }
+});
+
+test('設定ファイルが無いときも、事情を外へ出さない', function (): void {
+    try {
+        LineConfig::load('/存在しない/line-config.php');
+        throw new RuntimeException('設定が無いのに起動してしまった');
+    } catch (LineConfigMissing $e) {
+        assertSame('E_CONFIG_MISSING', $e->getMessage());
+    }
+});
+
+test('置き場所が書けないなら起動しない', function (): void {
+    $base = sys_get_temp_dir() . '/relagarden-line-ro-' . bin2hex(random_bytes(4));
+    mkdir($base, 0500, true);
+    try {
+        new LineStore($base . '/data');
+        throw new RuntimeException('書けない場所で起動してしまった');
+    } catch (LineStorageUnavailable $e) {
+        assertTrue(str_starts_with($e->getMessage(), 'E_STORAGE'), $e->getMessage());
+    } finally {
+        @chmod($base, 0700);
+        @rmdir($base);
+    }
+});
+
 // ── 掲載とは分かれていること ────────────────────────────
 group('掲載の入口を持たないこと');
 
@@ -574,12 +908,47 @@ test('replyToken を受け取っても保存しない', function (): void {
     }
 });
 
-// ── 記録に秘密を残さないこと ────────────────────────────
-group('記録の伏せ字');
+// ── 記録に何を書くか ────────────────────────────────────
+group('記録');
 
-test('LINEのユーザーIDは記録へ書かない', function (): void {
-    $masked = LineStore::maskSecrets('user=Uabcdef0123456789abcdef0123456789 kind=text');
-    assertTrue(!str_contains($masked, 'Uabcdef0123456789abcdef0123456789'), 'ユーザーIDが記録に残る');
+test('記録には決まったコードと件数しか書かない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store, ['U18181818181818181818181818181818' => 'にわ好きたろう']);
+    $secretText = '雑草がひどいです。電話は0564-00-0000、住所は岡崎市○○町です';
+
+    // ふつうに受け取る／署名を間違える／壊れた内容を送る、を一通り行う。
+    postWebhook($router, textEvent('EV-LOG', 'MSG-LOG', 'U18181818181818181818181818181818', $secretText));
+    postWebhook($router, textEvent('EV-LOG2', 'MSG-LOG2', 'U18181818181818181818181818181818', $secretText), 'ちがう署名');
+    postWebhook($router, '{壊れている');
+    getInbox($router, 'ちがう合言葉');
+
+    $log = readLog($store);
+    assertTrue($log !== '', '記録が1行も無い');
+    foreach ([
+        $secretText,
+        '0564-00-0000',
+        'U18181818181818181818181818181818',
+        'にわ好きたろう',
+        SECRET,
+        INBOX_TOKEN,
+        'EV-LOG',
+        'MSG-LOG',
+        sys_get_temp_dir(),
+        '/api-line/',
+        '.php',
+    ] as $forbidden) {
+        assertTrue(
+            !str_contains($log, $forbidden),
+            '記録に「' . mb_substr($forbidden, 0, 20) . '」が混ざっている'
+        );
+    }
+    // 中身は「日時・コード・件数」だけ。
+    foreach (explode("\n", trim($log)) as $line) {
+        assertTrue(
+            (bool) preg_match('/^[0-9T:+\-]+\t[A-Z0-9_]+\t\d+$/', $line),
+            '決まった形になっていない行がある: ' . $line
+        );
+    }
 });
 
 // ── 結果 ────────────────────────────────────────────────

@@ -65,13 +65,17 @@ final class LineInboxService
      * アプリが取り込めたものへ印を付ける。
      *
      * 同じidを何度送られても結果は変わらない。
+     * **書けなかったものは数えて返す。** 呼び出し側は成功として扱わない
+     * （印が付いていないのに「済んだ」と答えると、アプリは次に取りに来ず、
+     * サーバー側にはいつまでも残る）。
      *
      * @param list<mixed> $ids
-     * @return array<string,mixed>
+     * @return array{marked:int,failed:int}
      */
     public function ack(array $ids): array
     {
         $marked = 0;
+        $failed = 0;
         foreach ($ids as $id) {
             if (!is_string($id) || $id === '') {
                 continue;
@@ -84,10 +88,13 @@ final class LineInboxService
                 continue;
             }
             $record['takenAt'] = gmdate('c');
-            $this->store->put('inbox', $id, $record);
-            $marked++;
+            if ($this->store->put('inbox', $id, $record)) {
+                $marked++;
+            } else {
+                $failed++;
+            }
         }
-        return ['marked' => $marked];
+        return ['marked' => $marked, 'failed' => $failed];
     }
 
     /** 受け取り済みで、決めた日数を過ぎたものだけ片付ける。 */

@@ -23,6 +23,22 @@ if ($sourceDir === '') {
 }
 $sourceDir = rtrim($sourceDir, '/');
 
+/**
+ * HTTPSで来ているか。
+ *
+ * Xserverのように前段で暗号化を解く作りでは、$_SERVER['HTTPS'] が
+ * 立たずヘッダーだけで分かることがあるため、その両方を見る。
+ */
+function line_is_https(): bool
+{
+    $https = $_SERVER['HTTPS'] ?? '';
+    if (is_string($https) && $https !== '' && strtolower($https) !== 'off') {
+        return true;
+    }
+    $forwarded = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '';
+    return is_string($forwarded) && strtolower($forwarded) === 'https';
+}
+
 require $sourceDir . '/LineError.php';
 require $sourceDir . '/LineConfig.php';
 require $sourceDir . '/LineStore.php';
@@ -38,13 +54,26 @@ use Relagarden\Line\LineConfig;
 use Relagarden\Line\LineConfigMissing;
 use Relagarden\Line\LineRouter;
 use Relagarden\Line\LineStore;
+use Relagarden\Line\LineStorageUnavailable;
 use Relagarden\Line\NoLineProfile;
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('Cache-Control: no-store');
-// ブラウザーからは使わないため、外部サイトからの利用を許さない。
-header('Access-Control-Allow-Origin: null');
+// ブラウザーからは使わないので、外部サイトへの許可は一切出さない
+// （許可の書き方を間違えるより、何も書かないほうが安全）。
+
+/**
+ * 外へ返す短い返事。中身の事情は書かない。
+ */
+function line_fail(int $status, string $message, string $code): never
+{
+    // 記録へ出すのは決まったコードだけ。例外の文面もファイルの場所も出さない。
+    error_log('[relagarden-line] ' . $code);
+    http_response_code($status);
+    echo json_encode(['ok' => false, 'message' => $message], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // 設定ファイルの場所。public_html の外を指す。
 // 置き場所を変える場合はここだけ直す。
@@ -54,14 +83,22 @@ $configPath = getenv('RELAGARDEN_LINE_CONFIG')
 try {
     $config = LineConfig::load($configPath);
 } catch (LineConfigMissing $e) {
-    // 何が足りないかは記録にだけ残し、外へは出さない。
-    error_log('[relagarden-line] ' . $e->getMessage());
-    http_response_code(503);
-    echo json_encode(['ok' => false, 'message' => 'ただいま準備中です'], JSON_UNESCAPED_UNICODE);
-    exit;
+    // 何が足りないかはコードだけを記録し、外へは出さない。
+    line_fail(503, 'ただいま準備中です', $e->getMessage());
 }
 
-$store = new LineStore($config->str('storage_dir'));
+// 暗号化されていない通信では受けない。
+// Webhookの本文にはお客様の文章が入るため、平文で流れることを許さない。
+if ($config->bool('require_https') && !line_is_https()) {
+    line_fail(403, '受け付けられない要求です', 'E_NOT_HTTPS');
+}
+
+try {
+    // 置き場所が使えないまま動くと、届いた問い合わせを黙って捨ててしまう。
+    $store = new LineStore($config->str('storage_dir'));
+} catch (LineStorageUnavailable $e) {
+    line_fail(503, 'ただいま準備中です', $e->getMessage());
+}
 $token = $config->str('channel_access_token');
 $profile = $token === ''
     ? new NoLineProfile()

@@ -5,6 +5,17 @@ declare(strict_types=1);
 namespace Relagarden\Line;
 
 /**
+ * 置き場所が使えないときに投げる。
+ *
+ * 書けない場所のまま動かすと、届いた問い合わせを黙って捨ててしまう。
+ * それより「ただいま準備中です」で止まったほうが安全なので、
+ * 開始時に確かめて、駄目ならここで止める。
+ */
+final class LineStorageUnavailable extends \RuntimeException
+{
+}
+
+/**
  * LINEで届いた内容の置き場所。
  *
  * データベースは使わない。Xserverの契約に左右されず、
@@ -18,13 +29,20 @@ final class LineStore
 {
     private string $dir;
 
+    /** @throws LineStorageUnavailable 作れない・読めない・書けないとき */
     public function __construct(string $dir)
     {
         $this->dir = rtrim($dir, '/');
+        if ($this->dir === '') {
+            throw new LineStorageUnavailable('E_STORAGE_PATH');
+        }
         foreach (['', '/events', '/inbox', '/rate', '/logs'] as $sub) {
             $path = $this->dir . $sub;
-            if (!is_dir($path)) {
-                @mkdir($path, 0700, true);
+            if (!is_dir($path) && !@mkdir($path, 0700, true) && !is_dir($path)) {
+                throw new LineStorageUnavailable('E_STORAGE_MKDIR');
+            }
+            if (!is_readable($path) || !is_writable($path)) {
+                throw new LineStorageUnavailable('E_STORAGE_PERM');
             }
         }
     }
@@ -37,6 +55,17 @@ final class LineStore
     {
         $clean = preg_replace('/[^A-Za-z0-9_-]/', '', $raw) ?? '';
         return substr($clean, 0, 128);
+    }
+
+    /**
+     * LINEから来た文字列を、そのまま鍵にしない。
+     *
+     * 記号だけが違うIDが同じ鍵に潰れたり、細工した文字で
+     * フォルダーの外へ出られたりしないよう、必ずSHA-256を通す。
+     */
+    public static function hashKey(string $raw): string
+    {
+        return hash('sha256', $raw);
     }
 
     /**
@@ -57,8 +86,10 @@ final class LineStore
         if ($json === false) {
             return false;
         }
-        // 途中で落ちても壊れた内容が残らないよう、書いてから差し替える。
-        $tmp = $path . '.tmp';
+        // 同じ相手から同時に届いても、途中の内容を読ませない。
+        // 一時ファイルの名前は毎回変える。決め打ちの名前だと、
+        // 同時に走った2つが同じ一時ファイルを奪い合って壊れる。
+        $tmp = $path . '.' . bin2hex(random_bytes(8)) . '.tmp';
         if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
             return false;
         }
@@ -77,12 +108,58 @@ final class LineStore
         if ($path === null || !is_file($path)) {
             return null;
         }
-        $raw = file_get_contents($path);
+        $raw = @file_get_contents($path);
         if ($raw === false) {
             return null;
         }
         $data = json_decode($raw, true);
         return is_array($data) ? $data : null;
+    }
+
+    /**
+     * 読んで、書き換えて、書き戻すまでを一度に行う。
+     *
+     * 回数制限のように「読んだ値に足して書く」ものは、
+     * 途中で別の呼び出しが割り込むと数が合わなくなる。
+     * ファイルに鍵をかけて、割り込まれないようにする。
+     *
+     * @param callable(array<string,mixed>):array<string,mixed> $change
+     */
+    public function update(string $bucket, string $key, callable $change): bool
+    {
+        $path = $this->pathFor($bucket, $key);
+        if ($path === null) {
+            return false;
+        }
+        $handle = @fopen($path, 'c+');
+        if ($handle === false) {
+            return false;
+        }
+        try {
+            if (!flock($handle, LOCK_EX)) {
+                return false;
+            }
+            $raw = (string) stream_get_contents($handle);
+            $current = json_decode($raw, true);
+            $next = $change(is_array($current) ? $current : []);
+            $json = json_encode($next, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if ($json === false) {
+                return false;
+            }
+            rewind($handle);
+            if (ftruncate($handle, 0) === false) {
+                return false;
+            }
+            if (fwrite($handle, $json) === false) {
+                return false;
+            }
+            fflush($handle);
+            @chmod($path, 0600);
+            return true;
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
     }
 
     public function exists(string $bucket, string $key): bool
@@ -102,7 +179,8 @@ final class LineStore
     /**
      * 鍵を古い順に並べて返す。
      *
-     * 受信箱の鍵は「受信時刻＋連番」で作るので、名前順が届いた順になる。
+     * 受信箱の鍵は「受信時刻＋取り違えない印」で作るので、
+     * 名前順が届いた順になる。
      *
      * @return list<string>
      */
@@ -126,37 +204,23 @@ final class LineStore
     /**
      * 記録を1行足す。
      *
-     * LINEのユーザーIDと本文は記録へ書かない。呼び出す側で外すこと。
-     * ここでも念のため、トークンらしき文字列とユーザーIDを伏せる。
+     * **書いてよいのは、決まったエラーコードと件数だけ。**
+     * 本文・LINEのユーザーID・ファイルの場所・例外の文面・秘密は書かない。
+     * 記録が漏れても、お客様のことが何も分からないようにしておく。
      */
-    public function log(string $message): void
+    public function log(string $code, int $count = 0): void
     {
-        // 改行やタブを混ぜて、記録の行を偽装されないようにする。
-        $flat = str_replace(["\r", "\n", "\t"], ' ', $message);
-        $line = sprintf("%s\t%s\n", gmdate('c'), self::maskSecrets(mb_substr($flat, 0, 500)));
+        // 決めた形以外は受け付けない（うっかり本文を渡しても残らない）。
+        $safeCode = preg_replace('/[^A-Z0-9_]/', '', $code) ?? '';
+        if ($safeCode === '') {
+            $safeCode = 'E_UNKNOWN';
+        }
+        $line = sprintf("%s\t%s\t%d\n", gmdate('c'), substr($safeCode, 0, 40), $count);
         @file_put_contents(
             $this->dir . '/logs/' . gmdate('Y-m') . '.log',
             $line,
             FILE_APPEND | LOCK_EX
         );
-    }
-
-    /**
-     * 記録へ出す前に、秘密とユーザーIDを伏せる。
-     */
-    public static function maskSecrets(string $text): string
-    {
-        $patterns = [
-            // LINEのユーザーID（U + 32桁の16進）
-            '/\bU[0-9a-f]{32}\b/',
-            // チャネルアクセストークン・長い16進文字列
-            '/\b[A-Za-z0-9+\/]{60,}={0,2}/',
-            '/\b[A-Fa-f0-9]{40,}\b/',
-        ];
-        foreach ($patterns as $pattern) {
-            $text = preg_replace($pattern, '***', $text) ?? $text;
-        }
-        return $text;
     }
 
     private function pathFor(string $bucket, string $key): ?string
