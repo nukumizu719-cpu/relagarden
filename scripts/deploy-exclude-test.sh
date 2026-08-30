@@ -12,19 +12,23 @@ set -eu
 
 WEB_SWITCHES="-avzr --delete --exclude=api/"
 API_SWITCHES="-avzr --delete --exclude=line/"
+LINE_SWITCHES="-avzr --delete"
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
 src="$work/dist"
 api_src="$work/api-public"
+line_src="$work/line-public"
 dst="$work/public_html"
-mkdir -p "$src/works" "$api_src" "$dst/works" "$dst/api/line" "$dst/uploads"
+mkdir -p "$src/works" "$api_src" "$line_src" "$dst/works" "$dst/api/line" "$dst/uploads"
 
 # ビルド結果（これが正）
 echo '<html>あたらしいホームページ</html>' > "$src/index.html"
 echo 'keep' > "$src/works/010.jpg"
 echo 'new-api' > "$api_src/index.php"
+echo 'new-line' > "$line_src/index.php"
+echo 'line-rules' > "$line_src/.htaccess"
 
 # サーバーにいまあるもの
 echo '<html>ふるい</html>' > "$dst/index.html"
@@ -40,13 +44,15 @@ echo 'photo' > "$dst/uploads/photo.jpg"        # 今は保護対象ではない�
 rsync $WEB_SWITCHES "$src/" "$dst/" > /dev/null
 # shellcheck disable=SC2086
 rsync $API_SWITCHES "$api_src/" "$dst/api/" > /dev/null
+# shellcheck disable=SC2086
+rsync $LINE_SWITCHES "$line_src/" "$dst/api/line/" > /dev/null
 
 fail=0
 ok() { printf '  ✓ %s\n' "$1"; }
 ng() { printf '  ✗ %s\n' "$1"; fail=1; }
 
-[ -f "$dst/api/line/index.php" ] && ok 'LINEの受信口(index.php)が残る' || ng 'LINEの受信口が消えた'
-[ -f "$dst/api/line/.htaccess" ] && ok 'LINEの.htaccessが残る' || ng 'LINEの.htaccessが消えた'
+grep -q new-line "$dst/api/line/index.php" && ok 'LINEの受信口は新しい内容へ入れ替わる' || ng 'LINEの受信口が更新されていない'
+grep -q line-rules "$dst/api/line/.htaccess" && ok 'LINEの.htaccessは新しい内容へ入れ替わる' || ng 'LINEの.htaccessが更新されていない'
 [ -f "$dst/works/999-old-case.jpg" ] && ng '古い施工事例画像が消えていない（掃除が効いていない）' || ok '古い施工事例画像は今までどおり消える'
 [ -f "$dst/api/old.php" ] && ng '古い通常APIが消えていない' || ok '古い通常APIは消える'
 grep -q new-api "$dst/api/index.php" && ok '通常APIは新しい内容へ入れ替わる' || ng '通常APIが更新されていない'
@@ -54,10 +60,12 @@ grep -q あたらしい "$dst/index.html" && ok 'ホームページ本体は新�
 
 # deploy.yml と食い違っていないか
 if grep -q -- '--exclude=api/' .github/workflows/deploy.yml \
-  && grep -q -- '--exclude=line/' .github/workflows/deploy.yml; then
-  ok 'deploy.yml にWeb用とAPI用の除外が入っている'
+  && grep -q -- '--exclude=line/' .github/workflows/deploy.yml \
+  && grep -q -- 'path: api-line/src/' .github/workflows/deploy.yml \
+  && grep -q -- 'path: api-line/public/' .github/workflows/deploy.yml; then
+  ok 'deploy.yml に除外とLINE APIの配置工程が入っている'
 else
-  ng 'deploy.yml の2段階除外が不足している'
+  ng 'deploy.yml の除外またはLINE API配置工程が不足している'
 fi
 
 echo
