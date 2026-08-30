@@ -16,6 +16,9 @@ namespace Relagarden\Line;
  */
 final class LineInboxService
 {
+    /** 片付けを1日1回にするための印。**これは消さない。** */
+    public const housekeepingKey = 'housekeeping';
+
     public function __construct(
         private readonly LineConfig $config,
         private readonly LineStore $store,
@@ -127,6 +130,52 @@ final class LineInboxService
             $at = is_array($record) ? strtotime((string) ($record['at'] ?? '')) : false;
             if ($at !== false && $at < $limit) {
                 $this->store->delete('events', $key);
+            }
+        }
+
+        $this->pruneRate();
+
+        return $removed;
+    }
+
+    /**
+     * 回数制限の記録のうち、**時間の窓を過ぎたものだけ**を片付ける。
+     *
+     * 接続元ごとに1つずつ増えるため、放っておくと溜まり続ける。
+     * 窓の中に1回でも記録が残っているものは、まだ数えている最中なので消さない。
+     * 片付けの印（[housekeepingKey]）も消さない。
+     * 問い合わせ（inbox）と二度処理しない印（events）には触れない。
+     */
+    private function pruneRate(): int
+    {
+        $window = max(1, $this->config->int('rate_window_seconds'));
+        $now = time();
+        $removed = 0;
+
+        foreach ($this->store->keys('rate') as $key) {
+            if ($key === self::housekeepingKey) {
+                continue;
+            }
+            $done = $this->store->deleteIfExpired(
+                'rate',
+                $key,
+                static function (array $record) use ($now, $window): bool {
+                    // 数えた時刻の一覧を持たないものは、回数制限の記録ではない。
+                    // 見覚えのない形のものは消さない。
+                    if (!isset($record['times']) || !is_array($record['times'])) {
+                        return false;
+                    }
+                    foreach ($record['times'] as $t) {
+                        if (is_int($t) && $t > $now - $window) {
+                            // まだ窓の中。数えている最中なので残す。
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            );
+            if ($done) {
+                $removed++;
             }
         }
 

@@ -259,11 +259,11 @@ final class LineWebhookService
     private function housekeeping(): void
     {
         $today = gmdate('Y-m-d');
-        $last = $this->store->get('rate', 'housekeeping');
+        $last = $this->store->get('rate', LineInboxService::housekeepingKey);
         if (is_array($last) && ($last['day'] ?? '') === $today) {
             return;
         }
-        $this->store->put('rate', 'housekeeping', ['day' => $today]);
+        $this->store->put('rate', LineInboxService::housekeepingKey, ['day' => $today]);
         (new LineInboxService($this->config, $this->store))->prune();
     }
 }
