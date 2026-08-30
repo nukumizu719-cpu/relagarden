@@ -1,0 +1,168 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Relagarden\Line;
+
+/**
+ * LINE受信だけの受け口。
+ *
+ * ここには施工事例の掲載（/publish /status /unpublish）は無い。
+ * 掲載はiPhoneからGitHubへ直接行う方式のままで、こちらは触らない。
+ *
+ * | メソッド | 入口              | 用途                                   |
+ * | POST     | /api/line/webhook | LINEからの配信を受ける（署名を確認）    |
+ * | GET      | /api/line/inbox   | まだ取り込んでいない問い合わせを渡す    |
+ * | POST     | /api/line/sync    | 取り込めたものへ受け取り済みの印を付ける |
+ */
+final class LineRouter
+{
+    public function __construct(
+        private readonly LineConfig $config,
+        private readonly LineStore $store,
+        private readonly LineProfile $profile,
+    ) {
+    }
+
+    /**
+     * @param array<string,string> $headers
+     * @param array<string,string> $query
+     * @return array{0:int,1:array<string,mixed>}
+     */
+    public function handle(
+        string $method,
+        string $path,
+        string $rawBody,
+        array $headers,
+        string $clientIp,
+        array $query = [],
+    ): array {
+        try {
+            $route = '/' . trim($path, '/');
+
+            if ($route === '/webhook') {
+                $this->requireMethod($method, 'POST');
+                // 上限は十分に大きく取る。正規の配信を落とすと問い合わせが消えるため、
+                // ここで断るのは明らかに異常な量のときだけ。断っても LINE が再送する。
+                $limiter = new LineRateLimiter($this->store, $this->config->int('rate_window_seconds'));
+                $limiter->hit(
+                    'hook_' . $clientIp,
+                    $this->config->int('rate_max_webhook'),
+                    'ただいま受け取れません'
+                );
+                $service = new LineWebhookService($this->config, $this->store, $this->profile);
+                return [200, $service->receive($rawBody, $headers)];
+            }
+
+            if ($route === '/inbox') {
+                $this->requireMethod($method, 'GET');
+                $this->requireInboxToken($headers, $clientIp);
+                $limit = isset($query['limit']) ? (int) $query['limit'] : 0;
+                $service = new LineInboxService($this->config, $this->store);
+                return [200, ['ok' => true] + $service->items($limit)];
+            }
+
+            if ($route === '/sync') {
+                $this->requireMethod($method, 'POST');
+                $this->requireInboxToken($headers, $clientIp);
+                if (strlen($rawBody) > $this->config->int('max_sync_bytes')) {
+                    throw new LineError(413, '内容が大きすぎます', 'E_SYNC_BODY_TOO_BIG');
+                }
+                $body = $this->json($rawBody);
+                $ids = $this->validIds($body['ids'] ?? null);
+                $service = new LineInboxService($this->config, $this->store);
+                $result = $service->ack($ids);
+                if (($result['failed'] ?? 0) > 0) {
+                    // 印を付けられていないのに「済んだ」と答えない。
+                    // アプリは取り込み済み・確認待ちとして持ち越し、次に付け直す。
+                    $this->store->log('E_ACK_WRITE', (int) $result['failed']);
+                    return [500, ['ok' => false, 'message' => 'ただいま記録できません']];
+                }
+                return [200, ['ok' => true] + $result];
+            }
+
+            return [404, ['ok' => false, 'message' => '入口が見つかりません']];
+        } catch (LineError $e) {
+            if ($e->detailForLog !== null) {
+                $this->store->log($e->detailForLog);
+            }
+            return [$e->status, ['ok' => false, 'message' => $e->getMessage()]];
+        } catch (\Throwable $e) {
+            // 内部の事情は返さない。記録にも文面を残さない
+            // （例外の文面にはファイルの場所や値が入ることがあるため）。
+            $this->store->log('E_UNEXPECTED', 1);
+            return [500, ['ok' => false, 'message' => 'ただいま処理できません。時間をおいてお試しください']];
+        }
+    }
+
+    /**
+     * 取り込み済みとして送られてきた番号を確かめる。
+     *
+     * 数も長さも決めておく。決めておかないと、極端な数や長い文字列で
+     * 保存を探し回らせることができてしまう。
+     *
+     * @return list<string>
+     */
+    private function validIds(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            throw new LineError(400, '内容を読み取れません', 'E_SYNC_IDS_SHAPE');
+        }
+        if (count($raw) > $this->config->int('max_sync_ids')) {
+            throw new LineError(413, '一度に送れる件数を超えています', 'E_SYNC_IDS_COUNT');
+        }
+        $maxLength = $this->config->int('max_id_length');
+        $ids = [];
+        foreach ($raw as $id) {
+            if (!is_string($id) || $id === '') {
+                continue;
+            }
+            if (strlen($id) > $maxLength) {
+                throw new LineError(400, '受け付けられない要求です', 'E_SYNC_ID_LENGTH');
+            }
+            $ids[] = $id;
+        }
+        return $ids;
+    }
+
+    private function requireMethod(string $actual, string $expected): void
+    {
+        if (strtoupper($actual) !== $expected) {
+            throw new LineError(405, '受け付けられない要求です');
+        }
+    }
+
+    /**
+     * 受信箱の合言葉を確かめる。
+     *
+     * この合言葉はiPhoneのKeychainにだけ入れる。掲載用のPATとは別物。
+     *
+     * @param array<string,string> $headers
+     */
+    private function requireInboxToken(array $headers, string $clientIp): void
+    {
+        $limiter = new LineRateLimiter($this->store, $this->config->int('rate_window_seconds'));
+        $limiter->hit('inbox_' . $clientIp, $this->config->int('rate_max_inbox'));
+
+        $header = trim((string) ($headers['authorization'] ?? ''));
+        if (!preg_match('/^Bearer\s+(\S+)$/', $header, $m)) {
+            throw new LineError(401, 'LINE受信の設定が済んでいません');
+        }
+        if (!hash_equals($this->config->str('inbox_token'), $m[1])) {
+            throw new LineError(401, 'LINE受信の設定が済んでいません', 'E_TOKEN');
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private function json(string $raw): array
+    {
+        if ($raw === '') {
+            return [];
+        }
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            throw new LineError(400, '内容を読み取れません');
+        }
+        return $data;
+    }
+}

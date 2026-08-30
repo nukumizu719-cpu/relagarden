@@ -30,6 +30,9 @@ jobs:
       - name: Build Astro
         run: npm run build
 
+      # APIは下の別工程で配置する。Web更新ではapi/全体を守り、
+      # API更新では公式LINEの受信口(line/)だけを守る。
+      # 2段階の除外は scripts/deploy-exclude-test.sh で確かめる。
       - name: Deploy via rsync
         uses: Burnett01/rsync-deployments@7.0.1
         with:
@@ -58,7 +61,8 @@ jobs:
       - name: Deploy API public entry
         uses: Burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete
+          # LINE受信口は別設置。通常APIの更新で消さない。
+          switches: -avzr --delete --exclude=line/
           path: api/public/
           remote_path: /home/xs674757/relagarden.jp/public_html/api/
           remote_host: ${{ secrets.XSERVER_HOST }}
