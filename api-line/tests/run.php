@@ -794,6 +794,105 @@ test('取り込み済みの印を書けなかったら、成功と答えない',
     assertSame(0, count(getInbox($router)[1]['items']));
 });
 
+// ── 回数制限の記録の片付け ──────────────────────────────
+group('回数制限の記録の片付け');
+
+test('窓を過ぎた記録だけを片付け、いま数えている分は残す', function (): void {
+    $store = freshStore();
+    $config = testConfig(['keep_days' => 1, 'rate_window_seconds' => 3600]);
+    $now = time();
+
+    // 窓を過ぎたもの（消える）
+    $store->put('rate', 'inbox_198_51_100_1', ['times' => [$now - 7200, $now - 7300]]);
+    // 窓の中に1回でもあるもの（残る）
+    $store->put('rate', 'inbox_198_51_100_2', ['times' => [$now - 7200, $now - 60]]);
+    // 片付けの印（残る）。
+    // 万一この印が回数制限と同じ形になっても消さないよう、
+    // わざと「窓を過ぎた形」で置いて、名前だけで守れているかを見る。
+    $store->put('rate', LineInboxService::housekeepingKey, [
+        'day' => gmdate('Y-m-d'),
+        'times' => [$now - 7200],
+    ]);
+    // 見覚えのない形のもの（残す。回数制限の記録ではない）
+    $store->put('rate', 'unknown_shape', ['day' => '2026-01-01']);
+
+    (new LineInboxService($config, $store))->prune();
+
+    assertTrue(!$store->exists('rate', 'inbox_198_51_100_1'), '古い記録が残っている');
+    assertTrue($store->exists('rate', 'inbox_198_51_100_2'), '数えている最中の記録を消した');
+    assertTrue(
+        $store->exists('rate', LineInboxService::housekeepingKey),
+        '片付けの印を消した'
+    );
+    assertTrue($store->exists('rate', 'unknown_shape'), '見覚えのない形のものを消した');
+});
+
+test('片付けても、未取り込みの問い合わせと印には触れない', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    $config = testConfig(['keep_days' => 1, 'rate_window_seconds' => 3600]);
+    $now = time();
+
+    postWebhook($router, textEvent('EV-PRUNE', 'MSG-PRUNE', 'U30303030303030303030303030303030', '残っていてほしい'));
+    $store->put('rate', 'inbox_old', ['times' => [$now - 7200]]);
+
+    $inboxBefore = count($store->keys('inbox'));
+    $eventsBefore = count($store->keys('events'));
+
+    (new LineInboxService($config, $store))->prune();
+
+    assertSame($inboxBefore, count($store->keys('inbox')), '未取り込みの問い合わせが減った');
+    assertSame($eventsBefore, count($store->keys('events')), '二度処理しない印が減った');
+    assertTrue(!$store->exists('rate', 'inbox_old'), '古い回数制限の記録が残っている');
+    assertSame(1, count(getInbox($router)[1]['items']), 'アプリへ渡せなくなった');
+});
+
+test('いま使われている記録は、片付けの対象にしない', function (): void {
+    $store = freshStore();
+    $config = testConfig(['keep_days' => 1, 'rate_window_seconds' => 3600]);
+    $now = time();
+    $store->put('rate', 'inbox_busy', ['times' => [$now - 7200]]);
+
+    // 別の処理が同じファイルを開いて鍵をかけている状態を作る。
+    $path = storageDirOf($store) . '/rate/inbox_busy.json';
+    $busy = fopen($path, 'r+');
+    assertTrue($busy !== false, 'ファイルを開けない');
+    assertTrue(flock($busy, LOCK_EX | LOCK_NB), '鍵をかけられない');
+
+    try {
+        (new LineInboxService($config, $store))->prune();
+        assertTrue($store->exists('rate', 'inbox_busy'), '使われている最中のファイルを消した');
+    } finally {
+        flock($busy, LOCK_UN);
+        fclose($busy);
+    }
+
+    // 使い終われば、次の片付けで消える。
+    (new LineInboxService($config, $store))->prune();
+    assertTrue(!$store->exists('rate', 'inbox_busy'), '使い終わっても消えない');
+});
+
+test('印（シンボリックリンク）の先は消さない', function (): void {
+    $store = freshStore();
+    $config = testConfig(['keep_days' => 1, 'rate_window_seconds' => 3600]);
+    $dir = storageDirOf($store);
+
+    // 置き場所の外にある、消されては困るファイル。
+    $outside = $dir . '/../大事なファイル-' . bin2hex(random_bytes(4)) . '.json';
+    file_put_contents($outside, json_encode(['times' => [1]]));
+    // それを指す印を、回数制限のフォルダーへ置く。
+    symlink($outside, $dir . '/rate/inbox_link.json');
+
+    try {
+        (new LineInboxService($config, $store))->prune();
+        assertTrue(file_exists($outside), '印の先のファイルを消した');
+        assertTrue(is_link($dir . '/rate/inbox_link.json'), '印そのものを消した');
+    } finally {
+        @unlink($dir . '/rate/inbox_link.json');
+        @unlink($outside);
+    }
+});
+
 // ── 設定と置き場所 ──────────────────────────────────────
 group('設定と置き場所の守り');
 

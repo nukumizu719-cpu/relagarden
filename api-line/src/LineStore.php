@@ -171,8 +171,49 @@ final class LineStore
     public function delete(string $bucket, string $key): void
     {
         $path = $this->pathFor($bucket, $key);
-        if ($path !== null && is_file($path)) {
+        // 印やリンクを辿った先を消さない。ここで消してよいのは、
+        // このフォルダーに置かれた本物のファイルだけ。
+        if ($path !== null && is_file($path) && !is_link($path)) {
             @unlink($path);
+        }
+    }
+
+    /**
+     * 期限切れのものだけを、鍵をかけて片付ける。
+     *
+     * いま誰かが使っている（鍵が取れない）ファイルには触らない。
+     * 消してよいかの判断は呼び出し側へ渡し、**鍵を持ったまま**確かめてから消す。
+     * 確かめた後に書き込まれたものを消してしまわないようにするため。
+     *
+     * シンボリックリンクは相手にしない（リンクの先を消さない）。
+     *
+     * @param callable(array<string,mixed>):bool $isExpired
+     * @return bool 消したかどうか
+     */
+    public function deleteIfExpired(string $bucket, string $key, callable $isExpired): bool
+    {
+        $path = $this->pathFor($bucket, $key);
+        if ($path === null || is_link($path) || !is_file($path)) {
+            return false;
+        }
+        $handle = @fopen($path, 'r+');
+        if ($handle === false) {
+            return false;
+        }
+        try {
+            // 待たない。使われている最中なら、それは「今も使っている」ということ。
+            if (!flock($handle, LOCK_EX | LOCK_NB)) {
+                return false;
+            }
+            $raw = (string) stream_get_contents($handle);
+            $data = json_decode($raw, true);
+            if (!is_array($data) || !$isExpired($data)) {
+                return false;
+            }
+            return @unlink($path);
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
         }
     }
 

@@ -65,7 +65,11 @@ sh scripts/deploy-exclude-test.sh
 | --- | --- |
 | `channel_secret` | LINE Developers のチャネルシークレット |
 | `channel_access_token` | チャネルアクセストークン（長期）。空でも動く（表示名が空になる） |
-| `inbox_token` | `openssl rand -hex 24` などで作る。iPhoneアプリへ同じ値を入れる |
+| `inbox_token` | **`openssl rand -hex 32`**（64文字）で作る。iPhoneアプリへ同じ値を入れる |
+
+`inbox_token` は **64文字以上が必須** です。これより短いと起動を断り、
+すべての入口が `503`（ただいま準備中です）を返します。
+`openssl rand -hex 32` の出力がちょうど64文字なので、そのまま貼ってください。
 
 GitHubのPAT・Xserverの管理パスワードは使わないこと。
 
@@ -77,6 +81,18 @@ curl -s -o /dev/null -w '%{http_code}\n' https://relagarden.jp/api/line/inbox
 ```
 
 `503` は設定ファイルが読めていない、`404` は置き場所か .htaccess の問題です。
+
+`403` が返る場合は、暗号化されていない通信として扱われています。
+このAPIは `require_https` が `true` のとき、HTTPS以外を受け付けません。
+**本番の設定は `true` のままにしてください。** `false` にして回避しないこと
+（Webhookの本文にはお客様の文章が入るため、平文で流してはいけません）。
+
+`403` のときに確かめるところ:
+
+- そのURLへHTTPSでアクセスしているか（`http://` になっていないか）
+- XserverでSSLが有効になっているか
+- 前段でSSLを終端している場合、PHPへ `HTTPS` か `X-Forwarded-Proto: https`
+  のどちらかが渡っているか（このAPIはその両方を見ます）
 
 ### ④ LINE Developers の設定
 
