@@ -24,10 +24,24 @@ jobs:
       - name: Build Astro
         run: npm run build
 
+      # ⚠ --delete は「dist/ に無いものをサーバーから消す」動作をします。
+      #
+      # 公式LINEの受信は public_html/api/line/ に置いてあり、
+      # ビルド結果(dist/)には含まれません。除外しないと、ホームページを
+      # 更新するたびにLINEの受信口が消え、お問い合わせが届かなくなります。
+      #
+      # 守るのは api/line/ だけにしています。api/ 全体を除外すると、
+      # 将来そこへ置いた要らないものが消せなくなるためです。
+      # LINEの設定と受信データは public_html の外(private/)にあるので、
+      # ここでの除外とは別に守られています。
+      #
+      # この除外が効いているかは scripts/deploy-exclude-test.sh で確かめられます。
       - name: Deploy via rsync
         uses: Burnett01/rsync-deployments@7.0.1
         with:
-          switches: -avzr --delete
+          switches: >-
+            -avzr --delete
+            --exclude=api/line/
           path: dist/
           # 💡 Xserverの公開ディレクトリ
           # your-domain.com の部分は実際のドメイン名に変更してください
