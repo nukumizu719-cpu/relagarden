@@ -93,3 +93,71 @@ jobs:
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
+
+      # 公式LINEの受信に必要な設定を、暗号化Secretsから組み立てて置く。
+      #
+      # **秘密の値はログへ出さない。** 長さと使ってよい文字だけを確かめ、
+      # 足りなければここでデプロイを止める（中途半端な設定を置かない）。
+      # 置き場所は public_html の外。受信データ(private/line-storage)は
+      # 消さないよう、この工程では --delete を使わない。
+      - name: Build LINE config from secrets (never logged)
+        env:
+          CHANNEL_SECRET: ${{ secrets.RELAGARDEN_LINE_CHANNEL_SECRET }}
+          CHANNEL_ACCESS_TOKEN: ${{ secrets.RELAGARDEN_LINE_CHANNEL_ACCESS_TOKEN }}
+          INBOX_TOKEN: ${{ secrets.RELAGARDEN_LINE_INBOX_TOKEN }}
+        run: |
+          set -eu
+
+          check() {
+            name="$1"; value="$2"; least="$3"
+            if [ -z "$value" ]; then
+              echo "$name が設定されていません" >&2
+              exit 1
+            fi
+            if [ "${#value}" -lt "$least" ]; then
+              echo "$name が短すぎます（${least}文字以上）" >&2
+              exit 1
+            fi
+            case "$value" in
+              *[!A-Za-z0-9+/=_-]*)
+                echo "$name に使えない文字が入っています" >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          check RELAGARDEN_LINE_CHANNEL_SECRET "$CHANNEL_SECRET" 16
+          check RELAGARDEN_LINE_CHANNEL_ACCESS_TOKEN "$CHANNEL_ACCESS_TOKEN" 16
+          check RELAGARDEN_LINE_INBOX_TOKEN "$INBOX_TOKEN" 64
+
+          mkdir -p line-config-out
+          umask 077
+          {
+            printf '<?php\n'
+            printf '// GitHub Actions が暗号化Secretsから作ります。手で書き換えないでください。\n'
+            printf 'return [\n'
+            printf "    'channel_secret' => '%s',\n" "$CHANNEL_SECRET"
+            printf "    'channel_access_token' => '%s',\n" "$CHANNEL_ACCESS_TOKEN"
+            printf "    'inbox_token' => '%s',\n" "$INBOX_TOKEN"
+            printf "    'storage_dir' => '/home/xs674757/relagarden.jp/private/line-storage',\n"
+            printf "    'require_https' => true,\n"
+            printf '];\n'
+          } > line-config-out/line-config.php
+          chmod 600 line-config-out/line-config.php
+          echo "line-config.php を作りました（内容は表示しません）"
+
+      - name: Deploy LINE config outside public_html
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          # --delete を付けない。private/line-storage の受信データを守るため。
+          switches: -avz --chmod=F600
+          path: line-config-out/line-config.php
+          remote_path: /home/xs674757/relagarden.jp/private/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Remove local copy of LINE config
+        if: always()
+        run: rm -rf line-config-out
