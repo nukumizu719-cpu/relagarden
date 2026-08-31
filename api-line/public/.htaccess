@@ -1,8 +1,25 @@
 # LINE受信の入口だけを通す。ほかのファイルへ直接触れないようにする。
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # 合言葉（Authorization）をPHPへ渡す。
+  # CGIとして動くサーバーでは、この指定が無いとPHPまで届かず、
+  # 正しい合言葉でも401になる。
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# 同じ目的の別のやり方。上が効かないサーバー向け。
+<IfModule mod_setenvif.c>
+  SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
+# CGI版PHPへ合言葉を渡す（対応しているサーバーだけ効く）。
+<IfModule mod_cgi.c>
+  CGIPassAuth On
 </IfModule>
 
 # 中身の一覧を見せない
