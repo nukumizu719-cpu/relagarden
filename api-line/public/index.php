@@ -40,6 +40,7 @@ function line_is_https(): bool
 }
 
 require $sourceDir . '/LineError.php';
+require $sourceDir . '/LineHeaders.php';
 require $sourceDir . '/LineConfig.php';
 require $sourceDir . '/LineStore.php';
 require $sourceDir . '/LineSignature.php';
@@ -52,6 +53,7 @@ require $sourceDir . '/LineRouter.php';
 use Relagarden\Line\HttpLineProfile;
 use Relagarden\Line\LineConfig;
 use Relagarden\Line\LineConfigMissing;
+use Relagarden\Line\LineHeaders;
 use Relagarden\Line\LineRouter;
 use Relagarden\Line\LineStore;
 use Relagarden\Line\LineStorageUnavailable;
@@ -108,13 +110,12 @@ $path = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 // public_html/api/line/ の下に置く前提で、先頭の /api/line を落とす。
 $path = preg_replace('#^/api/line#', '', $path) ?? $path;
 
-$headers = [];
-foreach ($_SERVER as $key => $value) {
-    if (str_starts_with((string) $key, 'HTTP_') && is_string($value)) {
-        $name = strtolower(str_replace('_', '-', substr((string) $key, 5)));
-        $headers[$name] = $value;
-    }
-}
+// CGIとして動くサーバーでは Authorization が素通りしないことがある。
+// 転送後の名前とApacheの持ち物も見る（LineHeaders を参照）。
+$headers = LineHeaders::from(
+    $_SERVER,
+    function_exists('apache_request_headers') ? apache_request_headers() : null
+);
 
 $query = [];
 foreach ($_GET as $key => $value) {

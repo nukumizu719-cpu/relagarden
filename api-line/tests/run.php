@@ -12,6 +12,7 @@ declare(strict_types=1);
  */
 
 require __DIR__ . '/../src/LineError.php';
+require __DIR__ . '/../src/LineHeaders.php';
 require __DIR__ . '/../src/LineConfig.php';
 require __DIR__ . '/../src/LineStore.php';
 require __DIR__ . '/../src/LineSignature.php';
@@ -24,6 +25,7 @@ require __DIR__ . '/../src/LineRouter.php';
 use Relagarden\Line\FakeLineProfile;
 use Relagarden\Line\LineConfig;
 use Relagarden\Line\LineConfigMissing;
+use Relagarden\Line\LineHeaders;
 use Relagarden\Line\LineStorageUnavailable;
 use Relagarden\Line\LineInboxService;
 use Relagarden\Line\LineRouter;
@@ -1005,6 +1007,56 @@ test('replyToken を受け取っても保存しない', function (): void {
             'replyTokenが保存内容に混ざっている'
         );
     }
+});
+
+// ── 合言葉の受け取り ────────────────────────────────────
+group('合言葉の見出しを受け取れること');
+
+test('そのまま渡ってきた合言葉を読む', function (): void {
+    $headers = LineHeaders::from(['HTTP_AUTHORIZATION' => 'Bearer abc']);
+    assertSame('Bearer abc', $headers['authorization'] ?? '');
+});
+
+test('内部で転送された場合（REDIRECT_付き）も読む', function (): void {
+    // CGIとして動くサーバーでは、この名前で渡ってくることがある。
+    // ここを読み落とすと、正しい合言葉でも401になる。
+    $headers = LineHeaders::from(['REDIRECT_HTTP_AUTHORIZATION' => 'Bearer abc']);
+    assertSame('Bearer abc', $headers['authorization'] ?? '');
+});
+
+test('Apacheが持っている見出しからも読む', function (): void {
+    $headers = LineHeaders::from([], ['Authorization' => 'Bearer abc']);
+    assertSame('Bearer abc', $headers['authorization'] ?? '');
+});
+
+test('そのまま渡ってきたものを、転送後のもので上書きしない', function (): void {
+    $headers = LineHeaders::from([
+        'HTTP_AUTHORIZATION' => 'Bearer 本物',
+        'REDIRECT_HTTP_AUTHORIZATION' => 'Bearer 古い',
+    ]);
+    assertSame('Bearer 本物', $headers['authorization'] ?? '');
+});
+
+test('ほかの見出しもこれまでどおり読める', function (): void {
+    $headers = LineHeaders::from([
+        'HTTP_X_LINE_SIGNATURE' => 'sig',
+        'HTTP_CONTENT_TYPE' => 'application/json',
+        'REQUEST_METHOD' => 'POST',
+    ]);
+    assertSame('sig', $headers['x-line-signature'] ?? '');
+    assertSame('application/json', $headers['content-type'] ?? '');
+    assertTrue(!isset($headers['request-method']), '見出し以外まで拾っている');
+});
+
+test('読み取った合言葉で、受信箱を読める', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    // CGIのサーバーから来た形（REDIRECT_付き）をそのまま通す。
+    $headers = LineHeaders::from([
+        'REDIRECT_HTTP_AUTHORIZATION' => 'Bearer ' . INBOX_TOKEN,
+    ]);
+    [$status] = $router->handle('GET', '/inbox', '', $headers, '203.0.113.10');
+    assertSame(200, $status, 'CGIのサーバーで受信箱を読めない');
 });
 
 // ── 記録に何を書くか ────────────────────────────────────
