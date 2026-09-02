@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main  # mainブランチにpushしたときに実行
+  # 手で動かすとき用。設定だけを入れ替えたいときなど、
+  # 変更ファイルが無くてもAPIとLINE受信を必ず置き直す。
+  workflow_dispatch:
 
 # 複数の更新が続いてもXserverへの転送を同時実行しない。
 # 古い途中状態が新しい完成版を上書きする404を防ぐ。
@@ -17,6 +20,48 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 1つ前のコミットと比べて「どこが変わったか」を見るため、履歴を取る。
+          fetch-depth: 0
+
+      # 施工事例を1件足しただけのときに、APIまで毎回置き直さないようにする。
+      # 判定できないときは必ず「両方置き直す」へ倒す。
+      - name: 配置する場所を決める
+        id: targets
+        run: |
+          set -eu
+
+          before='${{ github.event.before }}'
+          after='${{ github.sha }}'
+          empty='0000000000000000000000000000000000000000'
+
+          changed=''
+          judged=no
+
+          if [ '${{ github.event_name }}' = 'push' ] \
+            && [ -n "$before" ] \
+            && [ "$before" != "$empty" ] \
+            && git cat-file -e "$before^{commit}" 2>/dev/null
+          then
+            if changed=$(git diff --name-only "$before" "$after" 2>/dev/null); then
+              judged=yes
+            fi
+          fi
+
+          answer="$RUNNER_TEMP/deploy-targets.txt"
+
+          if [ "$judged" = yes ]; then
+            count=$(printf '%s\n' "$changed" | grep -c . || true)
+            echo "変更されたファイル: ${count}件"
+            printf '%s\n' "$changed" | sh scripts/detect-deploy-targets.sh > "$answer"
+          else
+            echo "変更されたファイルを調べられませんでした。安全側に倒します"
+            printf 'api=true\nline=true\n' > "$answer"
+          fi
+
+          cat "$answer" >> "$GITHUB_OUTPUT"
+          echo "この回の配置:"
+          sed 's/^/  /' "$answer"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -24,30 +69,114 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      # package-lock.json のとおりに入れる。毎回同じ結果になる。
       - name: Install dependencies
-        run: npm install
+        run: npm ci --prefer-offline --no-audit
 
       - name: Build Astro
         run: npm run build
 
+      # ------------------------------------------------------------------
+      # ホームページ本体の転送。SSHが切れることがあるので、最大3回試す。
+      # 20秒あけて、成功した時点で残りは動かさない。
+      # 3回とも失敗したときだけ、全体を失敗にする。
+      #
       # APIは下の別工程で配置する。Web更新ではapi/全体を守り、
       # API更新では公式LINEの受信口(line/)だけを守る。
       # 2段階の除外は scripts/deploy-exclude-test.sh で確かめる。
-      - name: Deploy via rsync
+      # ------------------------------------------------------------------
+      - name: ホームページを転送（1回目）
+        id: web1
+        continue-on-error: true
         uses: Burnett01/rsync-deployments@7.0.1
         with:
           # APIは別工程で配置する。Web更新でAPIや保存データを消さない。
           switches: -avzr --delete --exclude=api/
           path: dist/
           # 💡 Xserverの公開ディレクトリ
-          # your-domain.com の部分は実際のドメイン名に変更してください
           remote_path: /home/xs674757/relagarden.jp/public_html/
           remote_host: ${{ secrets.XSERVER_HOST }}
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
 
+      - name: 1回目の結果
+        run: |
+          if [ '${{ steps.web1.outcome }}' = 'success' ]; then
+            echo '転送 1回目: 成功'
+          else
+            echo '転送 1回目: 失敗'
+            echo '次の試行まで: 20秒'
+          fi
+
+      - name: 20秒待つ（2回目の前）
+        if: steps.web1.outcome == 'failure'
+        run: sleep 20
+
+      - name: ホームページを転送（2回目）
+        id: web2
+        if: steps.web1.outcome == 'failure'
+        continue-on-error: true
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete --exclude=api/
+          path: dist/
+          remote_path: /home/xs674757/relagarden.jp/public_html/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: 2回目の結果
+        if: steps.web1.outcome == 'failure'
+        run: |
+          if [ '${{ steps.web2.outcome }}' = 'success' ]; then
+            echo '転送 2回目: 成功'
+          else
+            echo '転送 2回目: 失敗'
+            echo '次の試行まで: 20秒'
+          fi
+
+      - name: 20秒待つ（3回目の前）
+        if: steps.web1.outcome == 'failure' && steps.web2.outcome == 'failure'
+        run: sleep 20
+
+      - name: ホームページを転送（3回目）
+        id: web3
+        if: steps.web1.outcome == 'failure' && steps.web2.outcome == 'failure'
+        continue-on-error: true
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete --exclude=api/
+          path: dist/
+          remote_path: /home/xs674757/relagarden.jp/public_html/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: ホームページ転送の結果を確かめる
+        run: |
+          if [ '${{ steps.web1.outcome }}' = 'success' ] \
+            || [ '${{ steps.web2.outcome }}' = 'success' ] \
+            || [ '${{ steps.web3.outcome }}' = 'success' ]
+          then
+            echo 'ホームページの転送: 成功'
+          else
+            echo '転送 3回目: 失敗'
+            echo 'ホームページの転送: 3回とも失敗しました' >&2
+            exit 1
+          fi
+
+      # ------------------------------------------------------------------
+      # 通常API。api/ が変わった回だけ配置する。
+      # ------------------------------------------------------------------
+      - name: 通常APIは今回そのまま
+        if: steps.targets.outputs.api != 'true'
+        run: echo 'api/ に変更が無いので、通常APIの配置は行いません'
+
       - name: Deploy API source outside public_html
+        if: steps.targets.outputs.api == 'true'
         uses: Burnett01/rsync-deployments@7.0.1
         with:
           switches: -avzr --delete
@@ -59,6 +188,7 @@ jobs:
           remote_port: 10022
 
       - name: Deploy API public entry
+        if: steps.targets.outputs.api == 'true'
         uses: Burnett01/rsync-deployments@7.0.1
         with:
           # LINE受信口は別設置。通常APIの更新で消さない。
@@ -70,9 +200,17 @@ jobs:
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
 
-      # 公式LINEの受信APIは通常の掲載APIと分離して配置する。
+      # ------------------------------------------------------------------
+      # 公式LINEの受信API。api-line/ か配置の手順が変わった回だけ配置する。
+      # 通常の掲載APIとは分離したまま。
       # private/ の設定と保存データは対象外なので、ここでは上書きしない。
+      # ------------------------------------------------------------------
+      - name: 公式LINEの受信は今回そのまま
+        if: steps.targets.outputs.line != 'true'
+        run: echo 'api-line/ に変更が無いので、LINE受信APIと設定の配置は行いません'
+
       - name: Deploy LINE API source outside public_html
+        if: steps.targets.outputs.line == 'true'
         uses: Burnett01/rsync-deployments@7.0.1
         with:
           switches: -avzr --delete
@@ -84,6 +222,7 @@ jobs:
           remote_port: 10022
 
       - name: Deploy LINE API public entry
+        if: steps.targets.outputs.line == 'true'
         uses: Burnett01/rsync-deployments@7.0.1
         with:
           switches: -avzr --delete
@@ -101,6 +240,7 @@ jobs:
       # 置き場所は public_html の外。受信データ(private/line-storage)は
       # 消さないよう、この工程では --delete を使わない。
       - name: Build LINE config from secrets (never logged)
+        if: steps.targets.outputs.line == 'true'
         env:
           CHANNEL_SECRET: ${{ secrets.RELAGARDEN_LINE_CHANNEL_SECRET }}
           CHANNEL_ACCESS_TOKEN: ${{ secrets.RELAGARDEN_LINE_CHANNEL_ACCESS_TOKEN }}
@@ -147,6 +287,7 @@ jobs:
           echo "line-config.php を作りました（内容は表示しません）"
 
       - name: Deploy LINE config outside public_html
+        if: steps.targets.outputs.line == 'true'
         uses: Burnett01/rsync-deployments@7.0.1
         with:
           # --delete を付けない。private/line-storage の受信データを守るため。
