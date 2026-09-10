@@ -319,26 +319,10 @@ jobs:
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
 
-      # 既存のCronは残し、LINE自動受付の1行だけを入れ替える。
-      # 実行ファイルは公開領域外。auto_reply_enabled=false の間は何も送らない。
-      - name: Ensure LINE auto-reply cron on Xserver
-        if: steps.targets.outputs.line == 'true'
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.XSERVER_HOST }}
-          username: ${{ secrets.XSERVER_USER }}
-          key: ${{ secrets.XSERVER_SSH_KEY }}
-          port: 10022
-          script: |
-            set -eu
-            cron_tmp="$(mktemp)"
-            (crontab -l 2>/dev/null || true) \
-              | grep -Fv '/relagarden.jp/api-line-bin/run-auto-reply.php' \
-              > "$cron_tmp" || true
-            printf '%s\n' '*/5 * * * * /usr/bin/php /home/xs674757/relagarden.jp/api-line-bin/run-auto-reply.php >/dev/null 2>&1' >> "$cron_tmp"
-            crontab "$cron_tmp"
-            rm -f "$cron_tmp"
-            crontab -l | grep -F '/relagarden.jp/api-line-bin/run-auto-reply.php' >/dev/null
+      # LINE自動受付の起動は、Xserverのcrontabを使わない。
+      # このサーバーのcrontabは、既存の内容をそのまま書き戻すだけでも
+      # 拒否される（"bad minute"）。書き戻しを続けると、既存のCronを
+      # 壊しかねない。代わりに line-auto-reply.yml が5分ごとに呼ぶ。
 
       - name: Remove local copy of LINE config
         if: always()

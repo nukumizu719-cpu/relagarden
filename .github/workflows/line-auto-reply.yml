@@ -1,0 +1,66 @@
+name: LINE auto-reply runner
+
+# LINEの遅延受付を5分ごとに動かす。
+#
+# **Xserverのcrontabは使わない。**
+# このサーバーのcrontabは、既存の内容をそのまま書き戻すだけでも
+# 拒否される（"bad minute"）。書き戻しを続けると、既存のCron 9件を
+# 壊しかねないため、GitHub側から呼ぶ形にしている。
+#
+# ここは「呼ぶだけ」。送るかどうかを決めるのは、Xserver側の
+# private/line-config.php の auto_reply_enabled。
+# それが false の間、実行ファイルは保存領域にもLINEにも触れずに終わる。
+
+on:
+  schedule:
+    # 5分ごと。GitHubの予定実行は数分ずれることがある。
+    # 短い受付案内は「最後の受信から30分後」なので、多少ずれても差し支えない。
+    - cron: '*/5 * * * *'
+  # 手で1回だけ動かして確かめるとき用。
+  workflow_dispatch:
+
+# 前の実行が終わる前に次を始めない。二重送信を防ぐ。
+# **走っている実行を打ち切らない**（送信の途中で切ると結果が分からなくなる）。
+concurrency:
+  group: relagarden-line-auto-reply
+  cancel-in-progress: false
+
+jobs:
+  run:
+    # 予定実行は既定ブランチでしか動かないが、明示しておく。
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # 詰まった実行を次の回まで残さない。
+    timeout-minutes: 5
+    steps:
+      - name: Run LINE auto-reply on Xserver
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.XSERVER_HOST }}
+          username: ${{ secrets.XSERVER_USER }}
+          key: ${{ secrets.XSERVER_SSH_KEY }}
+          port: 10022
+          # 実行ファイルの場所は $HOME から組み立てる。
+          # 公開リポジトリなので、サーバーのユーザー名をここへ書かない。
+          script: |
+            set -eu
+
+            runner="$HOME/relagarden.jp/api-line-bin/run-auto-reply.php"
+            if [ ! -f "$runner" ]; then
+              echo 'run-auto-reply.php was not found. Deploy the LINE API first.' >&2
+              exit 1
+            fi
+
+            # PHPの場所は決め打ちにしない。あるものを探す。
+            php_bin="$(command -v php 2>/dev/null || true)"
+            if [ -z "$php_bin" ] && [ -x /usr/bin/php ]; then
+              php_bin=/usr/bin/php
+            fi
+            if [ -z "$php_bin" ]; then
+              echo 'php was not found on this server.' >&2
+              exit 1
+            fi
+
+            # 出力は捨てる。お客様の本文もトークンも記録へ残さないため。
+            "$php_bin" "$runner" >/dev/null 2>&1
+            echo 'LINE auto-reply runner finished normally.'
