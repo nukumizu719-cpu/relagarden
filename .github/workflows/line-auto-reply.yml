@@ -10,6 +10,10 @@ name: LINE auto-reply runner
 # ここは「呼ぶだけ」。送るかどうかを決めるのは、Xserver側の
 # private/line-config.php の auto_reply_enabled。
 # それが false の間、実行ファイルは保存領域にもLINEにも触れずに終わる。
+#
+# **script: の中は半角英数字だけにする。**
+# 日本語コメントを入れた版はSSHが status 255 で落ちた。
+# 説明はこの外側（YAMLのコメント）に書く。
 
 on:
   schedule:
@@ -33,6 +37,10 @@ jobs:
     # 詰まった実行を次の回まで残さない。
     timeout-minutes: 5
     steps:
+      # 実行ファイルの場所は $HOME から組み立てる。
+      # 公開リポジトリなので、サーバーのユーザー名をここへ書かない。
+      # PHPの場所も決め打ちにせず、あるものを探す。
+      # どこまで進んだかが分かるよう、段階ごとに印を出す。
       - name: Run LINE auto-reply on Xserver
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -40,27 +48,26 @@ jobs:
           username: ${{ secrets.XSERVER_USER }}
           key: ${{ secrets.XSERVER_SSH_KEY }}
           port: 10022
-          # 実行ファイルの場所は $HOME から組み立てる。
-          # 公開リポジトリなので、サーバーのユーザー名をここへ書かない。
           script: |
-            set -eu
-
+            echo "stage=start"
             runner="$HOME/relagarden.jp/api-line-bin/run-auto-reply.php"
             if [ ! -f "$runner" ]; then
-              echo 'run-auto-reply.php was not found. Deploy the LINE API first.' >&2
+              echo "stage=runner-missing"
               exit 1
             fi
-
-            # PHPの場所は決め打ちにしない。あるものを探す。
-            php_bin="$(command -v php 2>/dev/null || true)"
-            if [ -z "$php_bin" ] && [ -x /usr/bin/php ]; then
-              php_bin=/usr/bin/php
+            echo "stage=runner-found"
+            php_bin=""
+            if command -v php >/dev/null 2>&1; then
+              php_bin="$(command -v php)"
+            elif [ -x /usr/bin/php ]; then
+              php_bin="/usr/bin/php"
             fi
             if [ -z "$php_bin" ]; then
-              echo 'php was not found on this server.' >&2
+              echo "stage=php-missing"
               exit 1
             fi
-
-            # 出力は捨てる。お客様の本文もトークンも記録へ残さないため。
+            echo "stage=php-found"
             "$php_bin" "$runner" >/dev/null 2>&1
-            echo 'LINE auto-reply runner finished normally.'
+            status=$?
+            echo "stage=done exit=$status"
+            exit $status
