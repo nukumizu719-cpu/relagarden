@@ -106,7 +106,7 @@ curl -s -o /dev/null -w '%{http_code}\n' https://relagarden.jp/api/line/inbox
 
 ### ⑤ Xserver Cron（有効化前に設定）
 
-1分ごとに、公開領域外の実行ファイルを動かします。
+5分ごとに、公開領域外の実行ファイルを動かします。
 
 ```sh
 /usr/bin/php /home/<アカウント>/relagarden.jp/api-line-bin/run-auto-reply.php >/dev/null 2>&1
