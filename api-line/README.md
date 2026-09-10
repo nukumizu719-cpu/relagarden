@@ -11,8 +11,8 @@ Xserver の private/line-storage（public_htmlの外）
   → https://relagarden.jp/api/line/inbox
 iPhoneアプリ「リラガーデン」
   → 実際に返信した後「返信済みにする」
-Xserver Cron（1分ごと）
-  → 30分たっても返信済みでなければ短い受付案内
+Xserver Cron（5分ごと）
+  → 30分たっても返信済みでなければ、30〜35分後に短い受付案内
 ```
 
 ## このAPIがしないこと
@@ -96,7 +96,7 @@ LINE用の値だけを入れます。
 3. Webhookの利用をオンにする
 4. このAPIと重なる一律の応答メッセージは停止する。日程確認などのキーワード応答は残せます
 
-### 4. XserverのCronを1分ごとに設定する
+### 4. XserverのCronを5分ごとに設定する
 
 公開URLは使いません。XserverのCron設定に次を登録します。
 
