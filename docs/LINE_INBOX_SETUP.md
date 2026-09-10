@@ -1,4 +1,4 @@
-# 公式LINEの自動登録：本番設定と引き継ぎ
+# 公式LINEの自動登録・30分後受付：本番設定と引き継ぎ
 
 このファイルは、**本番の設定をする人**（Codex・谷口さん）へ渡す手順書です。
 コードとテストは終わっています。ここから先は、まだ誰も実施していません。
@@ -7,7 +7,7 @@
 
 | どこ | 何 |
 | --- | --- |
-| このリポジトリ | `api-line/`（LINE受信専用API）、`.github/workflows/deploy.yml`（受信口を消さない除外） |
+| このリポジトリ | `api-line/`（LINE受信・受付API）、`.github/workflows/deploy.yml` |
 | iPhoneアプリ | `relagarden-iphone-app` の `feature/line-inbox` |
 | Xserver | `public_html/api/line/`、`api-line-src/`、`private/line-config.php`、`private/line-storage/` |
 | LINE Developers | Messaging APIチャネルの Webhook 設定 |
@@ -22,7 +22,7 @@ Xserver のままです。`/publish` `/status` `/unpublish` `/pairing` はこの
 | 段階 | 状態 |
 | --- | --- |
 | 1. 実装済み | 済み |
-| 2. Fakeテスト済み | 済み（PHP 34件・Flutter 449件・実際のHTTPでの通し確認） |
+| 2. Fakeテスト済み | 済み（自動受付を含む。実LINE送信は未実施） |
 | 3. PR監査済み | PR作成済み。レビュー待ち |
 | 4. Xserver設置済み | **未実施** |
 | 5. 本番Webhook受信済み | **未実施** |
@@ -42,6 +42,7 @@ Xserver のままです。`/publish` `/status` `/unpublish` `/pairing` はこの
 │           ├── index.php
 │           └── .htaccess
 ├── api-line-src/          ← api-line/src/ の中身（public_html の外）
+├── api-line-bin/          ← api-line/bin/ の中身（public_html の外）
 └── private/
     ├── line-config.php    ← ②で作る（public_html の外）
     └── line-storage/      ← 自動で作られる
@@ -66,6 +67,7 @@ sh scripts/deploy-exclude-test.sh
 | `channel_secret` | LINE Developers のチャネルシークレット |
 | `channel_access_token` | チャネルアクセストークン（長期）。空でも動く（表示名が空になる） |
 | `inbox_token` | **`openssl rand -hex 32`**（64文字）で作る。iPhoneアプリへ同じ値を入れる |
+| `auto_reply_enabled` | 最初は `false`。Cronと実機確認後にだけ `true` |
 
 `inbox_token` は **64文字以上が必須** です。これより短いと起動を断り、
 すべての入口が `503`（ただいま準備中です）を返します。
@@ -100,25 +102,36 @@ curl -s -o /dev/null -w '%{http_code}\n' https://relagarden.jp/api/line/inbox
    `https://relagarden.jp/api/line/webhook`
 2. 「検証」を押す → 成功すること
 3. 「Webhookの利用」をオン
-4. **応答メッセージ（自動応答）はオンのまま**。触らない
+4. 一律に毎回返す応答メッセージは停止。日程確認などのキーワード応答は残す
 
-### ⑤ iPhone側
+### ⑤ Xserver Cron（有効化前に設定）
+
+1分ごとに、公開領域外の実行ファイルを動かします。
+
+```sh
+/usr/bin/php /home/<アカウント>/relagarden.jp/api-line-bin/run-auto-reply.php >/dev/null 2>&1
+```
+
+GitHub Actionsを使う場合は、Cron確認後にリポジトリ変数
+`RELAGARDEN_LINE_AUTOREPLY_ENABLED` を `true` にします。
+
+### ⑥ iPhone側
 
 1. アプリを `feature/line-inbox` の版へ更新
 2. 設定 →「公式LINEの受信」→ `inbox_token` と同じ合言葉を入れて保存
 3. ホーム →「LINE新着を確認」
+4. 公式LINEで実際に返信した後、返信文画面の「送信したので、返信済みにする」を押す
 
 ---
 
 ## 元に戻す手順
 
-1. LINE Developers で「Webhookの利用」をオフ ← これだけで受信が止まる
-2. `public_html/api/line/` を削除
-3. `api-line-src/` と `private/line-config.php` を削除
-4. deploy.yml の `--exclude=api/line/` を戻す（任意。残しても無害）
+1. `auto_reply_enabled` を `false` にする ← これだけで自動受付が止まる
+2. LINE Developers で「Webhookの利用」をオフ ← 受信も止める場合
+3. `public_html/api/line/` を削除
+4. `api-line-src/` `api-line-bin/` と `private/line-config.php` を削除
 
-自動応答の設定には一切触れていないので、1〜4のどれを行っても
-今までの自動返信はそのまま動きます。掲載経路にも影響しません。
+掲載経路には影響しません。
 アプリに取り込み済みのお客様と履歴は、iPhoneの中に残ります。
 
 ---
@@ -153,16 +166,15 @@ curl -s -o /dev/null -w '%{http_code}\n' https://relagarden.jp/api/line/inbox
 
 ---
 
-## 追加料金が発生しない理由
+## 料金上の注意
 
 - Xserver：いまの契約のまま。PHPのみ。データベースを使わない
-- LINE：Webhookの受信は無料。呼ぶのは「プロフィール取得」だけで、
-  課金対象のメッセージ送信を一切行わない
+- LINE：Webhook受信は無料ですが、初回案内と30分後の受付案内は
+  Messaging APIの送信通数としてプラン上の通数へ数えられます
 - 外部サービス：AI・OpenAI・ngrok・監視サービスのいずれも使わない
 
-## 自動返信と共存できる理由
+## 自動返信が重ならない理由
 
-このAPIは受け取って控えるだけで、LINEの送信APIを呼びません
-（`api-line/tests/run.php` が、送信の呼び出しがコードに無いことを毎回確かめます）。
-Webhookの有効化は「届いた内容の写しを受け取る」設定で、応答メッセージの設定とは別です。
-④の手順でも応答メッセージには触れません。
+送信経路は個別の自動受付1か所だけです。同じ相談中の短い案内は1回まで、
+既存キーワードと短い挨拶は除外し、通信結果が不明でも同じRetry Keyで再試行します。
+谷口さんが「返信済みにする」を押した予約は送信しません。

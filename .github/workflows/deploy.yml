@@ -221,6 +221,18 @@ jobs:
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
 
+      - name: Deploy LINE auto-reply runner outside public_html
+        if: steps.targets.outputs.line == 'true'
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          switches: -avzr --delete --chmod=F700
+          path: api-line/bin/
+          remote_path: /home/xs674757/relagarden.jp/api-line-bin/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
       - name: Deploy LINE API public entry
         if: steps.targets.outputs.line == 'true'
         uses: Burnett01/rsync-deployments@7.0.1
@@ -245,6 +257,7 @@ jobs:
           CHANNEL_SECRET: ${{ secrets.RELAGARDEN_LINE_CHANNEL_SECRET }}
           CHANNEL_ACCESS_TOKEN: ${{ secrets.RELAGARDEN_LINE_CHANNEL_ACCESS_TOKEN }}
           INBOX_TOKEN: ${{ secrets.RELAGARDEN_LINE_INBOX_TOKEN }}
+          AUTO_REPLY_ENABLED: ${{ vars.RELAGARDEN_LINE_AUTOREPLY_ENABLED }}
         run: |
           set -eu
 
@@ -270,6 +283,12 @@ jobs:
           check RELAGARDEN_LINE_CHANNEL_ACCESS_TOKEN "$CHANNEL_ACCESS_TOKEN" 16
           check RELAGARDEN_LINE_INBOX_TOKEN "$INBOX_TOKEN" 64
 
+          case "$AUTO_REPLY_ENABLED" in
+            true) ;;
+            false|'') AUTO_REPLY_ENABLED=false ;;
+            *) echo "RELAGARDEN_LINE_AUTOREPLY_ENABLED は true または false にしてください" >&2; exit 1 ;;
+          esac
+
           mkdir -p line-config-out
           umask 077
           {
@@ -279,6 +298,7 @@ jobs:
             printf "    'channel_secret' => '%s',\n" "$CHANNEL_SECRET"
             printf "    'channel_access_token' => '%s',\n" "$CHANNEL_ACCESS_TOKEN"
             printf "    'inbox_token' => '%s',\n" "$INBOX_TOKEN"
+            printf "    'auto_reply_enabled' => %s,\n" "$AUTO_REPLY_ENABLED"
             printf "    'storage_dir' => '/home/xs674757/relagarden.jp/private/line-storage',\n"
             printf "    'require_https' => true,\n"
             printf '];\n'
@@ -298,6 +318,27 @@ jobs:
           remote_user: ${{ secrets.XSERVER_USER }}
           remote_key: ${{ secrets.XSERVER_SSH_KEY }}
           remote_port: 10022
+
+      # 既存のCronは残し、LINE自動受付の1行だけを入れ替える。
+      # 実行ファイルは公開領域外。auto_reply_enabled=false の間は何も送らない。
+      - name: Ensure LINE auto-reply cron on Xserver
+        if: steps.targets.outputs.line == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.XSERVER_HOST }}
+          username: ${{ secrets.XSERVER_USER }}
+          key: ${{ secrets.XSERVER_SSH_KEY }}
+          port: 10022
+          script: |
+            set -eu
+            cron_tmp="$(mktemp)"
+            (crontab -l 2>/dev/null || true) \
+              | grep -Fv '/relagarden.jp/api-line-bin/run-auto-reply.php' \
+              > "$cron_tmp" || true
+            printf '%s\n' '* * * * * /usr/bin/php /home/xs674757/relagarden.jp/api-line-bin/run-auto-reply.php >/dev/null 2>&1' >> "$cron_tmp"
+            crontab "$cron_tmp"
+            rm -f "$cron_tmp"
+            crontab -l | grep -F '/relagarden.jp/api-line-bin/run-auto-reply.php' >/dev/null
 
       - name: Remove local copy of LINE config
         if: always()

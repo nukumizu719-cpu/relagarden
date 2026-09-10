@@ -1,6 +1,6 @@
 <?php
 /**
- * LINE受信用の設定の見本。
+ * LINE受信・自動受付用の設定の見本。
  *
  * この見本をコピーして、Xserverの **public_html の外** へ置く。
  *   /home/<アカウント>/relagarden.jp/private/line-config.php
@@ -17,9 +17,20 @@ return [
     'channel_secret' => 'ここへチャネルシークレットを貼る',
 
     // 「チャネルアクセストークン（長期）」。
-    // 使うのはお客様の表示名を読む1か所だけ。メッセージは送らない。
-    // 空のままでもよい（そのときは表示名が空欄で届く）。
+    // 自動受付を有効にした場合は、表示名取得と個別の受付送信に使う。
+    // 無効のままなら空でもよい（そのときは表示名が空欄で届く）。
     'channel_access_token' => '',
+
+    // ── 30分後の自動受付（最初は必ず false）────────────────
+    // Xserverへ配置・定期実行・実機確認が全部終わるまで有効にしない。
+    'auto_reply_enabled' => false,
+    // 12時間空いたら新しい相談として初回案内を1回送る。
+    'auto_reply_session_seconds' => 12 * 3600,
+    // 2通目以降、最後のメッセージから30分待つ。
+    'auto_reply_delay_seconds' => 30 * 60,
+    'auto_reply_retry_seconds' => 5 * 60,
+    'auto_reply_max_per_run' => 20,
+    'auto_reply_timeout' => 10,
 
     // ── iPhoneアプリとの合言葉 ────────────────────────────────
     // アプリが受信箱を読むときに使う。
