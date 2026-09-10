@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -367,3 +368,25 @@ jobs:
       - name: Remove local copy of LINE config
         if: always()
         run: rm -rf line-config-out
+
+  # 一時的な読み取り専用診断。コマンド本文や秘密情報は表示しない。
+  diagnose-line-cron:
+    if: github.ref == 'refs/heads/diagnose/line-cron-rejection'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect existing Cron shape without changing it
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.XSERVER_HOST }}
+          username: ${{ secrets.XSERVER_USER }}
+          key: ${{ secrets.XSERVER_SSH_KEY }}
+          port: 10022
+          script: |
+            set -eu
+            crontab -l 2>/dev/null \
+              | awk '
+                  /^[[:space:]]*$/ { printf "line=%d type=blank\n", NR; next }
+                  /^[[:space:]]*#/ { printf "line=%d type=comment\n", NR; next }
+                  /^[A-Za-z_][A-Za-z0-9_]*=/ { printf "line=%d type=environment\n", NR; next }
+                  { printf "line=%d type=job fields=%d schedule=%s %s %s %s %s line_runner=%s\n", NR, NF, $1, $2, $3, $4, $5, index($0, "/relagarden.jp/api-line-bin/run-auto-reply.php") ? "yes" : "no" }
+                '
