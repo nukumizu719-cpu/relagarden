@@ -331,13 +331,37 @@ jobs:
           port: 10022
           script: |
             set -eu
+            cron_old="$(mktemp)"
             cron_tmp="$(mktemp)"
-            (crontab -l 2>/dev/null || true) \
-              | grep -Fv '/relagarden.jp/api-line-bin/run-auto-reply.php' \
+            trap 'rm -f "$cron_old" "$cron_tmp"' EXIT
+            (crontab -l 2>/dev/null || true) > "$cron_old"
+
+            echo "既存Cronの行数: $(wc -l < "$cron_old" | tr -d ' ')"
+            if ! crontab "$cron_old"; then
+              echo '既存Cron自体を再登録できません。内容本文は表示しません。' >&2
+              awk '
+                /^[[:space:]]*$/ { printf "line=%d type=blank\n", NR; next }
+                /^[[:space:]]*#/ { printf "line=%d type=comment\n", NR; next }
+                /^[A-Za-z_][A-Za-z0-9_]*=/ { printf "line=%d type=environment\n", NR; next }
+                { printf "line=%d type=job fields=%d schedule=%s %s %s %s %s line_runner=%s\n", NR, NF, $1, $2, $3, $4, $5, index($0, "/relagarden.jp/api-line-bin/run-auto-reply.php") ? "yes" : "no" }
+              ' "$cron_old"
+              exit 1
+            fi
+            echo '既存Cronの再検証: 成功'
+
+            grep -Fv '/relagarden.jp/api-line-bin/run-auto-reply.php' "$cron_old" \
               > "$cron_tmp" || true
             printf '%s\n' '*/5 * * * * /usr/bin/php /home/xs674757/relagarden.jp/api-line-bin/run-auto-reply.php >/dev/null 2>&1' >> "$cron_tmp"
-            crontab "$cron_tmp"
-            rm -f "$cron_tmp"
+            if ! crontab "$cron_tmp"; then
+              echo 'LINE用Cronを加えた候補が拒否されました。内容本文は表示しません。' >&2
+              awk '
+                /^[[:space:]]*$/ { printf "line=%d type=blank\n", NR; next }
+                /^[[:space:]]*#/ { printf "line=%d type=comment\n", NR; next }
+                /^[A-Za-z_][A-Za-z0-9_]*=/ { printf "line=%d type=environment\n", NR; next }
+                { printf "line=%d type=job fields=%d schedule=%s %s %s %s %s line_runner=%s\n", NR, NF, $1, $2, $3, $4, $5, index($0, "/relagarden.jp/api-line-bin/run-auto-reply.php") ? "yes" : "no" }
+              ' "$cron_tmp"
+              exit 1
+            fi
             crontab -l | grep -F '/relagarden.jp/api-line-bin/run-auto-reply.php' >/dev/null
 
       - name: Remove local copy of LINE config
