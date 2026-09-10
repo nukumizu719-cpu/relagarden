@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Relagarden\Line;
 
 /**
- * LINE受信だけの設定。
+ * LINE受信と、任意の自動受付の設定。
  *
  * 施工事例の掲載（api/ 側）とは別のファイルを読む。
  * 掲載はiPhoneからGitHubへ直接行う方式のままで、こちらは触らない。
@@ -62,6 +62,11 @@ final class LineConfig
         if (self::looksPublic($storageDir)) {
             throw new LineConfigMissing('E_CONFIG_STORAGE_PUBLIC');
         }
+        if ((bool) ($loaded['auto_reply_enabled'] ?? false)) {
+            if (!isset($loaded['channel_access_token']) || !is_string($loaded['channel_access_token']) || strlen($loaded['channel_access_token']) < 20) {
+                throw new LineConfigMissing('E_CONFIG_AUTOREPLY_ACCESS_TOKEN');
+            }
+        }
         // チャネルアクセストークンは任意。無ければ表示名を取りに行かない
         // （空欄のまま受信し、谷口さんが後から手で入れる）。
 
@@ -85,6 +90,13 @@ final class LineConfig
             'rate_max_webhook' => 600,
             // 表示名を取りに行くときの待ち時間（秒）。
             'profile_timeout' => 5,
+            // 明示的に有効化するまで、従来どおり受信専用。
+            'auto_reply_enabled' => false,
+            'auto_reply_session_seconds' => 12 * 3600,
+            'auto_reply_delay_seconds' => 30 * 60,
+            'auto_reply_retry_seconds' => 5 * 60,
+            'auto_reply_max_per_run' => 20,
+            'auto_reply_timeout' => 10,
             // 本番はHTTPSでしか受けない。手元の確認のときだけ false にする。
             'require_https' => true,
             // /sync で受け取る本文と番号の上限。

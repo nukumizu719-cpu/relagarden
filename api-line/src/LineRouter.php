@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Relagarden\Line;
 
 /**
- * LINE受信だけの受け口。
+ * LINE受信と、返信済み記録の受け口。
  *
  * ここには施工事例の掲載（/publish /status /unpublish）は無い。
  * 掲載はiPhoneからGitHubへ直接行う方式のままで、こちらは触らない。
@@ -14,6 +14,7 @@ namespace Relagarden\Line;
  * | POST     | /api/line/webhook | LINEからの配信を受ける（署名を確認）    |
  * | GET      | /api/line/inbox   | まだ取り込んでいない問い合わせを渡す    |
  * | POST     | /api/line/sync    | 取り込めたものへ受け取り済みの印を付ける |
+ * | POST     | /api/line/auto-reply/replied | 手動返信済みとして予約を止める |
  */
 final class LineRouter
 {
@@ -21,6 +22,7 @@ final class LineRouter
         private readonly LineConfig $config,
         private readonly LineStore $store,
         private readonly LineProfile $profile,
+        private readonly ?LineAutoReplyService $autoReply = null,
     ) {
     }
 
@@ -50,8 +52,23 @@ final class LineRouter
                     $this->config->int('rate_max_webhook'),
                     'ただいま受け取れません'
                 );
-                $service = new LineWebhookService($this->config, $this->store, $this->profile);
+                $service = new LineWebhookService($this->config, $this->store, $this->profile, $this->autoReply);
                 return [200, $service->receive($rawBody, $headers)];
+            }
+
+            if ($route === '/auto-reply/replied') {
+                $this->requireMethod($method, 'POST');
+                $this->requireInboxToken($headers, $clientIp);
+                if ($this->autoReply === null) {
+                    throw new LineError(503, '自動受付の準備がまだ終わっていません');
+                }
+                if (strlen($rawBody) > 4096) {
+                    throw new LineError(413, '内容が大きすぎます');
+                }
+                $body = $this->json($rawBody);
+                $lineUserId = is_string($body['lineUserId'] ?? null) ? $body['lineUserId'] : '';
+                $this->autoReply->markReplied($lineUserId);
+                return [200, ['ok' => true]];
             }
 
             if ($route === '/inbox') {
