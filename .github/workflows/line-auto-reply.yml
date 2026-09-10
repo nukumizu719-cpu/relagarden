@@ -57,16 +57,27 @@ jobs:
             fi
             echo "stage=runner-found"
             php_bin=""
-            if command -v php >/dev/null 2>&1; then
-              php_bin="$(command -v php)"
-            elif [ -x /usr/bin/php ]; then
-              php_bin="/usr/bin/php"
-            fi
+            for c in /usr/bin/php8.4 /usr/bin/php8.3 /usr/bin/php8.2 /usr/bin/php8.1 "$(command -v php 2>/dev/null)" /usr/bin/php; do
+              [ -n "$c" ] || continue
+              [ -x "$c" ] || continue
+              v="$("$c" -r 'echo PHP_MAJOR_VERSION*100+PHP_MINOR_VERSION;' 2>/dev/null)"
+              case "$v" in ""|*[!0-9]*) continue ;; esac
+              echo "stage=php-candidate bin=$c ver=$v"
+              if [ "$v" -ge 801 ]; then
+                php_bin="$c"
+                break
+              fi
+            done
             if [ -z "$php_bin" ]; then
-              echo "stage=php-missing"
+              echo "stage=php81-missing"
               exit 1
             fi
-            echo "stage=php-found"
+            echo "stage=php-selected bin=$php_bin"
+            if ! "$php_bin" -l "$runner" >/dev/null 2>&1; then
+              echo "stage=lint-failed"
+              exit 1
+            fi
+            echo "stage=lint-ok"
             "$php_bin" "$runner" >/dev/null 2>&1
             status=$?
             echo "stage=done exit=$status"
