@@ -11,7 +11,11 @@
  */
 
 return [
-    // ── GitHub ───────────────────────────────────────────────
+    // ── GitHub（ホームページ掲載。**使わないなら空のままでよい**）──
+    //
+    // 空にしておくと、掲載の入口（/publish /status /unpublish）だけが
+    // 「ただいま準備中です」で止まる。
+    // **端末の連携（/pairing）とInstagramの入口は、そのまま使える。**
     // Fine-grained personal access token
     //   対象リポジトリ: nukumizu719-cpu/relagarden のみ
     //   権限: Contents = Read and write だけ
@@ -21,7 +25,7 @@ return [
     'github_repo'  => 'relagarden',
     'github_branch' => 'main',
 
-    // ── 端末の連携 ────────────────────────────────────────────
+    // ── 端末の連携（**ここだけは必須**）────────────────────────
     // iPhoneアプリを初回に連携させるための合言葉。
     // 谷口さんへ口頭かLINEで伝える。定期的に変えてよい。
     // 8文字以上。ここもGitHub/Xserverのパスワードとは別物にする。

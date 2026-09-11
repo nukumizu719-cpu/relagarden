@@ -1666,6 +1666,153 @@ test('Instagramを渡していないときは、その入口だけが準備中�
 
 }
 
+
+// ══════════════════════════════════════════════════════════
+// 機能ごとの設定（GitHubが無くてもInstagramは使える）
+// ══════════════════════════════════════════════════════════
+
+group('設定：機能ごとに分けて止める');
+
+/** GitHubの設定を持たない作業場。 */
+function igOnlyWorkspace(bool $withInstagram = true): array
+{
+    $dir = sys_get_temp_dir() . '/relagarden-igonly-' . bin2hex(random_bytes(6));
+    @mkdir($dir, 0700, true);
+    $values = [
+        'pairing_code' => 'pairing-code-1234',
+        'storage_dir' => $dir,
+        'site_base_url' => 'https://relagarden.jp',
+    ];
+    if ($withInstagram) {
+        $values += [
+            'instagram_user_id' => '17841400000000000',
+            'instagram_graph_api_version' => 'v0.0-test',
+            'instagram_account_name' => 'test_account',
+        ];
+    }
+    $config = new Config($values + Config::defaults());
+    return [$config, new Storage($dir), $dir];
+}
+
+test('GitHubの設定が無くても、設定ファイルは読める', function (): void {
+    $path = sys_get_temp_dir() . '/relagarden-igonly-config.php';
+    file_put_contents($path, '<?php return ' . var_export([
+        'pairing_code' => 'pairing-code-1234',
+        'instagram_user_id' => '17841400000000000',
+        'instagram_graph_api_version' => 'v0.0-test',
+        'instagram_account_name' => 'test_account',
+    ], true) . ';');
+    try {
+        $config = Config::load($path);
+        assertTrue(!$config->hasGitHub(), 'GitHubは未設定と判定されるはず');
+    } finally {
+        @unlink($path);
+    }
+});
+
+test('合言葉が無ければ、やはり読み込みを断る', function (): void {
+    $path = sys_get_temp_dir() . '/relagarden-nopair-config.php';
+    file_put_contents($path, '<?php return ' . var_export([
+        'instagram_user_id' => '1', 'instagram_account_name' => 'x',
+    ], true) . ';');
+    try {
+        Config::load($path);
+        throw new RuntimeException('合言葉なしが通った');
+    } catch (\Relagarden\Api\ConfigMissing $e) {
+        assertTrue(true);
+    } finally {
+        @unlink($path);
+    }
+});
+
+test('GitHub設定なし＋Instagram設定ありで、Instagramの入口が使える', function (): void {
+    [$config, $storage] = igOnlyWorkspace();
+    $fake = new FakeInstagramClient();
+    $router = new Router($config, $storage, null, $fake);
+
+    [$pairStatus, $paired] = $router->handle('POST', '/pairing', json_encode([
+        'pairingCode' => 'pairing-code-1234',
+        'deviceName' => 'iPhone',
+    ]), [], '203.0.113.1');
+    assertSame(200, $pairStatus, '端末の連携は使えるはず');
+
+    $auth = ['authorization' => 'Bearer ' . $paired['token']];
+    [$status, $payload] = $router->handle('GET', '/instagram/account', '', $auth, '203.0.113.1');
+    assertSame(200, $status, 'Instagramの入口が使えるはず');
+    assertTrue(($payload['configured'] ?? false) === true, '設定済みと返るはず');
+    assertSame('test_account', $payload['accountName'] ?? '');
+});
+
+test('GitHub設定が無いとき、掲載の入口だけが準備中で止まる', function (): void {
+    [$config, $storage] = igOnlyWorkspace();
+    $router = new Router($config, $storage, null, new FakeInstagramClient());
+
+    [, $paired] = $router->handle('POST', '/pairing', json_encode([
+        'pairingCode' => 'pairing-code-1234',
+        'deviceName' => 'iPhone',
+    ]), [], '203.0.113.2');
+    $auth = ['authorization' => 'Bearer ' . $paired['token']];
+
+    foreach ([['POST', '/publish'], ['GET', '/status'], ['POST', '/unpublish']] as [$method, $route]) {
+        [$status, $payload] = $router->handle($method, $route, '{}', $auth, '203.0.113.2');
+        assertSame(503, $status, $route . ' は準備中で止まるはず');
+        assertTrue(($payload['ok'] ?? true) === false);
+    }
+
+    // 連携の解除は掲載に関係しないので使える。
+    [$unpairStatus] = $router->handle('POST', '/unpair', '{}', $auth, '203.0.113.2');
+    assertSame(200, $unpairStatus, '連携解除は使えるはず');
+});
+
+test('Instagramの設定が無ければ、Instagramの入口が準備中で止まる', function (): void {
+    [$config, $storage] = igOnlyWorkspace(withInstagram: false);
+    $router = new Router($config, $storage, null, new FakeInstagramClient());
+
+    [, $paired] = $router->handle('POST', '/pairing', json_encode([
+        'pairingCode' => 'pairing-code-1234',
+        'deviceName' => 'iPhone',
+    ]), [], '203.0.113.3');
+    $auth = ['authorization' => 'Bearer ' . $paired['token']];
+
+    [$status, $payload] = $router->handle('POST', '/instagram/prepare', '{}', $auth, '203.0.113.3');
+    assertSame(503, $status);
+    assertTrue(($payload['ok'] ?? true) === false);
+});
+
+test('GitHubの設定がそろえば、掲載の入口は今までどおり', function (): void {
+    [$config, $storage, $dir] = igOnlyWorkspace();
+    $withGitHub = new Config([
+        'github_token' => 'x', 'github_owner' => 'o', 'github_repo' => 'r',
+    ] + $config->raw());
+    assertTrue($withGitHub->hasGitHub(), 'GitHubは設定済みと判定されるはず');
+
+    $router = new Router($withGitHub, $storage, new FakeGitHubClient(), new FakeInstagramClient());
+    [, $paired] = $router->handle('POST', '/pairing', json_encode([
+        'pairingCode' => 'pairing-code-1234',
+        'deviceName' => 'iPhone',
+    ]), [], '203.0.113.4');
+    $auth = ['authorization' => 'Bearer ' . $paired['token']];
+
+    [$status] = $router->handle('GET', '/status', '', $auth, '203.0.113.4');
+    assertTrue($status !== 503, '掲載の入口が準備中で止まってはいけない');
+});
+
+test('設定が欠けても、返す内容に秘密情報を出さない', function (): void {
+    [$config, $storage] = igOnlyWorkspace();
+    $router = new Router($config, $storage, null, new FakeInstagramClient());
+    [, $paired] = $router->handle('POST', '/pairing', json_encode([
+        'pairingCode' => 'pairing-code-1234',
+        'deviceName' => 'iPhone',
+    ]), [], '203.0.113.5');
+    $auth = ['authorization' => 'Bearer ' . $paired['token']];
+    [, $payload] = $router->handle('POST', '/publish', '{}', $auth, '203.0.113.5');
+
+    $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+    foreach (['github_token', 'pairing_code', 'access_token', 'storage_dir'] as $ng) {
+        assertTrue(!str_contains($json, $ng), '応答に ' . $ng . ' が出ている');
+    }
+});
+
 // ══════════════════════════════════════════════════════════
 echo "\n";
 echo str_repeat('─', 50) . "\n";
