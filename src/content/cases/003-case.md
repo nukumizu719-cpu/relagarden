@@ -5,7 +5,6 @@ pubDate: 2025-11-05
 image: "../../assets/works/003a.jpg"
 beforeImage: "../../assets/works/003b.jpg"
 area: "日進市"
-cost: "約24万円（20㎡）"
 period: "1日間"
 tags: ["泥跳ね対策", "景観リフォーム", "花壇・植栽連携"]
 

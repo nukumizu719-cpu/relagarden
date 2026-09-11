@@ -17,6 +17,11 @@ for (const key of required) {
   if (!options.get(key)?.trim()) fail(`--${key} は必須です。`);
 }
 
+// 黙って捨てると「入れたのに出ない」で混乱するので、明示的に止める
+if (options.has('cost')) {
+  fail('--cost は廃止されました。事例ごとの費用は載せない方針です（src/content/config.ts 参照）。');
+}
+
 const slug = options.get('slug').trim();
 if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
   fail('--slug は半角小文字・数字・ハイフンだけで指定してください。');
@@ -62,7 +67,7 @@ const frontmatter = [
   `image: ${q(`../../assets/works/${afterName}`)}`,
   `beforeImage: ${q(`../../assets/works/${beforeName}`)}`,
   `area: ${q(options.get('area'))}`,
-  ...(options.get('cost') ? [`cost: ${q(options.get('cost'))}`] : []),
+  // --cost は受け付けない。事例ごとの費用は載せない方針（src/content/config.ts 参照）
   ...(options.get('period') ? [`period: ${q(options.get('period'))}`] : []),
   `tags: [${tags.map(q).join(', ')}]`,
   ...(options.get('concerns') ? [`beforeConcerns: ${q(options.get('concerns'))}`] : []),

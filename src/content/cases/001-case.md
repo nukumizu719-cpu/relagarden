@@ -5,7 +5,6 @@ pubDate: 2025-10-10
 image: "../../assets/works/001a.jpg"
 beforeImage: "../../assets/works/001b.jpg"
 area: "岡崎市"
-cost: "約30万円（30㎡）"
 period: "2日間"
 tags: ["雑草対策", "子供の遊び場", "高耐久"]
 

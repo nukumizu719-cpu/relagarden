@@ -5,7 +5,6 @@ pubDate: 2026-03-01
 image: "../../assets/works/011a.jpg"
 beforeImage: "../../assets/works/011b.jpg"
 area: "名古屋市天白区"
-cost: "約10万円（9㎡）"
 period: "1日間"
 tags: ["雑草対策", "レンガチップ", "高耐久人工芝"]
 

@@ -5,7 +5,6 @@ pubDate: 2025-11-27
 image: "../../assets/works/005a.jpg"
 beforeImage: "../../assets/works/005b.jpg"
 area: "四日市市"
-cost: "約25万円（22㎡）"
 period: "1.5日間"
 tags: ["雑草対策", "ウッドデッキ活用", "三重県エリア"]
 

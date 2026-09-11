@@ -18,12 +18,12 @@ const headline = entry.data.title.startsWith('【')
   : `【${entry.data.area}】${entry.data.title}`;
 const pageTitle = `${headline} | 人工芝施工事例`;
 
-// 施工前の悩みと費用は任意項目。無い記事で「undefined」を出さない。
+// 施工前の悩みは任意項目。無い記事で「undefined」を出さない。
+// 費用は載せない。事例ごとの金額は整合が取れておらず、公開すると見積りの基準にされてしまうため。
 const concernSummary = entry.data.beforeConcerns?.slice(0, 80);
 const description = [
   `${entry.data.area}での人工芝施工事例。`,
-  concernSummary ? `${concernSummary}... ` : '',
-  entry.data.cost ? `施工費用の目安：${entry.data.cost}` : '',
+  concernSummary ? `${concernSummary}...` : '',
 ].join('');
 
 // JSON-LD（画像URLを文字列として抽出するために .src を使用）
@@ -63,10 +63,6 @@ const jsonLd = {
           {entry.data.title}
         </h1>
         <div class="flex gap-4 mt-6">
-          <div class="bg-gray-50 px-4 py-2 rounded-lg">
-            <p class="text-[10px] text-gray-400 uppercase font-bold">Cost</p>
-            <p class="text-sm font-bold text-gray-700">{entry.data.cost}</p>
-          </div>
           <div class="bg-gray-50 px-4 py-2 rounded-lg">
             <p class="text-[10px] text-gray-400 uppercase font-bold">Period</p>
             <p class="text-sm font-bold text-gray-700">{entry.data.period}</p>
