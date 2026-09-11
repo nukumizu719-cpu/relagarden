@@ -15,7 +15,8 @@ final class Router
     public function __construct(
         private readonly Config $config,
         private readonly Storage $storage,
-        private readonly GitHubClient $github,
+        /** ホームページ掲載用。設定が無ければ null。掲載の入口だけが止まる。 */
+        private readonly ?GitHubClient $github,
         /** Instagram実験用。使わない構成では null のままでよい。 */
         private readonly ?InstagramClient $instagram = null,
     ) {
@@ -78,7 +79,7 @@ final class Router
                     $this->config->int('rate_max_publishes'),
                     'しばらく時間をおいてからお試しください'
                 );
-                $service = new PublishService($this->config, $this->storage, $this->github);
+                $service = $this->requirePublishService();
                 $result = $service->publish($this->json($rawBody), $deviceId);
                 return [200, ['ok' => true] + $result];
             }
@@ -87,7 +88,7 @@ final class Router
                 $this->requireMethod($method, 'GET');
                 $auth->requireDevice($headers['authorization'] ?? null);
                 $caseId = $_GET['caseId'] ?? '';
-                $service = new PublishService($this->config, $this->storage, $this->github);
+                $service = $this->requirePublishService();
                 return [200, ['ok' => true] + $service->status(is_string($caseId) ? $caseId : '')];
             }
 
@@ -99,7 +100,7 @@ final class Router
                     $this->config->int('rate_max_unpublishes'),
                     'しばらく時間をおいてからお試しください'
                 );
-                $service = new PublishService($this->config, $this->storage, $this->github);
+                $service = $this->requirePublishService();
                 $result = $service->unpublish($this->json($rawBody), $deviceId);
                 return [200, ['ok' => true] + $result];
             }
@@ -122,6 +123,20 @@ final class Router
             $this->storage->log('unexpected: ' . $e->getMessage());
             return [500, ['ok' => false, 'message' => 'ただいま処理できません。時間をおいてお試しください']];
         }
+    }
+
+    /**
+     * ホームページ掲載の処理を用意する。
+     *
+     * GitHubの設定が無ければ、**掲載の入口だけ**を「準備中」で止める。
+     * Instagramと端末の連携はここを通らないので、影響を受けない。
+     */
+    private function requirePublishService(): PublishService
+    {
+        if ($this->github === null) {
+            throw new ApiError(503, 'ただいま準備中です');
+        }
+        return new PublishService($this->config, $this->storage, $this->github);
     }
 
     private function requireMethod(string $actual, string $expected): void

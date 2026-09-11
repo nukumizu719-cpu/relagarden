@@ -71,13 +71,19 @@ try {
 }
 
 $storage = new Storage($config->str('storage_dir'));
-$github = new GitHubApiClient(
-    $config->str('github_token'),
-    $config->str('github_owner'),
-    $config->str('github_repo'),
-    $config->str('github_branch'),
-    $storage,
-);
+
+// ホームページ掲載（GitHub直接方式）。設定が無ければ組み立てない。
+// 掲載の入口だけが「準備中」になり、Instagramと端末の連携は使える。
+$github = null;
+if ($config->hasGitHub()) {
+    $github = new GitHubApiClient(
+        $config->str('github_token'),
+        $config->str('github_owner'),
+        $config->str('github_repo'),
+        $config->str('github_branch'),
+        $storage,
+    );
+}
 
 // Instagram連携。設定が入っていないときは組み立てない（入口は503を返す）。
 $instagram = null;

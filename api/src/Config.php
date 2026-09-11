@@ -38,10 +38,15 @@ final class Config
             throw new ConfigMissing('設定ファイルの形式が正しくありません');
         }
 
-        foreach (['github_token', 'github_owner', 'github_repo', 'pairing_code'] as $key) {
-            if (!isset($loaded[$key]) || !is_string($loaded[$key]) || $loaded[$key] === '') {
-                throw new ConfigMissing(sprintf('設定 %s が未設定です', $key));
-            }
+        // **必須はこれだけ。** どの機能を使うにも要る、端末との合言葉。
+        //
+        // GitHub（ホームページ掲載）の設定は必須にしない。
+        // 掲載を使わずInstagramだけ動かしたいことがあるため。
+        // 掲載の入口は、設定が無ければ入口ごとに「準備中」で止める。
+        if (!isset($loaded['pairing_code'])
+            || !is_string($loaded['pairing_code'])
+            || $loaded['pairing_code'] === '') {
+            throw new ConfigMissing('設定 pairing_code が未設定です');
         }
         if (strlen((string) $loaded['pairing_code']) < 8) {
             throw new ConfigMissing('pairing_code は8文字以上にしてください');
@@ -79,6 +84,22 @@ final class Config
             'rate_max_instagram_account_prepares' => 3,
             'rate_max_instagram_account_publishes' => 3,
         ];
+    }
+
+    /**
+     * ホームページ掲載（GitHub直接方式）の設定がそろっているか。
+     *
+     * そろっていなければ、掲載の入口だけを「準備中」で止める。
+     * **Instagramの入口は止めない。**
+     */
+    public function hasGitHub(): bool
+    {
+        foreach (['github_token', 'github_owner', 'github_repo'] as $key) {
+            if ($this->str($key) === '') {
+                return false;
+            }
+        }
+        return true;
     }
 
     public function str(string $key): string
