@@ -7,9 +7,10 @@ namespace Relagarden\Line;
 /**
  * 公式LINEに届いたメッセージを受け取って、受信箱へ入れる。
  *
- * 本文を確実に保存した後だけ、自動受付サービスへ知らせる。
- * 自動受付は設定で明示的に有効化した場合に限り、個別の受付文を送る。
- * 一斉配信・既読・画像の取得は行わない。
+ * **ここでは返信を一切送らない。** 自動応答（応答メッセージ）は
+ * LINE側の設定のまま動く。このAPIは受け取って控えるだけで、
+ * 送信・一斉配信・既読・画像の取得のいずれも行わない。
+ * 呼ぶLINEの機能は「表示名の取得」1つだけ。
  *
  * 受け取るのは1対1の**文字のメッセージだけ**。
  * 写真・スタンプ・友だち追加は、二度処理しない印だけ残して読み捨てる。
@@ -39,7 +40,6 @@ final class LineWebhookService
         private readonly LineConfig $config,
         private readonly LineStore $store,
         private readonly LineProfile $profile,
-        private readonly ?LineAutoReplyService $autoReply = null,
     ) {
     }
 
@@ -228,16 +228,6 @@ final class LineWebhookService
 
         // ── 2. 本文が残ってから、二度処理しない印を付ける ────
         $this->writeMarks($marks);
-        if ($this->autoReply !== null && $this->autoReply->enabled()) {
-            try {
-                $this->autoReply->onIncoming($lineUserId, $text);
-                // 初回案内はその場で送る。失敗時は予約を残し、定期実行で再試行する。
-                $this->autoReply->runDue(time(), 1);
-            } catch (\Throwable $e) {
-                // 自動返信の不調で、大切な受信までLINEに再送させない。
-                $this->store->log('E_AUTOREPLY_AFTER_INBOX', 1);
-            }
-        }
         return self::stored;
     }
 
