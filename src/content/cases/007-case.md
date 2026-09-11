@@ -5,7 +5,6 @@ pubDate: 2025-12-11
 image: "../../assets/works/007a.jpg"
 beforeImage: "../../assets/works/007b.jpg"
 area: "岡崎市"
-cost: "約60万円（50㎡）"
 period: "3日間"
 tags: ["ドッグラン", "大規模施工", "防草対策徹底"]
 

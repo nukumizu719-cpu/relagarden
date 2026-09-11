@@ -5,7 +5,6 @@ pubDate: 2025-12-24
 image: "../../assets/works/008a.jpg"
 beforeImage: "../../assets/works/008b.jpg"
 area: "小牧市"
-cost: "約24万円（20㎡）"
 period: "1.5日間"
 tags: ["和モダン", "家事動線改善", "化粧砂利併用"]
 

@@ -5,7 +5,6 @@ pubDate: 2026-02-27
 image: "../../assets/works/after.jpg"
 beforeImage: "../../assets/works/before.jpg"
 area: "岡崎市"
-cost: "約XX万円"
 period: "X日間"
 tags: ["雑草対策", "子供の遊び場", "高耐久"]
 

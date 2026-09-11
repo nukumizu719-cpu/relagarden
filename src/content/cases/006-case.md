@@ -5,7 +5,6 @@ pubDate: 2025-12-02
 image: "../../assets/works/006a.jpg"
 beforeImage: "../../assets/works/006b.jpg"
 area: "東海市"
-cost: "約13万円（8㎡）"
 period: "0.5日間"
 tags: ["狭小地対策", "玄関アプローチ", "室外機周り"]
 

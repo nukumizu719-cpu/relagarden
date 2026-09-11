@@ -5,7 +5,6 @@ pubDate: 2026-01-19
 image: "../../assets/works/009a.jpg"
 beforeImage: "../../assets/works/009b.jpg"
 area: "豊田市"
-cost: "約18万円（15㎡）"
 period: "1日間"
 tags: ["駐車スペース連携", "景観向上", "モダンデザイン"]
 

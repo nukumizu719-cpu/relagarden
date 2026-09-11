@@ -5,7 +5,6 @@ pubDate: 2025-10-30
 image: "../../assets/works/002a.jpg"
 beforeImage: "../../assets/works/002b.jpg"
 area: "豊川市"
-cost: "約28万円（25㎡）"
 period: "1.5日間"
 tags: ["新築リフォーム", "景観向上", "ウッドデッキ連携"]
 

@@ -5,7 +5,6 @@ pubDate: 2025-11-10
 image: "../../assets/works/004a.jpg"
 beforeImage: "../../assets/works/004b.jpg"
 area: "名古屋市"
-cost: "約40万円（35㎡）"
 period: "2日間"
 tags: ["天然芝からのリフォーム", "メンテナンスフリー", "ウッドデッキ連携"]
 

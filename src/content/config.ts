@@ -12,7 +12,8 @@ const cases = defineCollection({
     image: image(), // src/assets内の画像を最適化
     beforeImage: image().optional(),
     area: z.string(),
-    cost: z.string().optional(),
+    // 費用（cost）は持たない。事例ごとの金額は整合が取れておらず、
+    // 公開すると見積りの基準にされてしまうため、2026年9月に廃止した。
     period: z.string().optional(),
     tags: z.array(z.string()).default([]),
     beforeConcerns: z.string().optional(),

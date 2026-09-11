@@ -5,7 +5,6 @@ pubDate: 2026-02-13
 image: "../../assets/works/010a.jpg"
 beforeImage: "../../assets/works/010b.jpg"
 area: "弥富市"
-cost: "約48万円（40㎡）"
 period: "2.5日間"
 tags: ["大規模施工", "泥跳ね・砂埃対策", "景観アップデート"]
 
