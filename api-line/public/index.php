@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * 公式LINEの受信と、返信済み記録の入口。
+ * 公式LINEの受信だけの入口。
  *
  * Xserverでは public_html/api/line/ へ置く。
  * 施工事例の掲載はiPhoneからGitHubへ直接行う方式のままで、
@@ -47,14 +47,10 @@ require $sourceDir . '/LineSignature.php';
 require $sourceDir . '/LineProfile.php';
 require $sourceDir . '/LineRateLimiter.php';
 require $sourceDir . '/LineInboxService.php';
-require $sourceDir . '/LineMessenger.php';
-require $sourceDir . '/LineAutoReplyService.php';
 require $sourceDir . '/LineWebhookService.php';
 require $sourceDir . '/LineRouter.php';
 
 use Relagarden\Line\HttpLineProfile;
-use Relagarden\Line\HttpLineMessenger;
-use Relagarden\Line\LineAutoReplyService;
 use Relagarden\Line\LineConfig;
 use Relagarden\Line\LineConfigMissing;
 use Relagarden\Line\LineHeaders;
@@ -62,7 +58,6 @@ use Relagarden\Line\LineRouter;
 use Relagarden\Line\LineStore;
 use Relagarden\Line\LineStorageUnavailable;
 use Relagarden\Line\NoLineProfile;
-use Relagarden\Line\NoLineMessenger;
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -110,10 +105,6 @@ $token = $config->str('channel_access_token');
 $profile = $token === ''
     ? new NoLineProfile()
     : new HttpLineProfile($token, $config->int('profile_timeout'));
-$messenger = $config->bool('auto_reply_enabled')
-    ? new HttpLineMessenger($token, $config->int('auto_reply_timeout'))
-    : new NoLineMessenger();
-$autoReply = new LineAutoReplyService($config, $store, $messenger);
 
 $path = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 // public_html/api/line/ の下に置く前提で、先頭の /api/line を落とす。
@@ -133,7 +124,7 @@ foreach ($_GET as $key => $value) {
     }
 }
 
-$router = new LineRouter($config, $store, $profile, $autoReply);
+$router = new LineRouter($config, $store, $profile);
 [$status, $payload] = $router->handle(
     (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
     $path,

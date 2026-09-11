@@ -19,14 +19,10 @@ require __DIR__ . '/../src/LineSignature.php';
 require __DIR__ . '/../src/LineProfile.php';
 require __DIR__ . '/../src/LineRateLimiter.php';
 require __DIR__ . '/../src/LineInboxService.php';
-require __DIR__ . '/../src/LineMessenger.php';
-require __DIR__ . '/../src/LineAutoReplyService.php';
 require __DIR__ . '/../src/LineWebhookService.php';
 require __DIR__ . '/../src/LineRouter.php';
 
 use Relagarden\Line\FakeLineProfile;
-use Relagarden\Line\FakeLineMessenger;
-use Relagarden\Line\LineAutoReplyService;
 use Relagarden\Line\LineConfig;
 use Relagarden\Line\LineConfigMissing;
 use Relagarden\Line\LineHeaders;
@@ -35,7 +31,6 @@ use Relagarden\Line\LineInboxService;
 use Relagarden\Line\LineRouter;
 use Relagarden\Line\LineSignature;
 use Relagarden\Line\LineStore;
-use Relagarden\Line\LinePushResult;
 
 // ── ごく小さなテストの道具 ────────────────────────────────
 $passed = 0;
@@ -974,12 +969,26 @@ foreach (['/publish', '/status', '/unpublish', '/pairing'] as $route) {
     });
 }
 
-// ── 送信経路を自動受付だけに絞ること ────────────────────
-group('送信経路を自動受付だけに絞ること');
+// ── 返信・送信を一切しないこと ──────────────────────────
+group('返信を送らないこと');
 
-test('LINEへの送信は個別の自動受付だけに限る', function (): void {
+test('自動返信の入口が無い', function (): void {
+    $store = freshStore();
+    $router = routerWith($store);
+    [$status] = $router->handle(
+        'POST',
+        '/auto-reply/replied',
+        '{}',
+        ['authorization' => 'Bearer ' . INBOX_TOKEN],
+        '203.0.113.10'
+    );
+    assertSame(404, $status);
+});
+
+test('LINEへ送信する呼び出しがコードに無い', function (): void {
     $forbidden = [
         '/v2/bot/message/reply',
+        '/v2/bot/message/push',
         '/v2/bot/message/multicast',
         '/v2/bot/message/broadcast',
         '/v2/bot/message/narrowcast',
@@ -988,12 +997,6 @@ test('LINEへの送信は個別の自動受付だけに限る', function (): voi
     ];
     foreach (glob(__DIR__ . '/../src/*.php') ?: [] as $file) {
         $code = (string) file_get_contents($file);
-        if (basename($file) !== 'LineMessenger.php') {
-            assertTrue(
-                !str_contains($code, '/v2/bot/message/push'),
-                basename($file) . ' に直接送信が入っている'
-            );
-        }
         foreach ($forbidden as $needle) {
             assertTrue(
                 !str_contains($code, $needle),
@@ -1001,8 +1004,6 @@ test('LINEへの送信は個別の自動受付だけに限る', function (): voi
             );
         }
     }
-    $messenger = (string) file_get_contents(__DIR__ . '/../src/LineMessenger.php');
-    assertSame(1, substr_count($messenger, '/v2/bot/message/push'), '送信先が増えている');
 });
 
 test('replyToken を受け取っても保存しない', function (): void {
@@ -1112,125 +1113,6 @@ test('記録には決まったコードと件数しか書かない', function ()
             '決まった形になっていない行がある: ' . $line
         );
     }
-});
-
-// ── 30分後の自動受付 ────────────────────────────────────
-group('30分後の自動受付');
-
-function autoReplyService(LineStore $store, FakeLineMessenger $messenger, array $overrides = []): LineAutoReplyService
-{
-    return new LineAutoReplyService(testConfig($overrides + [
-        'auto_reply_enabled' => true,
-        'auto_reply_session_seconds' => 12 * 3600,
-        'auto_reply_delay_seconds' => 30 * 60,
-        'auto_reply_retry_seconds' => 5 * 60,
-        'auto_reply_max_per_run' => 20,
-    ]), $store, $messenger);
-}
-
-test('初回は詳しい案内をすぐ1回だけ送る', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $service = autoReplyService($store, $messenger);
-    $service->onIncoming('U-AUTO-1', '庭の相談をしたいです', 1000);
-    $result = $service->runDue(1000);
-
-    assertSame(1, $result['sent']);
-    assertSame(1, count($messenger->sent));
-    assertSame(LineAutoReplyService::initialText, $messenger->sent[0]['text']);
-    $service->runDue(2000);
-    assertSame(1, count($messenger->sent), '初回案内を二重送信した');
-});
-
-test('2通目は30分間待ってから短い案内を送る', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $service = autoReplyService($store, $messenger);
-    $service->onIncoming('U-AUTO-2', '相談です', 1000);
-    $service->runDue(1000);
-    $service->onIncoming('U-AUTO-2', '写真も送ります', 1060);
-
-    $service->runDue(2859);
-    assertSame(1, count($messenger->sent), '30分より前に送った');
-    $service->runDue(2860);
-    assertSame(2, count($messenger->sent));
-    assertSame(LineAutoReplyService::waitingText, $messenger->sent[1]['text']);
-});
-
-test('待っている間に追加で届けば30分を数え直す', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $service = autoReplyService($store, $messenger);
-    $service->onIncoming('U-AUTO-3', '相談です', 1000);
-    $service->runDue(1000);
-    $service->onIncoming('U-AUTO-3', '追伸1', 1100);
-    $service->onIncoming('U-AUTO-3', '追伸2', 1700);
-
-    $service->runDue(2899);
-    assertSame(1, count($messenger->sent));
-    $service->runDue(3500);
-    assertSame(2, count($messenger->sent));
-});
-
-test('谷口さんが返信済みにすると30分後の予約を止める', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $service = autoReplyService($store, $messenger);
-    $service->onIncoming('U-AUTO-4', '相談です', 1000);
-    $service->runDue(1000);
-    $service->onIncoming('U-AUTO-4', '続きです', 1100);
-    $service->markReplied('U-AUTO-4', 1200);
-    $service->runDue(4000);
-
-    assertSame(1, count($messenger->sent), '返信済みなのに短い案内を送った');
-    assertSame(0, count($store->keys('auto-reply-jobs')));
-});
-
-test('挨拶と既存キーワードには重ねて自動返信しない', function (): void {
-    foreach (['ありがとうございます！', 'かしこまりました。', '日程確認', '見積確認'] as $index => $text) {
-        $store = freshStore();
-        $messenger = new FakeLineMessenger();
-        $service = autoReplyService($store, $messenger);
-        $service->onIncoming('U-SKIP-' . $index, $text, 1000);
-        $service->runDue(5000);
-        assertSame(0, count($messenger->sent), $text . ' に重ねて返信した');
-    }
-});
-
-test('短い案内は同じ12時間の相談中に1回まで', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $service = autoReplyService($store, $messenger);
-    $service->onIncoming('U-AUTO-5', '相談です', 1000);
-    $service->runDue(1000);
-    $service->onIncoming('U-AUTO-5', '2通目', 1100);
-    $service->runDue(2900);
-    $service->onIncoming('U-AUTO-5', '3通目', 3000);
-    $service->runDue(6000);
-    assertSame(2, count($messenger->sent), '短い案内を何度も送った');
-});
-
-test('通信結果不明の再試行でも同じ識別子を使う', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $messenger->results = [LinePushResult::retryLater(), LinePushResult::sent()];
-    $service = autoReplyService($store, $messenger);
-    $service->onIncoming('U-AUTO-6', '相談です', 1000);
-    $service->runDue(1000);
-    $service->runDue(1299);
-    assertSame(1, count($messenger->sent));
-    $service->runDue(1300);
-    assertSame(2, count($messenger->sent));
-    assertSame($messenger->sent[0]['retryKey'], $messenger->sent[1]['retryKey']);
-});
-
-test('自動受付が無効なら予約も送信もしない', function (): void {
-    $store = freshStore();
-    $messenger = new FakeLineMessenger();
-    $service = new LineAutoReplyService(testConfig(), $store, $messenger);
-    $service->onIncoming('U-AUTO-OFF', '相談です', 1000);
-    assertSame(0, count($store->keys('auto-reply-jobs')));
-    assertSame(0, count($messenger->sent));
 });
 
 // ── 結果 ────────────────────────────────────────────────

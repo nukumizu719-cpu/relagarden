@@ -1,6 +1,6 @@
-# 公式LINE 受信・受付API
+# 公式LINE 受信専用API
 
-公式LINEに届いたお問い合わせをiPhoneアプリへ渡し、必要なときだけ受付案内を送るAPIです。
+公式LINEに届いたお問い合わせを受け取り、iPhoneアプリへ渡すためだけのAPIです。
 
 ```text
 お客様
@@ -10,9 +10,6 @@ LINEプラットフォーム（Webhook）
 Xserver の private/line-storage（public_htmlの外）
   → https://relagarden.jp/api/line/inbox
 iPhoneアプリ「リラガーデン」
-  → 実際に返信した後「返信済みにする」
-Xserver Cron（5分ごと）
-  → 30分たっても返信済みでなければ、30〜35分後に短い受付案内
 ```
 
 ## このAPIがしないこと
@@ -22,8 +19,8 @@ Xserver Cron（5分ごと）
 このフォルダーには `/publish` `/status` `/unpublish` はありません
 （無いことを `api-line/tests/run.php` で毎回確かめています）。
 
-- **一斉送信をしません。** 送るのは、そのお客様への初回案内と30分後の受付案内だけです。
-- 自動受付は既定で無効です。Xserver配置・Cron・実機確認が済むまで送信しません。
+- **返信を送りません。** 自動応答はLINE公式アカウント側の設定で管理します。
+  このAPIが呼ぶLINEの機能は「表示名の取得」だけで、メッセージ送信数は使いません。
 - **お客様の本名・電話番号・住所を推測しません。** 空欄のまま渡し、谷口さんが後から入れます。
 - **写真・スタンプの中身を取りに行きません。** 受け取るのは1対1の文字のメッセージだけで、
   それ以外は「二度処理しない印」だけ残して読み捨てます。
@@ -37,7 +34,6 @@ Xserver Cron（5分ごと）
 | POST | `/api/line/webhook` | LINEからの配信を受ける | 不要（署名で確認） |
 | GET | `/api/line/inbox` | まだ取り込んでいない問い合わせを渡す | 必要 |
 | POST | `/api/line/sync` | 取り込めたものへ受け取り済みの印を付ける | 必要 |
-| POST | `/api/line/auto-reply/replied` | 実際に返信済みとして30分後の予約を止める | 必要 |
 
 決めた入口以外、想定しないメソッドはすべて断ります。
 
@@ -61,7 +57,6 @@ Xserver Cron（5分ごと）
 │           ├── index.php
 │           └── .htaccess
 ├── api-line-src/          ← api-line/src/ をここへ（public_html の外）
-├── api-line-bin/          ← api-line/bin/ をここへ（public_html の外）
 └── private/
     ├── line-config.php    ← 2で作る（public_html の外）
     └── line-storage/      ← 自動で作られる
@@ -83,7 +78,6 @@ Xserver Cron（5分ごと）
 | `channel_secret` | LINE Developersの「チャネルシークレット」 |
 | `channel_access_token` | 「チャネルアクセストークン（長期）」。空でも動く（表示名が空欄になる） |
 | `inbox_token` | iPhoneアプリと共有する合言葉。**`openssl rand -hex 32`（64文字）** で作る |
-| `auto_reply_enabled` | 最初は必ず `false`。実機確認直前にだけ `true` |
 
 ⚠️ GitHubのPAT・Xserverの管理パスワードは使わないでください。
 LINE用の値だけを入れます。
@@ -94,27 +88,7 @@ LINE用の値だけを入れます。
    `https://relagarden.jp/api/line/webhook` を入れる
 2. 「検証」を押して成功することを確かめる
 3. Webhookの利用をオンにする
-4. このAPIと重なる一律の応答メッセージは停止する。日程確認などのキーワード応答は残せます
-
-### 4. XserverのCronを5分ごとに設定する
-
-公開URLは使いません。XserverのCron設定に次を登録します。
-
-```sh
-/usr/bin/php /home/<アカウント>/relagarden.jp/api-line-bin/run-auto-reply.php >/dev/null 2>&1
-```
-
-Cronと実機確認が済んだ後でのみ `auto_reply_enabled` を `true` にします。
-GitHub Actionsから配置する場合はリポジトリ変数
-`RELAGARDEN_LINE_AUTOREPLY_ENABLED=true` を使います。
-
-## 返信の動き
-
-- 12時間以上空いた最初の通常メッセージ：詳しい初回案内をすぐ1回
-- 2通目以降：最後のメッセージから30分待ち、返信済みでなければ短い受付案内を1回
-- 待っている間に追加メッセージが来た場合：30分を数え直す
-- 「ありがとうございます」などの短い挨拶、日程確認などのキーワード：重ねて送らない
-- 谷口さんがアプリで「返信済みにする」：予約を取消
+4. あいさつ・営業時間内外の応答は、LINE Official Account Manager の応答設定で管理する
 
 ## 保存するもの・しないもの
 
@@ -136,8 +110,8 @@ GitHub Actionsから配置する場合はリポジトリ変数
 2. `public_html/api/line/` を削除する
 3. `api-line-src/` と `private/line-config.php` を削除する
 
-まず `auto_reply_enabled` を `false` にすれば自動受付だけ停止できます。
-ホームページの掲載経路には影響しません。
+LINE公式アカウント側の自動応答設定には影響しません。
+ホームページの掲載経路にも影響しません。
 
 ## 安全のためにしていること
 
@@ -147,7 +121,7 @@ GitHub Actionsから配置する場合はリポジトリ変数
 | 時間差での推測を防ぐ | 署名も合言葉も `hash_equals` で比べる |
 | 二重処理を防ぐ | `webhookEventId` と `messageId` の両方に印を残し、再送を弾く |
 | 秘密を公開領域へ置かない | 設定も保存データも `public_html` の外 |
-| 記録に個人情報を残さない | LINEのユーザーIDと本文は動作ログへ書かない |
+| 記録に個人情報を残さない | LINEのユーザーIDと本文は記録へ書かない。念のため伏せ字も掛ける |
 | 総当たりを防ぐ | 受信箱の読み出しに回数制限。Webhookには掛けない（取りこぼしを防ぐため） |
 | 取りこぼしを防ぐ | 消すのは「アプリが取り込み済み」のものだけ |
 | 内部の事情を返さない | 外へは短い日本語だけ |
@@ -163,8 +137,6 @@ GitHub Actionsから配置する場合はリポジトリ変数
 | 壊れた内容を弾く | JSONとして読めない・`events` が配列でない配信は400 |
 | 大きすぎる本文を弾く | 既定512KBを超えたら413 |
 | 異常な量を弾く | Webhookは既定600回/時。正規の配信を落とさない大きさにし、超えたら429（LINEが再送） |
-| 二重送信を防ぐ | 通信結果が不明でも同じRetry Keyで再試行し、同じ案内を重ねて送らない |
-| 公開の実行口を作らない | 30分後の処理は公開URLではなく、Xserver内のCronだけで動かす |
 
 ## テスト
 
@@ -172,7 +144,7 @@ GitHub Actionsから配置する場合はリポジトリ変数
 php api-line/tests/run.php
 ```
 
-本物のLINEへはつながりません。差し替え可能な `FakeLineProfile`・`FakeLineMessenger` と
+本物のLINEへはつながりません。差し替え可能な `FakeLineProfile` と
 自前で作った署名で、受信から取り込みまでの流れを確かめられます。
 
 手元のPHPで実際のHTTPを通して確かめることもできます。
