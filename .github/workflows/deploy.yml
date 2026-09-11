@@ -205,6 +205,102 @@ jobs:
       # 通常の掲載APIとは分離したまま。
       # private/ の設定と保存データは対象外なので、ここでは上書きしない。
       # ------------------------------------------------------------------
+      # 掲載API・Instagram用の設定を、暗号化Secretsから作って置く。
+      # 公式LINE（line-config.php）と同じやり方で、別ファイル・別Secret。
+      #
+      # **合言葉が未設定なら、何も作らず何も送らない。** デプロイは止めない。
+      # GitHub（ホームページ掲載）の項目は入れない。掲載を勝手に有効にしないため。
+      - name: Build API config from secrets (never logged)
+        if: steps.targets.outputs.api == 'true'
+        id: apiconfig
+        env:
+          PAIRING_CODE: ${{ secrets.RELAGARDEN_API_PAIRING_CODE }}
+          IG_USER_ID: ${{ secrets.RELAGARDEN_INSTAGRAM_USER_ID }}
+          IG_ACCOUNT_NAME: ${{ secrets.RELAGARDEN_INSTAGRAM_ACCOUNT_NAME }}
+          IG_ACCESS_TOKEN: ${{ secrets.RELAGARDEN_INSTAGRAM_ACCESS_TOKEN }}
+          IG_API_VERSION: ${{ vars.RELAGARDEN_INSTAGRAM_GRAPH_API_VERSION }}
+        run: |
+          set -eu
+
+          if [ -z "$PAIRING_CODE" ]; then
+            echo "RELAGARDEN_API_PAIRING_CODE が未設定のため、config.php は作りません"
+            echo "made=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          safe() {
+            name="$1"; value="$2"; least="$3"
+            if [ "${#value}" -lt "$least" ]; then
+              echo "$name が短すぎます（${least}文字以上）" >&2
+              exit 1
+            fi
+            case "$value" in
+              *[!A-Za-z0-9+/=_-]*)
+                echo "$name に使えない文字が入っています" >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          safe RELAGARDEN_API_PAIRING_CODE "$PAIRING_CODE" 16
+
+          ig=no
+          if [ -n "$IG_USER_ID" ] || [ -n "$IG_ACCOUNT_NAME" ] \
+            || [ -n "$IG_ACCESS_TOKEN" ] || [ -n "$IG_API_VERSION" ]; then
+            if [ -z "$IG_USER_ID" ] || [ -z "$IG_ACCOUNT_NAME" ] \
+              || [ -z "$IG_ACCESS_TOKEN" ] || [ -z "$IG_API_VERSION" ]; then
+              echo "Instagram の設定が途中までしか入っていません" >&2
+              echo "  必要: USER_ID / ACCOUNT_NAME / ACCESS_TOKEN / GRAPH_API_VERSION" >&2
+              exit 1
+            fi
+            safe RELAGARDEN_INSTAGRAM_USER_ID "$IG_USER_ID" 8
+            safe RELAGARDEN_INSTAGRAM_ACCOUNT_NAME "$IG_ACCOUNT_NAME" 1
+            safe RELAGARDEN_INSTAGRAM_ACCESS_TOKEN "$IG_ACCESS_TOKEN" 32
+            case "$IG_API_VERSION" in
+              v[0-9]*.[0-9]*) ;;
+              *) echo "RELAGARDEN_INSTAGRAM_GRAPH_API_VERSION の形が違います（例 v23.0）" >&2; exit 1 ;;
+            esac
+            ig=yes
+          fi
+
+          mkdir -p api-config-out
+          umask 077
+          {
+            printf '<?php\n'
+            printf '// GitHub Actions が暗号化Secretsから作ります。手で書き換えないでください。\n'
+            printf 'return [\n'
+            printf "    'pairing_code' => '%s',\n" "$PAIRING_CODE"
+            printf "    'storage_dir' => '/home/xs674757/relagarden.jp/private/api-storage',\n"
+            printf "    'site_base_url' => 'https://relagarden.jp',\n"
+            if [ "$ig" = yes ]; then
+              printf "    'instagram_user_id' => '%s',\n" "$IG_USER_ID"
+              printf "    'instagram_account_name' => '%s',\n" "$IG_ACCOUNT_NAME"
+              printf "    'instagram_graph_api_version' => '%s',\n" "$IG_API_VERSION"
+              printf "    'instagram_access_token' => '%s',\n" "$IG_ACCESS_TOKEN"
+            fi
+            printf '];\n'
+          } > api-config-out/config.php
+          chmod 600 api-config-out/config.php
+          echo "made=true" >> "$GITHUB_OUTPUT"
+          echo "config.php を作りました（内容は表示しません / Instagram設定=$ig）"
+
+      - name: Deploy API config outside public_html
+        if: steps.targets.outputs.api == 'true' && steps.apiconfig.outputs.made == 'true'
+        uses: Burnett01/rsync-deployments@7.0.1
+        with:
+          # --delete を付けない。private/ の保存データを消さないため。
+          switches: -avz --chmod=F600
+          path: api-config-out/config.php
+          remote_path: /home/xs674757/relagarden.jp/private/
+          remote_host: ${{ secrets.XSERVER_HOST }}
+          remote_user: ${{ secrets.XSERVER_USER }}
+          remote_key: ${{ secrets.XSERVER_SSH_KEY }}
+          remote_port: 10022
+
+      - name: Remove local copy of API config
+        if: always()
+        run: rm -rf api-config-out
+
       - name: 公式LINEの受信は今回そのまま
         if: steps.targets.outputs.line != 'true'
         run: echo 'api-line/ に変更が無いので、LINE受信APIと設定の配置は行いません'
