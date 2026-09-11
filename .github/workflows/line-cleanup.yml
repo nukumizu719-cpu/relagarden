@@ -1,0 +1,108 @@
+name: LINE cleanup (one-off)
+
+# 旧LINE自動返信の実行ファイルを確認・削除するための、使い捨ての入口。
+#
+# **既定は inspect（読むだけ）。** delete を選んだときだけ1ファイルを消す。
+# 対象は次の1つだけで、ワイルドカードも再帰削除も使わない。
+#   $HOME/relagarden.jp/api-line-bin/run-auto-reply.php
+#
+# 既存Cron、api-line-src、private/line-storage、private/line-config.php、
+# 顧客データ、受信履歴には触れない。
+#
+# 作業が終わったら、このファイルは別のPRで削除する。
+#
+# **script: の中は半角英数字だけにする。** 日本語を入れるとSSHが落ちる。
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'inspect = 読むだけ / delete = 対象1ファイルだけ削除'
+        required: true
+        default: inspect
+        type: choice
+        options:
+          - inspect
+          - delete
+
+jobs:
+  cleanup:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # ホームの実際の場所は確認するが、記録へは出さない。
+      # 出すのは「有無」「種類」「所有者が一致するか」「名前」だけ。
+      - name: Inspect or delete the old runner
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.XSERVER_HOST }}
+          username: ${{ secrets.XSERVER_USER }}
+          key: ${{ secrets.XSERVER_SSH_KEY }}
+          port: 10022
+          envs: MODE
+          script: |
+            if [ -z "$HOME" ]; then
+              echo "result=home-unknown"
+              exit 1
+            fi
+            echo "result=home-ok"
+            dir="$HOME/relagarden.jp/api-line-bin"
+            target="$dir/run-auto-reply.php"
+            if [ ! -d "$dir" ]; then
+              echo "result=dir-absent"
+              exit 0
+            fi
+            echo "result=dir-present"
+            echo "dir-entries-begin"
+            ls -A "$dir" 2>/dev/null || true
+            echo "dir-entries-end"
+            count="$(ls -A "$dir" 2>/dev/null | wc -l | tr -d ' ')"
+            echo "entry-count=$count"
+            if [ -L "$target" ]; then
+              echo "result=target-is-symlink"
+              exit 1
+            fi
+            if [ ! -e "$target" ]; then
+              echo "result=target-absent"
+              exit 0
+            fi
+            if [ ! -f "$target" ]; then
+              echo "result=target-not-regular"
+              exit 1
+            fi
+            echo "result=target-regular-file"
+            if [ -O "$target" ]; then
+              echo "owner=matches-login-user"
+            else
+              echo "owner=other"
+            fi
+            echo "basename=$(basename "$target")"
+            if [ "$MODE" != "delete" ]; then
+              echo "result=inspect-only-done"
+              exit 0
+            fi
+            if [ "$count" != "1" ]; then
+              echo "result=refused-other-entries-present"
+              exit 1
+            fi
+            rm -f "$target"
+            if [ -e "$target" ]; then
+              echo "result=delete-failed"
+              exit 1
+            fi
+            echo "result=deleted"
+            remaining="$(ls -A "$dir" 2>/dev/null | wc -l | tr -d ' ')"
+            echo "remaining-count=$remaining"
+            if [ "$remaining" = "0" ]; then
+              rmdir "$dir" 2>/dev/null || true
+              if [ -d "$dir" ]; then
+                echo "result=dir-kept"
+              else
+                echo "result=dir-removed"
+              fi
+            else
+              echo "result=dir-kept"
+            fi
+        env:
+          MODE: ${{ inputs.mode }}
