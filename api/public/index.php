@@ -31,11 +31,18 @@ require $sourceDir . '/GitHubClient.php';
 require $sourceDir . '/GitHubApiClient.php';
 require $sourceDir . '/FakeGitHubClient.php';
 require $sourceDir . '/PublishService.php';
+require $sourceDir . '/InstagramClient.php';
+require $sourceDir . '/FakeInstagramClient.php';
+require $sourceDir . '/CurlInstagramClient.php';
+require $sourceDir . '/InstagramService.php';
+require $sourceDir . '/InstagramRouter.php';
 require $sourceDir . '/Router.php';
 
 use Relagarden\Api\Config;
 use Relagarden\Api\ConfigMissing;
+use Relagarden\Api\CurlInstagramClient;
 use Relagarden\Api\GitHubApiClient;
+use Relagarden\Api\InstagramService;
 use Relagarden\Api\Router;
 use Relagarden\Api\Storage;
 
@@ -72,9 +79,34 @@ $github = new GitHubApiClient(
     $storage,
 );
 
+// Instagram連携。設定が入っていないときは組み立てない（入口は503を返す）。
+$instagram = null;
+if (InstagramService::isConfigured($config) && $config->str('instagram_access_token') !== '') {
+    $instagram = new CurlInstagramClient(
+        $config->str('instagram_access_token'),
+        $config->str('instagram_user_id'),
+        $config->str('instagram_graph_api_version'),
+        $storage,
+    );
+}
+
 $path = (string) parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 // public_html/api/ の下に置く前提で、先頭の /api を落とす
 $path = preg_replace('#^/api#', '', $path) ?? $path;
+
+// Metaが取りに来る一時画像だけは、JSONではなく画像そのものを返す。
+// 端末の合言葉は要らない（Metaは持っていない）。合札と期限で守る。
+if (preg_match('#^/instagram/media/([0-9a-f]{64})$#', $path, $mediaMatch) === 1) {
+    $service = new InstagramService($config, $storage, new \Relagarden\Api\FakeInstagramClient());
+    [$mediaStatus, $mediaType, $mediaBody] = $service->serveMedia($mediaMatch[1]);
+    header('Content-Type: ' . $mediaType);
+    header('X-Content-Type-Options: nosniff');
+    header('Cache-Control: no-store');
+    header('X-Robots-Tag: noindex, nofollow');
+    http_response_code($mediaStatus);
+    echo $mediaBody;
+    exit;
+}
 
 $headers = [];
 foreach ($_SERVER as $key => $value) {
@@ -84,7 +116,7 @@ foreach ($_SERVER as $key => $value) {
     }
 }
 
-$router = new Router($config, $storage, $github);
+$router = new Router($config, $storage, $github, $instagram);
 [$status, $payload] = $router->handle(
     (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'),
     $path,
