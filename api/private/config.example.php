@@ -48,5 +48,46 @@ return [
     'rate_max_pairings' => 5,
 
     // 公開されるサイトのURL。掲載後のリンクを組み立てるのに使う。
+    // Instagramへ渡す一時画像のURLも、これを土台に作る。
     'site_base_url' => 'https://relagarden.jp',
+
+    // ── Instagram実験（未設定なら Instagram の入口は動かない）──────
+    //
+    // **ここに書く値は、この見本ファイルには絶対に入れない。**
+    // 本物は public_html の外の config.php にだけ書く。
+    //
+    // 長期アクセストークン。Instagram Login で発行したもの。
+    // 60日で切れる。切れたら差し替える。
+    // GitHubのPAT・Xserverの管理パスワードとは必ず別物。
+    'instagram_access_token' => '',
+
+    // Instagramのユーザー番号（数字）。@から始まる名前ではない。
+    'instagram_user_id' => '',
+
+    // Graph APIのバージョン。例: 'v23.0'
+    // **推測で入れないこと。** Metaの管理画面か公式資料で、
+    // つなぐ直前に必ず現行のものを確認して入れる。
+    // ここが空の間、Instagramの入口は「準備中」を返す。
+    'instagram_graph_api_version' => '',
+
+    // アプリの画面に出す投稿先の名前。取り違え防止のために表示する。
+    // 例: 'your_instagram_name'（本物はここではなく config.php へ書く）
+    'instagram_account_name' => '',
+
+    // App Secret。**今回の投稿実験では使わない。** 将来用の空欄。
+    'instagram_app_secret' => '',
+
+    // 1枚あたりの画像サイズ（バイト）
+    'instagram_max_image_bytes' => 8 * 1024 * 1024,
+    // 準備1回で受け取る全体のサイズ（バイト）
+    'instagram_max_request_bytes' => 16 * 1024 * 1024,
+    // 一時画像URLの有効期間（秒）。24時間より長くはできない。
+    'instagram_media_ttl_seconds' => 3600,
+    // 1端末あたり、rate_window_seconds の間に許す回数
+    'rate_max_instagram_prepares' => 3,
+    'rate_max_instagram_publishes' => 3,
+    'rate_max_instagram_status' => 60,
+    // 投稿先アカウントごとの上限。**端末を替えても超えられない。**
+    'rate_max_instagram_account_prepares' => 3,
+    'rate_max_instagram_account_publishes' => 3,
 ];

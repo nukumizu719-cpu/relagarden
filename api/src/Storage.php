@@ -18,7 +18,7 @@ final class Storage
     public function __construct(string $dir)
     {
         $this->dir = rtrim($dir, '/');
-        foreach (['', '/devices', '/status', '/logs', '/rate'] as $sub) {
+        foreach (['', '/devices', '/status', '/logs', '/rate', '/igdrafts', '/igtickets'] as $sub) {
             $path = $this->dir . $sub;
             if (!is_dir($path)) {
                 @mkdir($path, 0700, true);
@@ -115,6 +115,9 @@ final class Storage
             '/gh[pousr]_[A-Za-z0-9]{20,}/',
             '/github_pat_[A-Za-z0-9_]{20,}/',
             '/\b[A-Fa-f0-9]{40,}\b/',
+            // Instagram / Meta のアクセストークン
+            '/IG[A-Za-z0-9_-]{20,}/',
+            '/EAA[A-Za-z0-9_-]{20,}/',
         ];
         foreach ($patterns as $pattern) {
             $text = preg_replace($pattern, '***', $text) ?? $text;

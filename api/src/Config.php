@@ -64,6 +64,20 @@ final class Config
             'rate_max_unpublishes' => 5,
             'rate_max_pairings' => 5,
             'site_base_url' => 'https://relagarden.jp',
+
+            // ── Instagram実験 ────────────────────────────────
+            // instagram_graph_api_version には既定値を置かない。
+            // 推測した値で本番へつなぐと、Metaが上げたときに黙って壊れる。
+            // 未設定のときは Instagram の入口を動かさない。
+            'instagram_max_image_bytes' => 8 * 1024 * 1024,
+            'instagram_max_request_bytes' => 16 * 1024 * 1024,
+            'instagram_media_ttl_seconds' => 3600,
+            'rate_max_instagram_prepares' => 3,
+            'rate_max_instagram_publishes' => 3,
+            'rate_max_instagram_status' => 60,
+            // 投稿先アカウントごとの上限。端末を替えても超えられない。
+            'rate_max_instagram_account_prepares' => 3,
+            'rate_max_instagram_account_publishes' => 3,
         ];
     }
 
@@ -77,6 +91,19 @@ final class Config
     {
         $value = $this->values[$key] ?? 0;
         return is_int($value) ? $value : (int) $value;
+    }
+
+    /**
+     * いま持っている設定をそのまま返す。
+     *
+     * テストで一部だけを差し替えた設定を作るために使う。
+     * **本番の処理からは呼ばない**（秘密情報をまとめて持ち回さないため）。
+     *
+     * @return array<string,mixed>
+     */
+    public function raw(): array
+    {
+        return $this->values;
     }
 }
 
